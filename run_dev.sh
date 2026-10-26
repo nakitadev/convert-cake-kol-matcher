@@ -23,7 +23,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir backend/ap
 BACKEND_PID=$!
 
 # 2. Start Frontend
-echo "[2/2] Starting Next.js 16 Frontend on http://localhost:3000..."
+echo "[2/2] Starting Vite React Frontend on http://localhost:3000..."
 cd "$PROJECT_DIR/frontend"
 npm run dev &
 FRONTEND_PID=$!
