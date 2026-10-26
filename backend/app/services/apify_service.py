@@ -48,7 +48,7 @@ class ApifyTikTokService:
             logger.info(f"Returning cached live TikTok results for {cache_key}")
             return self._cache[cache_key][1]
 
-        url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=30"
+        url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=90"
         payload = {
             "hashtags": query_tags,
             "resultsPerPage": 5,
@@ -57,12 +57,36 @@ class ApifyTikTokService:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=35.0) as client:
+            async with httpx.AsyncClient(timeout=95.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code not in [200, 201]:
                     logger.warning(f"Apify live search returned HTTP {resp.status_code}: {resp.text[:200]}")
-                    return []
-                items = resp.json()
+                    # Fallback to check if dataset has items despite timeout status
+                    try:
+                        err_data = resp.json()
+                        run_id = err_data.get("error", {}).get("runId") or (
+                            err_data.get("error", {}).get("message", "").split("run ID: ")[1].split(",")[0]
+                            if "run ID: " in err_data.get("error", {}).get("message", "") else None
+                        )
+                        if run_id:
+                            run_info = (await client.get(f"https://api.apify.com/v2/actor-runs/{run_id}?token={self.api_token}")).json().get("data", {})
+                            ds_id = run_info.get("defaultDatasetId")
+                            if ds_id:
+                                ds_items = (await client.get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={self.api_token}")).json()
+                                if isinstance(ds_items, list) and len(ds_items) > 0:
+                                    items = ds_items
+                                else:
+                                    return []
+                            else:
+                                return []
+                        else:
+                            return []
+                    except Exception as rescue_err:
+                        logger.warning(f"Failed to recover items from Apify run: {rescue_err}")
+                        return []
+                else:
+                    items = resp.json()
+
                 if not isinstance(items, list) or len(items) == 0:
                     return []
 
