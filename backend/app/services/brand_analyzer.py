@@ -72,35 +72,10 @@ class BrandAnalyzer:
                     scraped_sources=scraped_sources or ["Live Web Ingestion & Gemini 3.5 Flash-Lite"],
                 )
 
-        # 4. Direct factual fallback if Gemini LLM offline (no fake mock tables)
-        raw_id = re.sub(r'[^a-zA-Z0-9]', '', brand_name.lower())[:15] or "brand"
-        summary = f"{brand_name} campaign brief."
-        if scraped_text:
-            summary += f" Live site: {scraped_text[:250]}..."
-        elif req.custom_notes:
-            summary += f" Notes: {req.custom_notes}"
-
-        # Extract real tokens from scraped title and text
-        words = re.findall(r'\w+', f"{brand_name} {scraped_text} {req.custom_notes or ''}")
-        real_kws = [w for w in words if len(w) >= 3][:5] or [brand_name, "รีวิว"]
-
-        return BrandDNA(
-            id=f"live-{raw_id}",
-            brand_name=brand_name,
-            website_url=req.website_url or "",
-            facebook_url=req.facebook_url or "",
-            vertical="General Lifestyle & Retail",
-            sub_category="Direct Client Campaign",
-            brand_summary=summary,
-            target_audience="Thai TikTok consumers & digital shoppers",
-            target_age_range="20-35",
-            target_locations=["Bangkok", "Thailand"],
-            brand_tone=["Authentic", "Engaging"],
-            content_style_preferences=["Review", "Unboxing"],
-            price_positioning="Mid-Range / Accessible",
-            average_price_thb=500,
-            thai_keywords=real_kws,
-            scraped_sources=scraped_sources or ["Direct Web Ingestion"],
+        # 4. Strict Zero-Mock & Zero-Fallback Policy: No heuristic synthetic fallback
+        raise RuntimeError(
+            f"Failed to extract Brand DNA via Gemini LLM for '{brand_name}'. "
+            f"Zero-Mock Policy enforces 100% genuine live AI extraction. Please check GEMINI_API_KEY."
         )
 
     async def _scrape_website(self, url: str) -> Tuple[str, str]:

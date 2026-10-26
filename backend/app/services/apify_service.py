@@ -156,6 +156,34 @@ class ApifyTikTokService:
                         if clean_c:
                             sample_comments.append(f"สนใจตามคลิป: \"{clean_c[:50]}...\"")
 
+                # Dynamic creator persona and pricing derived from real captions & bio
+                content_corpus = f"{bio} {' '.join(captions)}".lower()
+                if any(w in content_corpus for w in ["สกินแคร์", "ผิว", "สิว", "หน้า", "beauty", "skincare", "ครีม"]):
+                    creator_persona = "Thai Skincare & Beauty Specialist"
+                    typical_price_tier = "Mid-Range / Accessible"
+                    avg_price = 690
+                    styles = ["Skincare Routine", "Honest Ingredient Review", "Before-After Showcase"]
+                elif any(w in content_corpus for w in ["อาหาร", "กิน", "คาเฟ่", "อร่อย", "food", "cafe", "ขนม", "ร้านอาหาร"]):
+                    creator_persona = "Bangkok Cafe & Foodie Explorer"
+                    typical_price_tier = "Budget / Mass"
+                    avg_price = 280
+                    styles = ["Cafe Hopping Vlog", "Taste-Test Review", "Food Guide"]
+                elif any(w in content_corpus for w in ["โต๊ะ", "เก้าอี้", "คอม", "ไอที", "tech", "gadget", "ปวดหลัง", "wfh", "จัดโต๊ะ"]):
+                    creator_persona = "Ergonomics & Tech Desk Specialist"
+                    typical_price_tier = "Premium / Masstige"
+                    avg_price = 2900
+                    styles = ["Desk Setup Tour", "Ergonomic Comparison", "Tech Teardown"]
+                elif any(w in content_corpus for w in ["เสื้อผ้า", "แฟชั่น", "แต่งตัว", "ootd", "fashion", "กระเป๋า"]):
+                    creator_persona = "Thai Fashion & OOTD Stylist"
+                    typical_price_tier = "Mid-Range / Accessible"
+                    avg_price = 850
+                    styles = ["OOTD Lookbook", "Mix & Match Tutorial", "Haul & Try-On"]
+                else:
+                    creator_persona = f"Thai {vertical} Content Creator"
+                    typical_price_tier = "Mid-Range / Accessible"
+                    avg_price = 490
+                    styles = ["Honest Review", "Tutorial", "Vlog"]
+
                 profiles.append(
                     KOLProfile(
                         id=f"live_{handle}",
@@ -170,10 +198,10 @@ class ApifyTikTokService:
                         following_count=following,
                         total_likes=total_likes,
                         tier=tier,
-                        creator_persona="Authentic Thai Lifestyle & Product Reviewer",
-                        content_styles=["Honest Review", "Tutorial", "Unboxing"],
-                        typical_price_tier="Mid-Range / Accessible",
-                        avg_reviewed_price_thb=450,
+                        creator_persona=creator_persona,
+                        content_styles=styles,
+                        typical_price_tier=typical_price_tier,
+                        avg_reviewed_price_thb=avg_price,
                         primary_locations=["Bangkok", "Thailand"],
                         audience_language="Thai (Central/Bangkok)",
                         sample_comments=sample_comments,
