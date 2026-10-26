@@ -1,0 +1,134 @@
+[
+  {
+    "id": "srichand-skincare",
+    "brand_name": "Srichand (ศรีจันทร์) — Skin Moisture Burst Series",
+    "website_url": "https://www.srichand.com",
+    "facebook_url": "https://www.facebook.com/srichand1948",
+    "vertical": "Beauty & Skincare",
+    "sub_category": "Hydrating Gel Cream & T-Zone Oil Control Skincare",
+    "brand_summary": "Modernized iconic Thai heritage skincare & cosmetics brand offering dermatologist-tested hydrating gel creams, sunscreens, and translucent powders formulated specifically for hot, humid Thai weather.",
+    "target_audience": "Thai Gen Z and Young Millennial women & men (ages 18-32) with combination/oily or dehydrated skin seeking accessible, effective skincare that holds up in Bangkok heat without feeling sticky.",
+    "target_age_range": "18-32",
+    "target_locations": ["Bangkok", "Chiang Mai", "Khon Kaen", "Thailand"],
+    "brand_tone": ["Trustworthy", "Modern Thai", "Dermatological yet Friendly", "Real-Skin Positivity"],
+    "content_style_preferences": [
+      "GRWM (Get Ready With Me) in Thai Weather",
+      "Texture & Skin Moisture Barrier Test",
+      "7-Day Before/After Honest Review",
+      "Watsons / Eveandboy / 7-Eleven Haul"
+    ],
+    "price_positioning": "Mid-Range / Accessible",
+    "average_price_thb": 450,
+    "thai_keywords": [
+      "สกินแคร์ผิวแพ้ง่าย",
+      "ศรีจันทร์",
+      "กู้ผิวโทรม",
+      "ผิวอิ่มน้ำ",
+      "รีวิวบิวตี้",
+      "ครีมเจลศรีจันทร์",
+      "คุมมัน",
+      "ป้ายยาสกินแคร์",
+      "Srichand",
+      "SkincareThailand"
+    ],
+    "scraped_sources": ["Preset: Srichand Official Website", "Preset: Facebook @srichand1948"]
+  },
+  {
+    "id": "her-hyness-clinical",
+    "brand_name": "Her Hyness — Royal Hya & Clean Clinical Skincare",
+    "website_url": "https://www.herhynessbeauty.com",
+    "facebook_url": "https://www.facebook.com/herhynessbeauty",
+    "vertical": "Beauty & Skincare",
+    "sub_category": "Clean Clinical Sheet Masks, Hybrid Sunscreen & Anti-Aging Ampoules",
+    "brand_summary": "Premium Thai clean-clinical skincare brand free from 18+ skin irritants, beloved by urban professionals and sensitive-skin users for ultra-lightweight UV sunscreens, royal jelly sheet masks, and barrier-repair serums.",
+    "target_audience": "Urban working professionals, aesthetic clinic goers, and skincare ingredients enthusiasts (ages 24-38) in Bangkok who invest in clean, gentle, clinical-grade skincare.",
+    "target_age_range": "24-38",
+    "target_locations": ["Bangkok", "Nonthaburi", "Phuket"],
+    "brand_tone": ["Clean Clinical", "Sophisticated", "Ingredient-Focused", "Gentle Luxury"],
+    "content_style_preferences": [
+      "Ingredient Deep-Dive & UV Camera Test",
+      "Post-Laser / Clinic Recovery Routine",
+      "Office Girl Morning Skincare Routine",
+      "Eveandboy / Sephora / Beautrium Favorite Picks"
+    ],
+    "price_positioning": "Premium / Masstige",
+    "average_price_thb": 1190,
+    "thai_keywords": [
+      "กันแดดเนื้อเซรั่ม",
+      "สกินแคร์คลีนบิวตี้",
+      "ผิวแพ้ง่ายใช้ได้",
+      "มาสก์หน้า",
+      "รีวิวสกินแคร์แพงแต่ดี",
+      "HerHyness",
+      "กู้ผิวพัง",
+      "รูทีนสกินแคร์"
+    ],
+    "scraped_sources": ["Preset: Her Hyness Website", "Preset: Facebook @herhynessbeauty"]
+  },
+  {
+    "id": "baantongkee-specialty-cafe",
+    "brand_name": "Drop by Dough & Specialty Matcha Cafe BKK",
+    "website_url": "https://www.dropbydough.com",
+    "facebook_url": "https://www.facebook.com/dropbydough",
+    "vertical": "Cafe / F&B & Lifestyle",
+    "sub_category": "Artisanal Brioche Doughnuts, Ceremonial Matcha & Aesthetic Specialty Cafe",
+    "brand_summary": "Bangkok specialty cafe & artisanal dessert destination in Sukhumvit / Ari known for handcrafted brioche doughnuts, ceremonial Uji matcha lattes, and Scandinavian-Thai minimalist aesthetics perfect for weekend café hopping.",
+    "target_audience": "Bangkok cafe hoppers, specialty coffee & matcha lovers, lifestyle aesthetic creators, and young urbanites (ages 20-34) exploring Sukhumvit, Thonglor, Ari, and Charoenkrung.",
+    "target_age_range": "20-34",
+    "target_locations": ["Bangkok", "Sukhumvit", "Thonglor", "Ari", "Charoenkrung"],
+    "brand_tone": ["Aesthetic", "Warm & Artisanal", "Trendy Bangkok Lifestyle", "Photogenic"],
+    "content_style_preferences": [
+      "1-Day Cafe Hopping Vlog in Bangkok",
+      "First-Bite ASMR & Cross-Section Reveal",
+      "OOTD + Cafe Photo Spot Guide",
+      "Specialty Matcha / Coffee Taste Test"
+    ],
+    "price_positioning": "Premium / Masstige",
+    "average_price_thb": 320,
+    "thai_keywords": [
+      "คาเฟ่กรุงเทพ",
+      "รีวิวคาเฟ่",
+      "คาเฟ่สุขุมวิท",
+      "คาเฟ่อารีย์",
+      "มัทฉะเลิฟเวอร์",
+      "ขนมอร่อยบอกต่อ",
+      "ปักหมุดคาเฟ่",
+      "CafeHoppingBKK",
+      "กินไรดี"
+    ],
+    "scraped_sources": ["Preset: Specialty Cafe BKK Website", "Preset: Facebook Cafe Page"]
+  },
+  {
+    "id": "bewell-ergo-gadget",
+    "brand_name": "Bewell Ergonomics & Smart Desk Gadgets Thailand",
+    "website_url": "https://www.bewellstyle.com",
+    "facebook_url": "https://www.facebook.com/Bewellstyle",
+    "vertical": "Gadgets / Home & Living",
+    "sub_category": "Ergonomic Chairs, Adjustable Standing Desks & WFH Productivity Gadgets",
+    "brand_summary": "Leading Thai ergonomic workspace and smart home-office brand helping office workers, programmers, gamers, and creators cure office syndrome with ergonomic mesh chairs, electric standing desks, and desk setup accessories.",
+    "target_audience": "Thai WFH professionals, tech workers, content creators, gamers, and condo dwellers (ages 23-40) suffering from office syndrome and upgrading their desk setup or home living space.",
+    "target_age_range": "23-40",
+    "target_locations": ["Bangkok", "Chiang Mai", "Chonburi", "Thailand"],
+    "brand_tone": ["Smart & Practical", "Health-Conscious", "Modern Tech Workspace", "Problem-Solving"],
+    "content_style_preferences": [
+      "Desk Setup Makeover / Condo WFH Tour",
+      "Office Syndrome Relief Honest Review",
+      "30-Day Ergonomic Chair & Standing Desk Test",
+      "Gadget Unbox & Feature Walkthrough"
+    ],
+    "price_positioning": "Premium / Masstige",
+    "average_price_thb": 4990,
+    "thai_keywords": [
+      "จัดโต๊ะคอม",
+      "เก้าอี้เพื่อสุขภาพ",
+      "ออฟฟิศซินโดรม",
+      "โต๊ะปรับระดับไฟฟ้า",
+      "รีวิวแกดเจ็ต",
+      "ของแต่งห้อง",
+      "ชาวออฟฟิศ",
+      "DeskSetupThailand",
+      "WorkFromHome"
+    ],
+    "scraped_sources": ["Preset: Bewell Official Website", "Preset: Facebook @Bewellstyle"]
+  }
+]
