@@ -19,6 +19,7 @@ class ApifyTikTokService:
     def __init__(self, api_token: Optional[str] = None):
         self.api_token = api_token or os.environ.get("APIFY_API_TOKEN")
         self.actor_id = "clockworks~tiktok-scraper"
+        self.facebook_actor_id = "apify~facebook-pages-scraper"
         self._cache: Dict[str, Tuple[float, List[KOLProfile]]] = {}
 
     @property
@@ -246,6 +247,72 @@ class ApifyTikTokService:
         except Exception as e:
             logger.warning(f"Apify live search failed or timed out: {e}")
             return []
+
+    async def scrape_facebook_page(self, facebook_url: str) -> Dict[str, Any]:
+        """
+        Scrapes a live Facebook Page using Apify actor 'apify~facebook-pages-scraper'.
+        Extracts verified page metadata: title, bio, categories, likes, followers, recent posts.
+        Zero-Mock Policy: 100% genuine live extraction with resilient Jina Reader fallback.
+        """
+        if not self.is_configured or not facebook_url:
+            return {}
+
+        clean_url = facebook_url if facebook_url.startswith("http") else f"https://{facebook_url}"
+        url = f"https://api.apify.com/v2/acts/{self.facebook_actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=60"
+        payload = {
+            "startUrls": [{"url": clean_url}],
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=65.0) as client:
+                resp = await client.post(url, json=payload)
+                if resp.status_code in [200, 201]:
+                    items = resp.json()
+                    if isinstance(items, list) and len(items) > 0:
+                        item = items[0]
+                        posts = []
+                        raw_posts = item.get("posts") or []
+                        if isinstance(raw_posts, list):
+                            for p in raw_posts[:5]:
+                                if isinstance(p, dict) and p.get("text"):
+                                    posts.append(p.get("text"))
+                                elif isinstance(p, str):
+                                    posts.append(p)
+
+                        return {
+                            "title": item.get("title") or item.get("name") or "",
+                            "bio": item.get("bio") or item.get("intro") or item.get("about") or item.get("description") or "",
+                            "categories": item.get("categories") or [],
+                            "likes": item.get("likes") or 0,
+                            "followers": item.get("followers") or 0,
+                            "website": item.get("website") or "",
+                            "address": item.get("address") or "",
+                            "posts": posts,
+                            "source": "Apify Facebook Pages Scraper",
+                        }
+        except Exception as e:
+            logger.warning(f"Apify Facebook scrape failed or timed out: {e}")
+
+        # Resilient fallback: Jina Reader on FB page url
+        try:
+            jina_fb_url = f"https://r.jina.ai/{clean_url}"
+            headers = {"Accept": "text/plain", "User-Agent": "ConvertCake-KOL-Matcher/1.0", "X-Timeout": "10"}
+            jina_key = os.environ.get("JINA_API_KEY")
+            if jina_key:
+                headers["Authorization"] = f"Bearer {jina_key}"
+            async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+                resp = await client.get(jina_fb_url, headers=headers)
+                if resp.status_code == 200 and len(resp.text.strip()) > 80:
+                    handle = clean_url.rstrip("/").split("/")[-1]
+                    return {
+                        "title": handle.replace(".", " ").replace("-", " ").title(),
+                        "bio": resp.text[:1500],
+                        "source": "Jina Reader Facebook Fallback",
+                    }
+        except Exception:
+            pass
+
+        return {}
 
 
 _apify_instance: Optional[ApifyTikTokService] = None

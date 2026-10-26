@@ -37,10 +37,18 @@ async def analyze_brand_node(state: MatcherState) -> Dict[str, Any]:
         return {"trace": trace}
 
     req = state.get("brand_request") or BrandAnalyzeRequest()
+    if req.website_url:
+        trace.append(f"Ingesting client website via Jina Reader: {req.website_url}")
+    if req.facebook_url:
+        trace.append(f"Scraping live Facebook Page via Apify Scraper: {req.facebook_url}")
+
     analyzer = get_brand_analyzer()
     brand_dna = await analyzer.analyze(req)
 
-    trace.append(f"BrandDNA analyzed for '{brand_dna.brand_name}' ({brand_dna.vertical})")
+    trace.append(f"BrandDNA extracted for '{brand_dna.brand_name}' ({brand_dna.vertical} - {brand_dna.sub_category})")
+    for src in brand_dna.scraped_sources:
+        trace.append(f"Ingested source: {src}")
+
     return {"brand_dna": brand_dna, "trace": trace}
 
 

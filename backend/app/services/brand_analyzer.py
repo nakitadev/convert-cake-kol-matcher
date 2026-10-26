@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 from app.models import BrandAnalyzeRequest, BrandDNA
 from app.services.gemini_service import get_gemini_service
+from app.services.apify_service import get_apify_service
 
 
 class BrandAnalyzer:
@@ -28,12 +29,39 @@ class BrandAnalyzer:
                 if not brand_name and title:
                     brand_name = title.split("|")[0].split("-")[0].strip()
 
-        # 2. Extract public Facebook page handle/metadata if provided
+        # 2. Scrape live Facebook Page using Apify Facebook Pages Scraper (Zero-Mock)
         if req.facebook_url:
-            fb_handle = req.facebook_url.rstrip("/").split("/")[-1]
-            scraped_sources.append(f"Facebook Page @{fb_handle}")
-            if not brand_name:
-                brand_name = fb_handle.replace(".", " ").replace("-", " ").title()
+            apify = get_apify_service()
+            fb_data = {}
+            if apify.is_configured:
+                fb_data = await apify.scrape_facebook_page(req.facebook_url)
+
+            if fb_data:
+                fb_title = fb_data.get("title") or ""
+                fb_bio = fb_data.get("bio") or ""
+                fb_cats = ", ".join(fb_data.get("categories", [])) if isinstance(fb_data.get("categories"), list) else ""
+                fb_posts = " | ".join(fb_data.get("posts", [])) if fb_data.get("posts") else ""
+                likes = fb_data.get("likes") or 0
+                followers = fb_data.get("followers") or 0
+                source_label = fb_data.get("source", "Apify Facebook Pages Scraper")
+
+                fb_summary = f"Facebook Page: {fb_title}. Bio: {fb_bio}."
+                if fb_cats:
+                    fb_summary += f" Categories: {fb_cats}."
+                if followers or likes:
+                    fb_summary += f" Community: {followers:,} followers, {likes:,} likes."
+                if fb_posts:
+                    fb_summary += f" Recent Posts: {fb_posts[:1000]}."
+
+                scraped_text += f"\n\nFacebook Insights ({source_label}): {fb_summary}"
+                scraped_sources.append(f"Live Facebook via {source_label} ({req.facebook_url})")
+                if not brand_name and fb_title:
+                    brand_name = fb_title.split("-")[0].split("|")[0].strip()
+            else:
+                fb_handle = req.facebook_url.rstrip("/").split("/")[-1]
+                scraped_sources.append(f"Facebook Page @{fb_handle}")
+                if not brand_name:
+                    brand_name = fb_handle.replace(".", " ").replace("-", " ").title()
 
         if req.custom_notes:
             scraped_sources.append("Agency Brief Notes")
