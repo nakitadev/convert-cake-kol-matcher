@@ -6,8 +6,8 @@ AI Automation & Influencer Matching Prototype for Digital Marketing Agencies.
 
 ## 🎧 Quick Start & Demo Launch Guide
 
-### Option A: Launch with Docker Compose (Recommended for Demo)
-Spin up both FastAPI backend and Next.js frontend with isolated networking and health checks in 1 command:
+### Option A: Launch with Docker Compose (Recommended for Production & Demo)
+Spin up both FastAPI backend and Vite + React frontend with isolated networking and health checks in 1 command:
 
 ```bash
 # 1. Prepare environment variables
@@ -28,16 +28,7 @@ docker compose down
 
 ---
 
-### Option B: Single Fullstack Docker Container
-Alternatively, run the entire stack in one container:
-```bash
-docker build -t convert-cake .
-docker run -p 3000:3000 -p 8000:8000 --env-file .env convert-cake
-```
-
----
-
-### Option C: Local Dev Script (Without Docker)
+### Option B: Local Dev Script (Without Docker)
 ```bash
 cd /home/ubuntu/projects/convert-cake-kol-matcher
 ./run_dev.sh
@@ -54,7 +45,7 @@ source venv/bin/activate
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-#### Frontend (Next.js 16 + Tailwind CSS + Lucide)
+#### Frontend (Vite + React 19 + Tailwind CSS + Lucide)
 ```bash
 cd /home/ubuntu/projects/convert-cake-kol-matcher/frontend
 npm run dev
