@@ -46,7 +46,7 @@ import {
   PieChart
 } from 'lucide-react';
 
-const API_BASE = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://127.0.0.1:8000' : '';
+const API_BASE = '';
 
 interface BrandDNA {
   id?: string;
