@@ -467,16 +467,16 @@ export default function HomePage() {
 
             <div>
               <div className="flex items-center space-x-2.5">
-                <h1 className="text-xl font-black tracking-tight text-white flex items-center space-x-1.5">
-                  <span>CONVERT</span>
-                  <span className="text-[#597ef3]">CAKE</span>
+                <h1 className="text-xl font-black tracking-tight text-slate-950 flex items-center space-x-1">
+                  <span className="text-slate-950">CONVERT</span>
+                  <span className="text-[#0536d2]">CAKE</span>
                 </h1>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#0536d2]/20 text-[#597ef3] border border-[#597ef3]/35 flex items-center space-x-1.5">
-                  <Radio className="w-2.5 h-2.5 animate-pulse text-[#03e78b]" />
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0536d2] border border-blue-200 flex items-center space-x-1.5">
+                  <Radio className="w-2.5 h-2.5 animate-pulse text-[#0536d2]" />
                   <span>Performance TikTok Matcher</span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium">
+              <p className="text-[11px] text-slate-500 font-medium">
                 The Performance-Only Agency · Real-time Apify Scraper & Gemini 3.5 Flash Lite
               </p>
             </div>
