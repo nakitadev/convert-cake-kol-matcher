@@ -368,9 +368,11 @@ export default function HomePage() {
             </div>
 
             <div className="hidden md:flex items-center text-xs text-slate-400 border-l border-slate-800 pl-3 space-x-2">
-              <span>LangGraph 2-Stage</span>
+              <span className="text-emerald-400 font-medium">Gemini Embedding 2</span>
               <span>•</span>
-              <span>Apify Live Telemetry</span>
+              <span className="text-indigo-400 font-medium">Gemini 2.5 Flash</span>
+              <span>•</span>
+              <span>LangGraph</span>
               <span>•</span>
               <span>Anti-Spam Filter</span>
             </div>

@@ -9,6 +9,7 @@ from app.models import (
     SignalBreakdown,
     RankedKOL,
 )
+from app.services.gemini_service import get_gemini_service
 
 
 class ScoringEngine:
@@ -24,7 +25,7 @@ class ScoringEngine:
 
     def evaluate_kol(self, kol: KOLProfile, brand: BrandDNA) -> Tuple[float, SignalBreakdown, str, List[str]]:
         # 1. Relevance (45%)
-        rel_raw, sem_sim, matched_kw = self._calculate_relevance(kol, brand)
+        rel_raw, sem_sim, matched_kw, emb_model = self._calculate_relevance(kol, brand)
         rel_weighted = round(rel_raw * 0.45, 2)
 
         # 2. Engagement Quality (35%)
@@ -44,6 +45,7 @@ class ScoringEngine:
             relevance_weighted=rel_weighted,
             semantic_similarity=sem_sim,
             matched_keywords=matched_kw,
+            embedding_model=emb_model,
             engagement_score_raw=eng_raw,
             engagement_weighted=eng_weighted,
             median_engagement_rate_pct=round(median_er, 2),
@@ -67,7 +69,7 @@ class ScoringEngine:
 
         return total_score, breakdown, why_text, hooks
 
-    def _calculate_relevance(self, kol: KOLProfile, brand: BrandDNA) -> Tuple[float, float, List[str]]:
+    def _calculate_relevance(self, kol: KOLProfile, brand: BrandDNA) -> Tuple[float, float, List[str], str]:
         # Keyword and semantic overlap
         brand_text_corpus = (
             f"{brand.brand_name} {brand.vertical} {brand.sub_category} "
@@ -102,17 +104,30 @@ class ScoringEngine:
         shared_styles = set(s.lower() for s in brand.content_style_preferences) & set(s.lower() for s in kol.content_styles)
         style_ratio = len(shared_styles) / max(len(brand.content_style_preferences), 1) if brand.content_style_preferences else 0.5
 
-        # Token-based Jaccard-like semantic proxy
-        brand_tokens = set(re.findall(r'\w+', brand_text_corpus))
-        kol_tokens = set(re.findall(r'\w+', kol_text_corpus))
-        overlap = len(brand_tokens & kol_tokens)
-        union = len(brand_tokens | kol_tokens) if brand_tokens | kol_tokens else 1
-        sem_sim = round(overlap / union * 3.5, 3) # scale for readability
-        sem_sim = min(1.0, max(0.05, sem_sim))
+        # Gemini Embedding 2 dense vector semantic similarity
+        gemini = get_gemini_service()
+        emb_model = "gemini-embedding-2 (simulated/offline)"
+        sem_sim = 0.0
+
+        if gemini.is_configured:
+            b_emb = gemini.get_embedding(brand_text_corpus)
+            k_emb = gemini.get_embedding(kol_text_corpus)
+            if b_emb and k_emb:
+                sem_sim = round(gemini.cosine_similarity(b_emb, k_emb), 3)
+                emb_model = "gemini-embedding-2 (live)"
+
+        if sem_sim == 0.0:
+            # Token-based Jaccard-like semantic proxy fallback
+            brand_tokens = set(re.findall(r'\w+', brand_text_corpus))
+            kol_tokens = set(re.findall(r'\w+', kol_text_corpus))
+            overlap = len(brand_tokens & kol_tokens)
+            union = len(brand_tokens | kol_tokens) if brand_tokens | kol_tokens else 1
+            sem_sim = round(overlap / union * 3.5, 3) # scale for readability
+            sem_sim = min(1.0, max(0.05, sem_sim))
 
         raw_score = (vertical_match * 45.0) + (min(1.0, kw_ratio * 1.5) * 35.0) + (style_ratio * 20.0)
         raw_score = max(5.0, min(100.0, round(raw_score, 1)))
-        return raw_score, sem_sim, matched_kw
+        return raw_score, sem_sim, matched_kw, emb_model
 
     def _calculate_engagement(self, kol: KOLProfile) -> Tuple[float, float, float, float, bool, float, str]:
         if not kol.recent_videos:

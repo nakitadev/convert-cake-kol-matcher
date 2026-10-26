@@ -6,6 +6,7 @@ from app.models import BrandAnalyzeRequest, BrandDNA, MatchRequest
 from app.services.brand_analyzer import get_brand_analyzer
 from app.services.kol_repository import get_kol_repository
 from app.services.scoring_engine import get_scoring_engine
+from app.services.gemini_service import get_gemini_service
 from app.workflow.graph import run_full_matching
 
 client = TestClient(app)
@@ -147,3 +148,24 @@ def test_fastapi_analyze_and_match_endpoints():
     auto_data = auto_res.json()
     assert auto_data["brand_dna"]["vertical"] == "Cafe / F&B & Lifestyle"
     assert len(auto_data["ranked_kols"]) == 4
+
+
+def test_gemini_service_embedding_and_llm():
+    gemini = get_gemini_service()
+    assert gemini.embedding_model == "gemini-embedding-2"
+    assert "gemini" in gemini.llm_model
+    # Cosine similarity mathematical consistency
+    v1 = [1.0, 0.0, 0.0]
+    v2 = [1.0, 0.0, 0.0]
+    v3 = [0.0, 1.0, 0.0]
+    assert gemini.cosine_similarity(v1, v2) == 1.0
+    assert gemini.cosine_similarity(v1, v3) == 0.5 # mapped to [0, 1] range
+    # Verify scoring engine recorded gemini embedding model
+    scoring = get_scoring_engine()
+    analyzer = get_brand_analyzer()
+    repo = get_kol_repository()
+    kol = repo.get_all()[0]
+    brand = analyzer.get_presets()[0]
+    _, breakdown, _, _ = scoring.evaluate_kol(kol, brand)
+    assert "gemini-embedding-2" in breakdown.embedding_model
+

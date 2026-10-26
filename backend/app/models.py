@@ -79,6 +79,7 @@ class SignalBreakdown(BaseModel):
     relevance_weighted: float = Field(..., description="0-45 weighted relevance points")
     semantic_similarity: float = Field(..., description="0-1 cosine/keyword similarity")
     matched_keywords: List[str] = Field(default_factory=list, description="Matched Thai/English keywords & hashtags")
+    embedding_model: str = Field(default="gemini-embedding-2", description="Model used for dense vector semantic matching")
 
     # 2. Deterministic Engagement Quality (35% weight)
     engagement_score_raw: float = Field(..., description="0-100 raw engagement score after penalty")
@@ -109,6 +110,7 @@ class RankedKOL(BaseModel):
     why_this_kol: str = Field(..., description="Agency-grade strategic rationale explaining fit or penalty")
     thai_campaign_hooks: List[str] = Field(default_factory=list, description="Custom Thai TikTok campaign hook ideas tailored to Brand DNA & KOL style")
     enrichment_source: str = Field(default="Local Pre-Indexed Thai Pool", description="Whether enriched via Live Apify or Pre-Indexed Seed Pool")
+    llm_generator_model: str = Field(default="gemini-2.5-flash", description="Gemini LLM model used for rationale & hook generation")
 
 
 class MatchRequest(BaseModel):
