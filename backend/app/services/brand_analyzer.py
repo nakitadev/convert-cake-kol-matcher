@@ -51,7 +51,7 @@ class BrandAnalyzer:
                 if followers or likes:
                     fb_summary += f" Community: {followers:,} followers, {likes:,} likes."
                 if fb_posts:
-                    fb_summary += f" Recent Posts: {fb_posts[:1000]}."
+                    fb_summary += f" Recent Posts (up to 10): {fb_posts[:2500]}."
 
                 scraped_text += f"\n\nFacebook Insights ({source_label}): {fb_summary}"
                 scraped_sources.append(f"Live Facebook via {source_label} ({req.facebook_url})")

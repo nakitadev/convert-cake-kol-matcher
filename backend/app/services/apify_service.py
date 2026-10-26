@@ -261,6 +261,7 @@ class ApifyTikTokService:
         url = f"https://api.apify.com/v2/acts/{self.facebook_actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=60"
         payload = {
             "startUrls": [{"url": clean_url}],
+            "maxPosts": 10,
         }
 
         try:
@@ -273,7 +274,7 @@ class ApifyTikTokService:
                         posts = []
                         raw_posts = item.get("posts") or []
                         if isinstance(raw_posts, list):
-                            for p in raw_posts[:5]:
+                            for p in raw_posts[:10]:
                                 if isinstance(p, dict) and p.get("text"):
                                     posts.append(p.get("text"))
                                 elif isinstance(p, str):
