@@ -46,7 +46,7 @@ import {
   PieChart
 } from 'lucide-react';
 
-const API_BASE = '';
+const API_BASE = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://127.0.0.1:8000' : '';
 
 interface BrandDNA {
   id?: string;
@@ -236,11 +236,15 @@ export default function HomePage() {
           custom_notes: customNotes || undefined,
         }),
       });
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(errBody || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setBrandDNA(data);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to analyze brand. Ensure backend is running.');
+    } catch (err: any) {
+      console.error('Analyze brand error:', err);
+      alert(`Analyze brand failed: ${err.message || 'Ensure backend is running.'}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -253,7 +257,7 @@ export default function HomePage() {
 
     const stepTimer = setInterval(() => {
       setActiveStep(prev => (prev < 4 ? prev + 1 : prev));
-    }, 4500);
+    }, 3500);
 
     try {
       const res = await fetch(`${API_BASE}/api/match-kols`, {
@@ -265,12 +269,16 @@ export default function HomePage() {
           include_penalized_traps: true,
         }),
       });
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(errBody || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setMatchResponse(data);
       setActiveTab('ranked');
-    } catch (err) {
-      console.error(err);
-      alert('Live TikTok matching failed. Please verify APIFY_API_TOKEN.');
+    } catch (err: any) {
+      console.error('Match KOLs error:', err);
+      alert(`Live TikTok matching failed: ${err.message || 'Please verify APIFY_API_TOKEN.'}`);
     } finally {
       clearInterval(stepTimer);
       setIsMatching(false);
@@ -288,7 +296,7 @@ export default function HomePage() {
 
     const stepTimer = setInterval(() => {
       setActiveStep(prev => (prev < 4 ? prev + 1 : prev));
-    }, 5500);
+    }, 3500);
 
     try {
       const res = await fetch(`${API_BASE}/api/auto-match`, {
@@ -302,13 +310,17 @@ export default function HomePage() {
           top_k: topK,
         }),
       });
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(errBody || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setBrandDNA(data.brand_dna);
       setMatchResponse(data);
       setActiveTab('ranked');
-    } catch (err) {
-      console.error(err);
-      alert('Auto-matching failed. Please verify APIFY_API_TOKEN and backend.');
+    } catch (err: any) {
+      console.error('Auto-match error:', err);
+      alert(`Auto-matching error: ${err.message || 'Please verify APIFY_API_TOKEN and backend.'}`);
     } finally {
       clearInterval(stepTimer);
       setIsMatching(false);
@@ -1113,16 +1125,27 @@ export default function HomePage() {
                                   }}
                                 />
                               </div>
-                              <div className="flex justify-between items-center text-[10px]">
-                                <span className="text-slate-400">Triangulation</span>
+                              <div className="flex justify-between items-center text-[10px] gap-1.5 min-w-0">
+                                <span className="text-slate-400 truncate">Triangulation</span>
                                 <span
-                                  className={`px-2 py-0.5 rounded font-bold text-[9px] ${
+                                  className={`px-2 py-0.5 rounded-full font-bold text-[9px] shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 ${
                                     item.score_breakdown.confidence_level === 'High'
-                                      ? 'bg-[#03e78b]/20 text-[#03e78b] border border-[#03e78b]/30'
-                                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                      ? 'bg-[#03e78b]/15 text-[#03e78b] border border-[#03e78b]/30'
+                                      : item.score_breakdown.confidence_level === 'Medium'
+                                      ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                                      : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
                                   }`}
                                 >
-                                  {item.score_breakdown.confidence_level} Confidence
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      item.score_breakdown.confidence_level === 'High'
+                                        ? 'bg-[#03e78b]'
+                                        : item.score_breakdown.confidence_level === 'Medium'
+                                        ? 'bg-amber-400'
+                                        : 'bg-rose-400'
+                                    }`}
+                                  />
+                                  <span>{item.score_breakdown.confidence_level} Conf.</span>
                                 </span>
                               </div>
                             </div>

@@ -1,7 +1,8 @@
 import os
 import re
+import time
 import logging
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 import httpx
 
 from app.models import KOLProfile, VideoMetric
@@ -17,6 +18,7 @@ class ApifyTikTokService:
     def __init__(self, api_token: Optional[str] = None):
         self.api_token = api_token or os.environ.get("APIFY_API_TOKEN")
         self.actor_id = "clockworks~tiktok-scraper" # Standard popular Apify actor for TikTok
+        self._cache: Dict[str, Tuple[float, List[KOLProfile]]] = {}
 
     @property
     def is_configured(self) -> bool:
@@ -37,22 +39,27 @@ class ApifyTikTokService:
         if not clean_tags:
             clean_tags = ["รีวิวบิวตี้", "ป้ายยา"]
 
-        # Take up to 2 primary hashtags for fast responsive scraping
-        query_tags = clean_tags[:2]
+        # Take 1 primary hashtag with 5 videos for fast, responsive live scraping (<15s)
+        query_tags = clean_tags[:1]
+        cache_key = f"{query_tags[0]}_{vertical}"
+        now = time.time()
+        if cache_key in self._cache and (now - self._cache[cache_key][0]) < 900:
+            logger.info(f"Returning cached Apify live TikTok results for {cache_key}")
+            return self._cache[cache_key][1]
 
-        url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=25"
+        url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=18"
         payload = {
             "hashtags": query_tags,
-            "resultsPerPage": 8,
+            "resultsPerPage": 5,
             "shouldDownloadVideos": False,
             "shouldDownloadCovers": False,
         }
 
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=20.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code not in [200, 201]:
-                    logger.warning(f"Apify live search returned HTTP {resp.status_code}")
+                    logger.warning(f"Apify live search returned HTTP {resp.status_code}: {resp.text[:200]}")
                     return []
                 items = resp.json()
                 if not isinstance(items, list) or len(items) == 0:
@@ -165,6 +172,8 @@ class ApifyTikTokService:
                     break
 
             logger.info(f"Discovered {len(profiles)} live creators from Apify for {query_tags}")
+            if profiles:
+                self._cache[cache_key] = (time.time(), profiles)
             return profiles
 
         except Exception as e:
