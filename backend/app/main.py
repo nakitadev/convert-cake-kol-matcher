@@ -1,4 +1,13 @@
+import os
+from pathlib import Path
 from typing import List, Optional
+from dotenv import load_dotenv
+
+# Load backend/.env
+env_path = Path(__file__).resolve().parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path, override=True)
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 

@@ -45,22 +45,43 @@ async def analyze_brand_node(state: MatcherState) -> Dict[str, Any]:
     return {"brand_dna": brand_dna, "trace": trace}
 
 
-def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
+async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
     trace.append("Node 2: discover_candidates_node started")
 
-    repo = get_kol_repository()
     brand_dna = state.get("brand_dna")
-    vertical = brand_dna.vertical if brand_dna else None
+    vertical = brand_dna.vertical if brand_dna else "Beauty & Skincare"
+    keywords = brand_dna.thai_keywords if brand_dna and brand_dna.thai_keywords else ["รีวิวบิวตี้", "ป้ายยา"]
 
-    candidates = repo.filter_candidates(
-        vertical=vertical,
-        min_followers=state.get("min_followers"),
-        max_followers=state.get("max_followers"),
-        include_penalized_traps=True, # We evaluate all to demonstrate trap catching
-    )
+    apify = get_apify_service()
+    candidates = []
 
-    trace.append(f"Retrieved {len(candidates)} Thai KOL candidate profiles from repository")
+    # 1. Attempt Live TikTok Discovery via Apify Scraper if configured
+    if apify.is_configured:
+        trace.append(f"Querying live TikTok creators via Apify for hashtags: {keywords[:2]}")
+        try:
+            live_candidates = await apify.search_live_kols_by_hashtags(
+                hashtags=keywords,
+                vertical=vertical,
+                limit_creators=12,
+            )
+            if live_candidates:
+                candidates = live_candidates
+                trace.append(f"Discovered {len(candidates)} real live Thai TikTok creators via Apify Clockworks Actor")
+        except Exception as e:
+            trace.append(f"Apify live search exception: {e}; activating verified fallback pool")
+
+    # 2. Resilient Fallback to Verified Pool if Apify returns no items
+    if not candidates:
+        repo = get_kol_repository()
+        candidates = repo.filter_candidates(
+            vertical=vertical,
+            min_followers=state.get("min_followers"),
+            max_followers=state.get("max_followers"),
+            include_penalized_traps=True,
+        )
+        trace.append(f"Retrieved {len(candidates)} Thai KOL candidate profiles from repository fallback pool")
+
     return {"candidates": candidates, "trace": trace}
 
 
@@ -68,17 +89,12 @@ async def enrich_apify_node(state: MatcherState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
     trace.append("Node 3: enrich_apify_node started")
 
-    apify = get_apify_service()
     candidates = state.get("candidates", [])
-
-    if apify.is_configured and candidates:
-        lead_handle = candidates[0].handle
-        result = await apify.enrich_profile(lead_handle)
-        apify_status = result.get("message", "Live Apify enriched")
-        enrich_source = result.get("source", "Live Apify TikTok Actor")
+    has_live = any(c.id.startswith("live_") for c in candidates)
+    if has_live:
+        apify_status = "Live TikTok Scraper Telemetry (Apify Clockworks Active)"
     else:
-        apify_status = "Pre-indexed verified Thai TikTok pool (Production-grade resilient fallback)"
-        enrich_source = "Local Pre-Indexed Thai Pool"
+        apify_status = "Pre-indexed verified Thai TikTok pool (Resilient Fallback)"
 
     trace.append(f"Apify telemetry status: {apify_status}")
     return {"apify_status": apify_status, "trace": trace}

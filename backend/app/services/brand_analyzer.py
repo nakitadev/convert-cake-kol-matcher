@@ -6,6 +6,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from app.models import BrandAnalyzeRequest, BrandDNA
+from app.services.gemini_service import get_gemini_service
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "sample_brands.json"
 
@@ -30,41 +31,66 @@ class BrandAnalyzer:
         return list(self._presets.values())
 
     async def analyze(self, req: BrandAnalyzeRequest) -> BrandDNA:
-        # 1. Preset Match
-        if req.preset_id and req.preset_id in self._presets:
+        # 1. Preset Match only if explicitly requested without custom override
+        if req.preset_id and req.preset_id in self._presets and not req.website_url and not req.brand_name:
             preset = self._presets[req.preset_id].model_copy()
             if req.custom_notes:
                 preset.brand_summary += f" (Agency Note: {req.custom_notes})"
             return preset
 
-        # Check if website or facebook matches known preset domain
-        for preset in self._presets.values():
-            if req.website_url and preset.website_url and preset.website_url.rstrip("/") in req.website_url.rstrip("/"):
-                return preset
-            if req.facebook_url and preset.facebook_url and preset.facebook_url.rstrip("/") in req.facebook_url.rstrip("/"):
-                return preset
-
-        # 2. Live Web Scrape (with Jina Reader or direct httpx)
+        # 2. Live Web Scrape (with direct httpx + BS4 parser)
         scraped_text = ""
         scraped_sources = []
-        brand_name = req.brand_name or "Custom Brand"
+        brand_name = req.brand_name or ""
 
         if req.website_url:
             web_text, title = await self._scrape_website(req.website_url)
             if web_text:
                 scraped_text += f" Website Content: {web_text}"
-                scraped_sources.append(f"Website ({req.website_url})")
-                if not req.brand_name and title:
+                scraped_sources.append(f"Live Website ({req.website_url})")
+                if not brand_name and title:
                     brand_name = title.split("|")[0].split("-")[0].strip()
 
         if req.facebook_url:
-            # Trap 1: Explicit handling of Meta's unauthenticated login-wall
             fb_handle = req.facebook_url.rstrip("/").split("/")[-1]
             scraped_sources.append(f"Facebook Page @{fb_handle} (Public Page Metadata Ingested)")
-            if not req.brand_name and brand_name == "Custom Brand":
+            if not brand_name:
                 brand_name = fb_handle.replace(".", " ").replace("-", " ").title()
 
-        # 3. Classify and Construct BrandDNA
+        if not brand_name:
+            brand_name = "Thai Client Brand"
+
+        # 3. Dynamic Gemini LLM Analysis (gemini-3.5-flash-lite)
+        gemini = get_gemini_service()
+        if gemini.is_configured:
+            context_to_analyze = scraped_text or req.custom_notes or f"Brand Name: {brand_name}"
+            llm_dna = await gemini.generate_brand_dna(
+                scraped_text=context_to_analyze,
+                brand_name=brand_name,
+                website_url=req.website_url or "",
+                fb_url=req.facebook_url or "",
+            )
+            if llm_dna:
+                return BrandDNA(
+                    id=f"live-{re.sub(r'[^a-zA-Z0-9]', '', brand_name.lower())[:15]}",
+                    brand_name=llm_dna.get("brand_name", brand_name),
+                    website_url=req.website_url or "",
+                    facebook_url=req.facebook_url or "",
+                    vertical=llm_dna.get("vertical", "Beauty & Skincare"),
+                    sub_category=llm_dna.get("sub_category", "Specialty Category"),
+                    brand_summary=llm_dna.get("brand_summary", f"{brand_name} Brand DNA"),
+                    target_audience=llm_dna.get("target_audience", "Thai consumer audience"),
+                    target_age_range=llm_dna.get("target_age_range", "20-35"),
+                    target_locations=llm_dna.get("target_locations", ["Bangkok", "Thailand"]),
+                    brand_tone=llm_dna.get("brand_tone", ["Modern", "Authentic"]),
+                    content_style_preferences=llm_dna.get("content_style_preferences", ["Review", "Vlog"]),
+                    price_positioning=llm_dna.get("price_positioning", "Mid-Range / Accessible"),
+                    average_price_thb=int(llm_dna.get("average_price_thb") or 500),
+                    thai_keywords=llm_dna.get("thai_keywords", ["รีวิว", "ป้ายยา"]),
+                    scraped_sources=scraped_sources or ["Gemini 3.5 Flash-Lite Ingestion"],
+                )
+
+        # 4. Fallback to heuristic synthesis if LLM not reachable
         return self._synthesize_brand_dna(
             brand_name=brand_name,
             website_url=req.website_url or "",
