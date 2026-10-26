@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Convert Cake — Thai TikTok KOL Matcher",
-  description: "AI Automation Engine for Thai TikTok Influencer Discovery, Hybrid Scoring & Campaign Matching",
+  title: "Convert Cake — Thai TikTok KOL Performance Matcher",
+  description: "Performance-driven TikTok Influencer Intelligence & Anti-Spam Matching Engine for Thai Brands by Convert Cake",
 };
 
 export default function RootLayout({
@@ -12,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-slate-950 text-slate-100">
-      <body className="min-h-full flex flex-col font-sans antialiased selection:bg-rose-500 selection:text-white">
+    <html lang="th" className="h-full bg-[#030712] text-slate-100">
+      <body className="min-h-full flex flex-col font-sans antialiased selection:bg-[#0536d2] selection:text-white">
         {children}
       </body>
     </html>

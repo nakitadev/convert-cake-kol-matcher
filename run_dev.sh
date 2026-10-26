@@ -10,7 +10,7 @@ echo "=== Starting Convert Cake Thai TikTok KOL Matcher ==="
 echo "[1/2] Starting FastAPI Backend on http://localhost:8000..."
 source venv/bin/activate
 export PYTHONPATH="$PROJECT_DIR/backend:$PROJECT_DIR"
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir backend/app &
 BACKEND_PID=$!
 
 # 2. Start Frontend
