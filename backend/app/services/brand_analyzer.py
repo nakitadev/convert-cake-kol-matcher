@@ -80,23 +80,31 @@ class BrandAnalyzer:
                 fb_url=req.facebook_url or "",
             )
             if llm_dna:
+                vertical = llm_dna.get("vertical")
+                if not vertical:
+                    raise RuntimeError(f"Gemini LLM failed to identify brand vertical for '{brand_name}'. Zero-Hardcode Policy forbids fallback defaults.")
+                
+                thai_keywords = llm_dna.get("thai_keywords")
+                if not thai_keywords or not isinstance(thai_keywords, list):
+                    raise RuntimeError(f"Gemini LLM failed to return thai_keywords for '{brand_name}'. Zero-Hardcode Policy forbids fallback defaults.")
+
                 raw_id = re.sub(r'[^a-zA-Z0-9]', '', brand_name.lower())[:15] or "brand"
                 return BrandDNA(
                     id=f"live-{raw_id}",
-                    brand_name=llm_dna.get("brand_name", brand_name),
+                    brand_name=llm_dna.get("brand_name") or brand_name,
                     website_url=req.website_url or "",
                     facebook_url=req.facebook_url or "",
-                    vertical=llm_dna.get("vertical", "General Retail & Lifestyle"),
-                    sub_category=llm_dna.get("sub_category", "Specialty Consumer Goods"),
-                    brand_summary=llm_dna.get("brand_summary", f"{brand_name} Brand Profile"),
-                    target_audience=llm_dna.get("target_audience", "Thai consumer audience"),
-                    target_age_range=llm_dna.get("target_age_range", "20-35"),
-                    target_locations=llm_dna.get("target_locations", ["Bangkok", "Thailand"]),
-                    brand_tone=llm_dna.get("brand_tone", ["Modern", "Authentic"]),
-                    content_style_preferences=llm_dna.get("content_style_preferences", ["Honest Review", "Vlog"]),
-                    price_positioning=llm_dna.get("price_positioning", "Mid-Range / Accessible"),
-                    average_price_thb=int(llm_dna.get("average_price_thb") or 500),
-                    thai_keywords=llm_dna.get("thai_keywords", [brand_name, "รีวิว", "ป้ายยา"]),
+                    vertical=vertical,
+                    sub_category=llm_dna.get("sub_category") or vertical,
+                    brand_summary=llm_dna.get("brand_summary") or f"{brand_name} ({vertical})",
+                    target_audience=llm_dna.get("target_audience") or "Thai consumer audience",
+                    target_age_range=llm_dna.get("target_age_range") or "All Ages",
+                    target_locations=llm_dna.get("target_locations") or ["Thailand"],
+                    brand_tone=llm_dna.get("brand_tone") or ["Professional"],
+                    content_style_preferences=llm_dna.get("content_style_preferences") or ["Short-Form"],
+                    price_positioning=llm_dna.get("price_positioning") or "Dynamic",
+                    average_price_thb=int(llm_dna.get("average_price_thb") or 0),
+                    thai_keywords=thai_keywords,
                     scraped_sources=scraped_sources or ["Live Web Ingestion & Gemini 3.5 Flash-Lite"],
                 )
 

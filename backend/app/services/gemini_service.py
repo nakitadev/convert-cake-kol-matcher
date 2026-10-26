@@ -106,17 +106,17 @@ Scraped Context:
 Respond ONLY with a valid JSON object matching this schema:
 {{
   "brand_name": "{brand_name}",
-  "vertical": "One of: 'Beauty & Skincare' | 'Cafe / F&B & Lifestyle' | 'Gadgets / Home & Living'",
-  "sub_category": "Specific niche (e.g. Dermocosmetics, Matcha Specialty, Ergonomic Desks)",
+  "vertical": "Primary industry vertical identified from content (e.g. Beauty & Skincare, Food & Beverage, Tech & Ergonomics, Fashion & Apparel, Lifestyle, etc.)",
+  "sub_category": "Specific niche (e.g. Dermocosmetics, Specialty Coffee, Standing Desks, Streetwear)",
   "brand_summary": "2-3 sentence strategic agency summary in English or Thai",
   "target_audience": "Detailed target demographic and lifestyle in Thailand",
   "target_age_range": "e.g. '18-24', '22-35', '28-45'",
-  "target_locations": ["Bangkok", "Nonthaburi", "Chiang Mai"],
-  "brand_tone": ["Friendly", "Scientific", "Aesthetic"],
-  "content_style_preferences": ["GRWM", "Honest Review", "Aesthetic B-Roll"],
+  "target_locations": ["Bangkok", "Thailand"],
+  "brand_tone": ["Authentic", "Modern"],
+  "content_style_preferences": ["Review", "Short-Form"],
   "price_positioning": "One of: 'Budget / Mass' | 'Mid-Range / Accessible' | 'Premium / Masstige' | 'Luxury / High-End'",
-  "average_price_thb": 590,
-  "thai_keywords": ["5-8 Thai search tags and hashtags without #, e.g. สกินแคร์, ผิวแพ้ง่าย, ป้ายยา"]
+  "average_price_thb": 0,
+  "thai_keywords": ["5-8 high-intent Thai TikTok search tags and keywords without # extracted directly from brand context"]
 }}
 """
         try:

@@ -165,3 +165,24 @@ def test_fastapi_analyze_endpoint():
     data = res.json()
     assert "After You" in data["brand_name"]
     assert "thai_keywords" in data
+
+
+@pytest.mark.asyncio
+async def test_zero_hardcode_discovery_policy():
+    from app.workflow.graph import discover_candidates_node
+    import pytest
+
+    # Zero-Hardcode: missing brand_dna or vertical must fail with ValueError, NOT fall back to 'Beauty & Skincare'
+    with pytest.raises(ValueError, match="BrandDNA vertical is required"):
+        await discover_candidates_node({"brand_dna": None})
+
+    bad_dna = BrandDNA(
+        id="test",
+        brand_name="Test",
+        vertical="",
+        brand_summary="test",
+        target_audience="test",
+        thai_keywords=[],
+    )
+    with pytest.raises(ValueError, match="BrandDNA vertical is required"):
+        await discover_candidates_node({"brand_dna": bad_dna})

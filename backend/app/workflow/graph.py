@@ -57,8 +57,15 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
     trace.append("Node 2: discover_candidates_node started")
 
     brand_dna = state.get("brand_dna")
-    vertical = brand_dna.vertical if brand_dna else "Beauty & Skincare"
-    keywords = brand_dna.thai_keywords if brand_dna and brand_dna.thai_keywords else ["รีวิว", "ป้ายยา"]
+    if not brand_dna or not brand_dna.vertical:
+        raise ValueError("BrandDNA vertical is required. Zero-Hardcode Policy forbids fallback defaults.")
+    if not brand_dna.thai_keywords:
+        raise ValueError("BrandDNA thai_keywords is required. Zero-Hardcode Policy forbids fallback defaults.")
+
+    vertical = brand_dna.vertical
+    keywords = [k.lstrip('#').strip() for k in brand_dna.thai_keywords if k and k.lstrip('#').strip()]
+    if not keywords:
+        raise ValueError("No valid Thai keywords found in BrandDNA. Zero-Hardcode Policy forbids fallback defaults.")
 
     apify = get_apify_service()
     candidates = []

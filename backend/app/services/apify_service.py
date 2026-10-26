@@ -27,7 +27,7 @@ class ApifyTikTokService:
         return bool(self.api_token and len(self.api_token.strip()) > 5)
 
     async def search_live_kols_by_hashtags(
-        self, hashtags: List[str], vertical: str = "Beauty & Skincare", limit_creators: int = 12
+        self, hashtags: List[str], vertical: str, limit_creators: int = 12
     ) -> List[KOLProfile]:
         """
         Search live TikTok creators using Apify actor by hashtags.
@@ -39,7 +39,7 @@ class ApifyTikTokService:
 
         clean_tags = [t.lstrip('#').strip() for t in hashtags if t and t.lstrip('#').strip()]
         if not clean_tags:
-            clean_tags = ["รีวิว", "ป้ายยา"]
+            raise ValueError("Hashtags list cannot be empty. Zero-Hardcode Policy forbids fallback tags.")
 
         # Query primary hashtag with 5 videos for fast live scraping
         query_tags = clean_tags[:1]
@@ -181,33 +181,29 @@ class ApifyTikTokService:
                         if clean_c:
                             sample_comments.append(f"สนใจตามคลิป: \"{clean_c[:50]}...\"")
 
-                # Dynamic creator persona and pricing derived from real captions & bio
-                content_corpus = f"{bio} {' '.join(captions)}".lower()
-                if any(w in content_corpus for w in ["สกินแคร์", "ผิว", "สิว", "หน้า", "beauty", "skincare", "ครีม"]):
-                    creator_persona = "Thai Skincare & Beauty Specialist"
-                    typical_price_tier = "Mid-Range / Accessible"
-                    avg_price = 690
-                    styles = ["Skincare Routine", "Honest Ingredient Review", "Before-After Showcase"]
-                elif any(w in content_corpus for w in ["อาหาร", "กิน", "คาเฟ่", "อร่อย", "food", "cafe", "ขนม", "ร้านอาหาร"]):
-                    creator_persona = "Bangkok Cafe & Foodie Explorer"
-                    typical_price_tier = "Budget / Mass"
-                    avg_price = 280
-                    styles = ["Cafe Hopping Vlog", "Taste-Test Review", "Food Guide"]
-                elif any(w in content_corpus for w in ["โต๊ะ", "เก้าอี้", "คอม", "ไอที", "tech", "gadget", "ปวดหลัง", "wfh", "จัดโต๊ะ"]):
-                    creator_persona = "Ergonomics & Tech Desk Specialist"
+                # Dynamic creator persona and pricing derived strictly from real captions & bio (Zero-Hardcode)
+                import re
+                # Extract actual prices mentioned in video captions
+                detected_prices = []
+                for c in captions:
+                    for p in re.findall(r'(\d[\d,]*)\s*(?:บาท|บ\.|.-|thb)', c, re.IGNORECASE):
+                        val = int(p.replace(',', ''))
+                        if 20 <= val <= 100000:
+                            detected_prices.append(val)
+                
+                avg_price = int(sum(detected_prices) / len(detected_prices)) if detected_prices else 0
+                if avg_price >= 2000:
                     typical_price_tier = "Premium / Masstige"
-                    avg_price = 2900
-                    styles = ["Desk Setup Tour", "Ergonomic Comparison", "Tech Teardown"]
-                elif any(w in content_corpus for w in ["เสื้อผ้า", "แฟชั่น", "แต่งตัว", "ootd", "fashion", "กระเป๋า"]):
-                    creator_persona = "Thai Fashion & OOTD Stylist"
+                elif avg_price >= 500:
                     typical_price_tier = "Mid-Range / Accessible"
-                    avg_price = 850
-                    styles = ["OOTD Lookbook", "Mix & Match Tutorial", "Haul & Try-On"]
+                elif avg_price > 0:
+                    typical_price_tier = "Budget / Mass"
                 else:
-                    creator_persona = f"Thai {vertical} Content Creator"
-                    typical_price_tier = "Mid-Range / Accessible"
-                    avg_price = 490
-                    styles = ["Honest Review", "Tutorial", "Vlog"]
+                    typical_price_tier = "General / Organic"
+
+                creator_persona = bio.strip() if bio.strip() else f"@{handle} — Thai {vertical} Creator"
+                tags_in_vids = [t for v in video_metrics for t in v.hashtags if t]
+                styles = list(dict.fromkeys(tags_in_vids[:4])) if tags_in_vids else ["Short-Form Video", "Review"]
 
                 profiles.append(
                     KOLProfile(

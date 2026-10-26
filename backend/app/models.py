@@ -14,18 +14,18 @@ class BrandDNA(BaseModel):
     brand_name: str = Field(..., description="Brand name")
     website_url: str = Field(default="", description="Website URL")
     facebook_url: str = Field(default="", description="Facebook Page URL")
-    vertical: str = Field(..., description="Primary industry vertical (e.g., Beauty & Skincare, Cafe / F&B & Lifestyle, Gadgets / Home & Living)")
+    vertical: str = Field(..., description="Primary industry vertical extracted dynamically from brand data")
     sub_category: str = Field(default="", description="Specific product or service category")
     brand_summary: str = Field(..., description="Concise summary of the brand value proposition and products")
     target_audience: str = Field(..., description="Primary target demographic & psychographic in Thailand")
-    target_age_range: str = Field(default="20-34", description="Target age range")
-    target_locations: List[str] = Field(default_factory=lambda: ["Bangkok", "Thailand"], description="Target geographic regions in Thailand")
+    target_age_range: str = Field(default="", description="Target age range")
+    target_locations: List[str] = Field(default_factory=list, description="Target geographic regions in Thailand")
     brand_tone: List[str] = Field(default_factory=list, description="Brand tone and personality traits")
     content_style_preferences: List[str] = Field(default_factory=list, description="Desired TikTok content formats")
-    price_positioning: Literal["Budget / Mass", "Mid-Range / Accessible", "Premium / Masstige", "Luxury / High-End"] = Field(
-        default="Mid-Range / Accessible", description="Product price tier positioning"
+    price_positioning: Literal["Budget / Mass", "Mid-Range / Accessible", "Premium / Masstige", "Luxury / High-End", "Dynamic"] = Field(
+        default="Dynamic", description="Product price tier positioning"
     )
-    average_price_thb: int = Field(default=590, description="Representative product price in THB")
+    average_price_thb: int = Field(default=0, description="Representative product price in THB")
     thai_keywords: List[str] = Field(default_factory=list, description="Thai search keywords & hashtags for TikTok discovery")
     scraped_sources: List[str] = Field(default_factory=list, description="Sources used to construct Brand DNA")
 

@@ -22,12 +22,13 @@
 
 ---
 
-### 3. Strict Zero-Mock & Zero-Fallback Policy (กฎเหล็ก)
-- **ห้ามใช้ Mock Data หรือ Fallback โดยเด็ดขาด 100%**
+### 3. Strict Zero-Mock, Zero-Fallback & Zero-Hardcode Policy (กฎเหล็ก)
+- **ห้ามใช้ Mock Data, Fallback หรือ Hardcoded Defaults โดยเด็ดขาด 100% (Zero-Mock & Zero-Hardcode Policy)**
+- **ห้ามใส่ Hardcoded Else/Default Strings** ในโค้ด เช่น `vertical = ... if ... else "Beauty & Skincare"`, `clean_tags = ["รีวิว", "ป้ายยา"]` หรือค่าคงที่อื่นๆ หากข้อมูลขาดหายหรือไม่ส่งมา ต้อง Raise Error (`ValueError` / `RuntimeError`) อย่างตรงไปตรงมา ห้ามแอบเติม Default แทนเด็ดขาด
+- **ห้ามใส่ Hardcoded Heuristic Numbers / Tables** เช่น การเดาราคาคงที่ 690, 280, 2900 หรือการเขียน `if "beauty" in ... elif "f&b" in ... else ...` ทุกอย่างต้องสกัดจากข้อมูลจริง (Regex ดึงราคาที่ระบุในคลิปจริง, ใช้ Bio/Hashtags ของครีเอเตอร์จริง, Brand Category จริงจาก LLM)
 - ห้ามใช้ Seed Pool (`thai_kols_seed.json`) มาเป็น Fallback เมื่อค้นหาไม่เจอ
 - ห้ามใช้ Hardcoded Comments ใน `apify_service.py` ทุกคอมเมนต์ต้องมาจากการสังเคราะห์สดผ่าน Gemini จาก Live Video Captions
-- ห้ามใช้ Template Campaign Hooks แบบตายตัว ต้องปรับไดนามิกตาม Brand DNA และ Category จริง
-- ห้ามใช้ Heuristic ตรวจสอบแบรนด์แบบเดาสุ่ม
+- ห้ามใช้ Template Campaign Hooks แบบตายตัว ต้องสร้างแบบไดนามิก 100% จาก Context ของวิดีโอจริงและ Brand DNA จริง
 - **Fail-Loud / Transparent Reporting:** หาก Apify หรือ Gemini ขัดข้อง ให้รายงาน Error สดตามจริงบน UI เพื่อให้ผู้ใช้ทราบสถานะจริงของ API เสมอ
 
 ---
