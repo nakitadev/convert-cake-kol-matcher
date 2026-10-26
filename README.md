@@ -4,16 +4,44 @@ AI Automation & Influencer Matching Prototype for Digital Marketing Agencies.
 
 ---
 
-## 🎧 Quick Start Guide
+## 🎧 Quick Start & Demo Launch Guide
 
-### 1-Click Launch (All Services)
+### Option A: Launch with Docker Compose (Recommended for Demo)
+Spin up both FastAPI backend and Next.js frontend with isolated networking and health checks in 1 command:
+
 ```bash
-cd /home/ubuntu/projects/convert-cake-kol-matcher
-./run_dev.sh
+# 1. Prepare environment variables
+cp .env.example .env
+# Edit .env and fill in GEMINI_API_KEY and APIFY_API_TOKEN
+
+# 2. Build & launch services
+docker compose up --build
 ```
 - **Dashboard UI:** `http://localhost:3000`
 - **Swagger API Docs:** `http://localhost:8000/docs`
 - **Health Check:** `http://localhost:8000/api/health`
+
+To stop the demo:
+```bash
+docker compose down
+```
+
+---
+
+### Option B: Single Fullstack Docker Container
+Alternatively, run the entire stack in one container:
+```bash
+docker build -t convert-cake .
+docker run -p 3000:3000 -p 8000:8000 --env-file .env convert-cake
+```
+
+---
+
+### Option C: Local Dev Script (Without Docker)
+```bash
+cd /home/ubuntu/projects/convert-cake-kol-matcher
+./run_dev.sh
+```
 
 ---
 

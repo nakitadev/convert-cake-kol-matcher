@@ -4,7 +4,16 @@ set -e
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
+# Check if docker flag requested
+if [ "$1" == "--docker" ] || [ "$1" == "docker" ]; then
+  echo "🐳 Launching Convert Cake via Docker Compose..."
+  docker compose up --build
+  exit 0
+fi
+
 echo "=== Starting Convert Cake Thai TikTok KOL Matcher ==="
+echo "Tip: You can also launch with Docker Compose using: docker compose up --build (or ./run_dev.sh --docker)"
+echo ""
 
 # 1. Start Backend
 echo "[1/2] Starting FastAPI Backend on http://localhost:8000..."

@@ -3,10 +3,15 @@ from pathlib import Path
 from typing import List, Optional
 from dotenv import load_dotenv
 
-# Load backend/.env
+# Load .env (supports backend/.env or root .env, container env vars take precedence)
 env_path = Path(__file__).resolve().parent.parent / ".env"
+root_env = Path(__file__).resolve().parents[2] / ".env"
 if env_path.exists():
-    load_dotenv(dotenv_path=env_path, override=True)
+    load_dotenv(dotenv_path=env_path, override=False)
+elif root_env.exists():
+    load_dotenv(dotenv_path=root_env, override=False)
+else:
+    load_dotenv(override=False)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
