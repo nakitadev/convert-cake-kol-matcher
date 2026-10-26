@@ -36,7 +36,7 @@ class ApifyTikTokService:
             logger.warning("APIFY_API_TOKEN not configured.")
             return []
 
-        clean_tags = [re.sub(r'[^a-zA-Z0-9฀-๿]', '', t) for t in hashtags if t.strip()]
+        clean_tags = [t.lstrip('#').strip() for t in hashtags if t and t.lstrip('#').strip()]
         if not clean_tags:
             clean_tags = ["รีวิว", "ป้ายยา"]
 
