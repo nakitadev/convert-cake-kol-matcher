@@ -8,7 +8,7 @@ env_path = Path(__file__).resolve().parent.parent / ".env"
 if env_path.exists():
     load_dotenv(dotenv_path=env_path, override=True)
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.models import (
@@ -17,10 +17,8 @@ from app.models import (
     MatchRequest,
     AutoMatchRequest,
     MatchResponse,
-    KOLProfile,
 )
 from app.services.brand_analyzer import get_brand_analyzer
-from app.services.kol_repository import get_kol_repository
 from app.workflow.graph import run_full_matching
 
 app = FastAPI(
@@ -46,12 +44,11 @@ async def root():
         "version": "1.0.0",
         "market": "Thailand",
         "endpoints": [
-            "/api/presets",
+            "/api/health",
             "/api/analyze-brand",
             "/api/match-kols",
             "/api/auto-match",
-            "/api/kols",
-        ]
+        ],
     }
 
 
@@ -60,16 +57,10 @@ async def health():
     return {"status": "healthy", "service": "kol-matcher-backend"}
 
 
-@app.get("/api/presets", response_model=List[BrandDNA])
-async def list_presets():
-    analyzer = get_brand_analyzer()
-    return analyzer.get_presets()
-
-
 @app.post("/api/analyze-brand", response_model=BrandDNA)
 async def analyze_brand(req: BrandAnalyzeRequest):
     """
-    Stage 1: Extract Brand DNA from client website/Facebook page or preset.
+    Stage 1: Extract Brand DNA from client website/Facebook page with Gemini 3.5 Flash Lite.
     Supports Human-in-the-Loop review & editing prior to Stage 2.
     """
     try:
@@ -83,7 +74,7 @@ async def analyze_brand(req: BrandAnalyzeRequest):
 @app.post("/api/match-kols", response_model=MatchResponse)
 async def match_kols(req: MatchRequest):
     """
-    Stage 2: Evaluate & rank Thai TikTok KOLs against confirmed Brand DNA
+    Stage 2: Evaluate & rank live Thai TikTok creators against Brand DNA
     using the 3-part Hybrid Scoring Engine (Relevance 45%, Engagement 35%, Multi-Signal Audience 20%).
     """
     try:
@@ -102,14 +93,13 @@ async def match_kols(req: MatchRequest):
 @app.post("/api/auto-match", response_model=MatchResponse)
 async def auto_match(req: AutoMatchRequest):
     """
-    1-Click End-to-End matching pipeline combining Stage 1 & Stage 2 in LangGraph.
+    1-Click End-to-End matching pipeline combining Stage 1 & Stage 2 via LangGraph.
     """
     try:
         brand_req = BrandAnalyzeRequest(
             brand_name=req.brand_name,
             website_url=req.website_url,
             facebook_url=req.facebook_url,
-            preset_id=req.preset_id,
             custom_notes=req.custom_notes,
         )
         response = await run_full_matching(
@@ -121,21 +111,6 @@ async def auto_match(req: AutoMatchRequest):
         raise HTTPException(status_code=500, detail=f"Auto matching failed: {str(e)}")
 
 
-@app.get("/api/kols", response_model=List[KOLProfile])
-async def list_kols(
-    vertical: Optional[str] = Query(None),
-    tier: Optional[str] = Query(None),
-):
-    repo = get_kol_repository()
-    all_kols = repo.get_all()
-    if vertical:
-        all_kols = [k for k in all_kols if vertical.lower() in k.vertical.lower()]
-    if tier:
-        all_kols = [k for k in all_kols if tier.lower() in k.tier.lower()]
-    return all_kols
-
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-

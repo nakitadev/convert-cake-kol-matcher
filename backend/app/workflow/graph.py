@@ -10,7 +10,6 @@ from app.models import (
     MatchResponse,
 )
 from app.services.brand_analyzer import get_brand_analyzer
-from app.services.kol_repository import get_kol_repository
 from app.services.scoring_engine import get_scoring_engine
 from app.services.apify_service import get_apify_service
 
@@ -41,7 +40,7 @@ async def analyze_brand_node(state: MatcherState) -> Dict[str, Any]:
     analyzer = get_brand_analyzer()
     brand_dna = await analyzer.analyze(req)
 
-    trace.append(f"BrandDNA synthesized for '{brand_dna.brand_name}' ({brand_dna.vertical})")
+    trace.append(f"BrandDNA analyzed for '{brand_dna.brand_name}' ({brand_dna.vertical})")
     return {"brand_dna": brand_dna, "trace": trace}
 
 
@@ -51,14 +50,14 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
 
     brand_dna = state.get("brand_dna")
     vertical = brand_dna.vertical if brand_dna else "Beauty & Skincare"
-    keywords = brand_dna.thai_keywords if brand_dna and brand_dna.thai_keywords else ["รีวิวบิวตี้", "ป้ายยา"]
+    keywords = brand_dna.thai_keywords if brand_dna and brand_dna.thai_keywords else ["รีวิว", "ป้ายยา"]
 
     apify = get_apify_service()
     candidates = []
 
-    # 1. Attempt Live TikTok Discovery via Apify Scraper if configured
+    # Live TikTok Discovery via Apify Scraper (Zero-Mock)
     if apify.is_configured:
-        trace.append(f"Querying live TikTok creators via Apify for hashtags: {keywords[:2]}")
+        trace.append(f"Querying live TikTok creators via Apify for hashtag: #{keywords[0]}")
         try:
             live_candidates = await apify.search_live_kols_by_hashtags(
                 hashtags=keywords,
@@ -74,7 +73,7 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
 
     if not candidates:
         trace.append("No live TikTok creators returned for given keywords")
-        raise RuntimeError(f"Zero live TikTok creators matched for hashtags {keywords}. No mock fallback allowed.")
+        raise RuntimeError(f"Zero live TikTok creators matched for hashtags {keywords[:3]}. Pure live scraping returned 0 results.")
 
     return {"candidates": candidates, "trace": trace}
 
@@ -82,14 +81,7 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
 async def enrich_apify_node(state: MatcherState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
     trace.append("Node 3: enrich_apify_node started")
-
-    candidates = state.get("candidates", [])
-    has_live = any(c.id.startswith("live_") for c in candidates)
-    if has_live:
-        apify_status = "Live TikTok Scraper Telemetry (Apify Clockworks Active)"
-    else:
-        apify_status = "Pre-indexed verified Thai TikTok pool (Resilient Fallback)"
-
+    apify_status = "Live TikTok Scraper Telemetry (Apify Clockworks Active)"
     trace.append(f"Apify telemetry status: {apify_status}")
     return {"apify_status": apify_status, "trace": trace}
 
@@ -101,7 +93,7 @@ def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
     brand_dna = state.get("brand_dna")
     candidates = state.get("candidates", [])
     top_k = state.get("top_k", 8)
-    apify_status = state.get("apify_status", "Local Pre-Indexed Thai Pool")
+    apify_status = state.get("apify_status", "Live TikTok Scraper")
 
     scoring = get_scoring_engine()
     ranked_results: List[RankedKOL] = []
@@ -110,13 +102,14 @@ def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
     for kol in candidates:
         total_score, breakdown, why_text, hooks = scoring.evaluate_kol(kol, brand_dna)
         ranked_item = RankedKOL(
-            rank=1, # will set to final index after sort
+            rank=1,
             kol=kol,
             total_match_score=total_score,
             score_breakdown=breakdown,
             why_this_kol=why_text,
             thai_campaign_hooks=hooks,
             enrichment_source=apify_status,
+            llm_generator_model="gemini-3.5-flash-lite",
         )
         if breakdown.affiliate_spam_penalty_applied:
             spam_traps.append(ranked_item)
@@ -196,7 +189,7 @@ async def run_full_matching(
     return MatchResponse(
         brand_dna=final_state["brand_dna"],
         total_candidates_evaluated=len(final_state.get("candidates", [])),
-        apify_enrichment_status=final_state.get("apify_status", "Completed"),
+        apify_enrichment_status=final_state.get("apify_status", "Live TikTok Scraper"),
         ranked_kols=final_state.get("ranked_kols", []),
         penalized_spam_kols=final_state.get("penalized_spam_kols", []),
         workflow_trace=final_state.get("trace", []),

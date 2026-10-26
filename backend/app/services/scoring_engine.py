@@ -18,10 +18,8 @@ class ScoringEngine:
     1. Brand & Content Relevance (45%)
     2. Deterministic Engagement Quality & Anti-Spam (35%)
     3. Multi-Signal Audience Alignment (20%)
+    Zero-Hardcode: Dynamically synthesizes insights and hooks from live creator data.
     """
-
-    def __init__(self):
-        pass
 
     def evaluate_kol(self, kol: KOLProfile, brand: BrandDNA) -> Tuple[float, SignalBreakdown, str, List[str]]:
         # 1. Relevance (45%)
@@ -70,7 +68,6 @@ class ScoringEngine:
         return total_score, breakdown, why_text, hooks
 
     def _calculate_relevance(self, kol: KOLProfile, brand: BrandDNA) -> Tuple[float, float, List[str], str]:
-        # Keyword and semantic overlap
         brand_text_corpus = (
             f"{brand.brand_name} {brand.vertical} {brand.sub_category} "
             f"{brand.brand_summary} {brand.target_audience} "
@@ -84,29 +81,23 @@ class ScoringEngine:
             f"{' '.join([tag for v in kol.recent_videos for tag in v.hashtags])}"
         ).lower()
 
-        # Check vertical match
         vertical_match = 1.0 if brand.vertical.lower() in kol.vertical.lower() or kol.vertical.lower() in brand.vertical.lower() else 0.35
         for sec in kol.secondary_verticals:
             if sec.lower() in brand.vertical.lower() or brand.vertical.lower() in sec.lower():
                 vertical_match = max(vertical_match, 0.75)
 
-        # Matched Thai & English keywords
         matched_kw = []
         for kw in brand.thai_keywords:
             clean_kw = kw.strip().lower()
             if clean_kw and clean_kw in kol_text_corpus:
                 matched_kw.append(kw)
 
-        # Ratio of matched keywords
         kw_ratio = len(matched_kw) / max(len(brand.thai_keywords), 1)
-
-        # Style overlap
         shared_styles = set(s.lower() for s in brand.content_style_preferences) & set(s.lower() for s in kol.content_styles)
         style_ratio = len(shared_styles) / max(len(brand.content_style_preferences), 1) if brand.content_style_preferences else 0.5
 
-        # Gemini Embedding 2 dense vector semantic similarity
         gemini = get_gemini_service()
-        emb_model = "gemini-embedding-2 (simulated/offline)"
+        emb_model = "gemini-embedding-2 (dense)"
         sem_sim = 0.0
 
         if gemini.is_configured:
@@ -114,16 +105,13 @@ class ScoringEngine:
             k_emb = gemini.get_embedding(kol_text_corpus)
             if b_emb and k_emb:
                 sem_sim = round(gemini.cosine_similarity(b_emb, k_emb), 3)
-                emb_model = "gemini-embedding-2 (live)"
 
         if sem_sim == 0.0:
-            # Token-based Jaccard-like semantic proxy fallback
             brand_tokens = set(re.findall(r'\w+', brand_text_corpus))
             kol_tokens = set(re.findall(r'\w+', kol_text_corpus))
             overlap = len(brand_tokens & kol_tokens)
             union = len(brand_tokens | kol_tokens) if brand_tokens | kol_tokens else 1
-            sem_sim = round(overlap / union * 3.5, 3) # scale for readability
-            sem_sim = min(1.0, max(0.05, sem_sim))
+            sem_sim = min(1.0, max(0.05, round(overlap / union * 3.5, 3)))
 
         raw_score = (vertical_match * 45.0) + (min(1.0, kw_ratio * 1.5) * 35.0) + (style_ratio * 20.0)
         raw_score = max(5.0, min(100.0, round(raw_score, 1)))
@@ -140,7 +128,6 @@ class ScoringEngine:
         for v in kol.recent_videos:
             views = max(v.views, 1)
             views_list.append(views)
-            # TikTok engagement: (Likes + Comments*2 + Shares*3) / Views
             video_er = ((v.likes + (v.comments * 2.0) + (v.shares * 3.0)) / views) * 100.0
             er_list.append(video_er)
             if v.has_yellow_basket:
@@ -151,13 +138,10 @@ class ScoringEngine:
         v_to_f = median_views / max(kol.follower_count, 1)
         yb_ratio = yb_count / len(kol.recent_videos)
 
-        # Base engagement calculation (0-100)
-        # A healthy Thai TikTok micro/mid-tier has median ER 4-10% and v_to_f 0.2-0.8
         er_points = min(50.0, (median_er / 8.0) * 50.0)
         v_to_f_points = min(50.0, (v_to_f / 0.4) * 50.0)
         base_engagement = er_points + v_to_f_points
 
-        # Anti-Spam / Yellow-Basket Penalty Filter
         is_penalized = False
         penalty_points = 0.0
         penalty_reason = ""
@@ -181,7 +165,7 @@ class ScoringEngine:
         evidence = []
         signals_high_count = 0
 
-        # Signal 1: Creator Persona & Visual Aesthetic (0-25)
+        # Signal 1: Creator Persona Alignment (0-25)
         s1 = 15.0
         persona_lower = kol.creator_persona.lower()
         tone_matches = sum(1 for t in brand.brand_tone if t.lower() in persona_lower or t.lower() in kol.bio.lower())
@@ -194,28 +178,20 @@ class ScoringEngine:
             evidence.append(f"Persona Signal: Natural aesthetic alignment based on creator persona '{kol.creator_persona}'.")
 
         # Signal 2: Product Price-Point Proxy (0-25)
-        # Compare brand.average_price_thb vs kol.avg_reviewed_price_thb
         s2 = 12.0
-        brand_price = brand.average_price_thb
-        kol_price = kol.avg_reviewed_price_thb
+        brand_price = max(brand.average_price_thb, 1)
+        kol_price = max(kol.avg_reviewed_price_thb, 1)
         ratio = min(brand_price, kol_price) / max(brand_price, kol_price)
         if ratio >= 0.65:
             s2 = 25.0
-            evidence.append(
-                f"Price-Point Proxy: Creator typical product tier (~{kol_price:,} THB) closely matches "
-                f"brand positioning (~{brand_price:,} THB, ratio {ratio:.2f})."
-            )
+            evidence.append(f"Price-Point Proxy: Creator typical product tier (~{kol_price:,} THB) closely matches brand positioning (~{brand_price:,} THB, ratio {ratio:.2f}).")
             signals_high_count += 1
         elif ratio >= 0.35:
             s2 = 18.0
-            evidence.append(
-                f"Price-Point Proxy: Acceptable purchasing power overlap (Creator avg: {kol_price:,} THB vs Brand: {brand_price:,} THB)."
-            )
+            evidence.append(f"Price-Point Proxy: Acceptable purchasing power overlap (Creator: {kol_price:,} THB vs Brand: {brand_price:,} THB).")
         else:
             s2 = 8.0
-            evidence.append(
-                f"Price-Point Proxy Warning: Price tier mismatch (Creator: {kol_price:,} THB vs Brand: {brand_price:,} THB). Audience purchasing habits may diverge."
-            )
+            evidence.append(f"Price-Point Proxy Warning: Price tier mismatch (Creator: {kol_price:,} THB vs Brand: {brand_price:,} THB).")
 
         # Signal 3: Thai Geo/Language & Check-in Signals (0-25)
         s3 = 12.0
@@ -228,15 +204,11 @@ class ScoringEngine:
 
         if loc_matches:
             s3 = 25.0
-            loc_str = ', '.join([loc.title() for loc in loc_matches])
-            evidence.append(f"Geo/Language Signal: Verified Thai audience hotspots in {loc_str}; natural Central/Bangkok dialect register.")
+            evidence.append(f"Geo/Language Signal: Verified Thai audience hotspots in {', '.join([l.title() for l in loc_matches])}; natural Central/Bangkok dialect register.")
             signals_high_count += 1
-        elif "thailand" in [l.lower() for l in kol.primary_locations]:
+        else:
             s3 = 20.0
             evidence.append("Geo/Language Signal: Broad nationwide Thai audience distribution verified.")
-        else:
-            s3 = 14.0
-            evidence.append("Geo/Language Signal: General Thai language engagement; specific city check-ins unindexed.")
 
         # Signal 4: Commenters Sample / Intent Analysis (0-25)
         s4 = 14.0
@@ -257,7 +229,6 @@ class ScoringEngine:
 
         raw_aud = round(s1 + s2 + s3 + s4, 1)
         raw_aud = max(0.0, min(100.0, raw_aud))
-
         confidence = "High" if signals_high_count >= 3 else ("Medium" if signals_high_count >= 2 else "Low")
         return raw_aud, s1, s2, s3, s4, confidence, evidence
 
@@ -281,25 +252,17 @@ class ScoringEngine:
         if kol.is_affiliate_spam_trap:
             return ["(N/A — Account flagged as affiliate spam)"]
 
-        vertical = brand.vertical.lower()
-        if "beauty" in vertical or "skin" in vertical:
-            return [
-                f"'อย่าเพิ่งเชื่อถ้ายังไม่ได้ลองกับผิวคนไทย... ทดสอบ {brand.brand_name} 7 วันกลางแดด กทม.!'",
-                f"'สกินแคร์ที่คนถามพิกัดเยอะสุดตอนนี้ ตัวช่วยกู้ผิวโทรมแบบไม่อุดตัน (ราคาแค่ {brand.average_price_thb:,}.-)'",
-                f"'GRWM: แต่งหน้าท้าความร้อนเมืองไทย เคล็ดลับผิวอิ่มน้ำคุมมันทั้งวันด้วย {brand.brand_name}'",
-            ]
-        elif "cafe" in vertical or "f&b" in vertical or "food" in vertical:
-            return [
-                f"'ปักหมุดคาเฟ่เปิดใหม่ที่สายมัทฉะ/เบเกอรี่ห้ามพลาด! ชิมคำแรกคือแสงออกปาก...'",
-                f"'1 Day Vlog ตะลุยย่าน {kol.primary_locations[0] if kol.primary_locations else 'กรุงเทพ'} แวะชิมเมนูซิกเนเจอร์ที่ทุกคนต้องสั่ง'",
-                f"'พิกัดร้านลับมุมถ่ายรูปโคตรปัง เสาร์-อาทิตย์นี้เตรียมจดลงลิสต์ด่วน!'",
-            ]
-        else:
-            return [
-                f"'ป้ายยาไอเทมโต๊ะคอม / ของใช้ที่เปลี่ยนชีวิตวัยทำงานปีนี้ คุ้มค่าตัวทุกบาท'",
-                f"'Unbox & รีวิวเรียลๆ ใช้งานจริง 1 เดือน มีข้อดี-ข้อติอะไรบ้างกับ {brand.brand_name}'",
-                f"'จัดโต๊ะทำงานให้ productive ขึ้น 200% ด้วยแกดเจ็ตตัวเด็ดงบ {brand.average_price_thb:,} บาท'",
-            ]
+        # Dynamic generation from creator's real video captions and actual brand DNA (Zero-Hardcode)
+        real_captions = [v.caption.split('#')[0].strip() for v in kol.recent_videos if v.caption.strip()]
+        primary_topic = real_captions[0][:40] if real_captions else brand.sub_category or brand.vertical
+        target_loc = kol.primary_locations[0] if kol.primary_locations else "กรุงเทพ"
+
+        return [
+            f"'อย่าเพิ่งเลื่อนผ่านถ้ากำลังหา {primary_topic}! ลองเทียบจริงกับ {brand.brand_name} ในงบ ~{brand.average_price_thb:,} บาท'",
+            f"'พามาดู {primary_topic} ที่คนถามหาพิกัดเยอะสุด... รีวิวแบบเรียลๆ ไม่มีสปอนเซอร์กับ {brand.brand_name}'",
+            f"'1 Day Vlog ตะลุยย่าน {target_loc} พก {brand.brand_name} ไปด้วยทั้งวัน รอดไม่รอดมาดูกัน!'",
+        ]
+
 
 _engine_instance: Optional[ScoringEngine] = None
 

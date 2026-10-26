@@ -2,12 +2,16 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models import BrandAnalyzeRequest, BrandDNA, MatchRequest
+from app.models import (
+    BrandAnalyzeRequest,
+    BrandDNA,
+    KOLProfile,
+    VideoMetric,
+    MatchRequest,
+)
 from app.services.brand_analyzer import get_brand_analyzer
-from app.services.kol_repository import get_kol_repository
 from app.services.scoring_engine import get_scoring_engine
 from app.services.gemini_service import get_gemini_service
-from app.workflow.graph import run_full_matching
 
 client = TestClient(app)
 
@@ -17,155 +21,147 @@ def test_root_and_health():
     assert resp.status_code == 200
     assert resp.json()["status"] == "healthy"
 
-
-def test_brand_presets_loaded():
-    resp = client.get("/api/presets")
-    assert resp.status_code == 200
-    presets = resp.json()
-    assert len(presets) >= 3
-    preset_ids = [p["id"] for p in presets]
-    assert "srichand-skincare" in preset_ids
-    assert "baantongkee-specialty-cafe" in preset_ids
+    root_resp = client.get("/")
+    assert root_resp.status_code == 200
+    assert "Convert Cake" in root_resp.json()["name"]
 
 
 @pytest.mark.asyncio
-async def test_brand_analyzer_preset():
+async def test_brand_analyzer_pure_live():
     analyzer = get_brand_analyzer()
-    req = BrandAnalyzeRequest(preset_id="srichand-skincare")
+    req = BrandAnalyzeRequest(
+        brand_name="Her Hyness Clean Skincare",
+        custom_notes="Clean dermatological skincare for sensitive skin in Bangkok, budget 400-800 THB",
+    )
     dna = await analyzer.analyze(req)
-    assert dna.brand_name.startswith("Srichand")
-    assert dna.vertical == "Beauty & Skincare"
-    assert "สกินแคร์ผิวแพ้ง่าย" in dna.thai_keywords
+    assert "Her Hyness" in dna.brand_name
+    assert len(dna.thai_keywords) >= 1
     assert dna.average_price_thb > 0
+    assert dna.id.startswith("live-")
 
 
-def test_kol_repository_loading():
-    repo = get_kol_repository()
-    kols = repo.get_all()
-    assert len(kols) >= 20
-    # Verify each KOL has direct TikTok profile link
-    for kol in kols:
-        assert kol.tiktok_url.startswith("https://www.tiktok.com/@")
-        assert kol.handle in kol.tiktok_url
-        assert len(kol.recent_videos) >= 2
+def test_scoring_engine_legit_creator():
+    scoring = get_scoring_engine()
+    brand = BrandDNA(
+        id="live-testbrand",
+        brand_name="Her Hyness",
+        vertical="Beauty & Skincare",
+        sub_category="Clean Skincare",
+        brand_summary="Clean skincare for acne-prone skin",
+        target_audience="Young Thai beauty shoppers",
+        target_locations=["Bangkok", "Thailand"],
+        brand_tone=["Trustworthy", "Modern"],
+        content_style_preferences=["Review", "Vlog"],
+        price_positioning="Mid-Range / Accessible",
+        average_price_thb=690,
+        thai_keywords=["รีวิวบิวตี้", "สกินแคร์", "ผิวแพ้ง่าย"],
+    )
+
+    kol = KOLProfile(
+        id="live_fah_beauty",
+        handle="fah_beauty",
+        display_name="Fah Skincare",
+        tiktok_url="https://www.tiktok.com/@fah_beauty",
+        vertical="Beauty & Skincare",
+        secondary_verticals=["Lifestyle"],
+        bio="รีวิวสกินแคร์ผิวแพ้ง่าย ใช้จริงทุกตัว",
+        follower_count=85000,
+        total_likes=900000,
+        tier="Micro (10K-100K)",
+        creator_persona="Authentic Skincare Reviewer",
+        content_styles=["Review", "Vlog"],
+        typical_price_tier="Mid-Range / Accessible",
+        avg_reviewed_price_thb=550,
+        primary_locations=["Bangkok", "Thailand"],
+        sample_comments=["ใช้ตามแล้วดีมาก", "ขอพิกัดหน่อยค่ะ", "ราคาเท่าไหร่คะ"],
+        recent_videos=[
+            VideoMetric(
+                video_id="v1",
+                caption="รีวิวสกินแคร์กู้ผิวโทรมใน 7 วัน",
+                hashtags=["รีวิวบิวตี้", "สกินแคร์"],
+                views=45000,
+                likes=3200,
+                comments=150,
+                shares=80,
+                has_yellow_basket=False,
+                location_tag="Bangkok, Thailand",
+            )
+        ],
+        is_affiliate_spam_trap=False,
+    )
+
+    score, breakdown, why, hooks = scoring.evaluate_kol(kol, brand)
+    assert score >= 60.0
+    assert breakdown.affiliate_spam_penalty_applied is False
+    assert breakdown.confidence_level in ["High", "Medium"]
+    assert len(hooks) == 3
+    assert "Her Hyness" in hooks[0]
+    assert "[PENALIZED]" not in why
 
 
 def test_anti_spam_yellow_basket_penalty():
-    repo = get_kol_repository()
     scoring = get_scoring_engine()
-    analyzer = get_brand_analyzer()
+    brand = BrandDNA(
+        id="live-testbrand",
+        brand_name="Test Brand",
+        vertical="Beauty & Skincare",
+        brand_summary="Testing anti spam",
+        target_audience="Thai consumers",
+        thai_keywords=["รีวิว"],
+    )
 
-    srichand = analyzer.get_presets()[0]
-    kols = repo.get_all()
+    # Spam account: 100% yellow basket, low retention
+    spam_kol = KOLProfile(
+        id="live_spam_farm",
+        handle="cheap_shop_repost",
+        display_name="Affiliate Repost Farm",
+        tiktok_url="https://www.tiktok.com/@cheap_shop_repost",
+        vertical="Beauty & Skincare",
+        bio="คลิกลิงก์ตะกร้าเหลืองเลย",
+        follower_count=50000,
+        tier="Micro (10K-100K)",
+        creator_persona="Affiliate Bot",
+        sample_comments=[],
+        recent_videos=[
+            VideoMetric(
+                video_id="v1",
+                caption="กดตะกร้าเหลืองด่วน",
+                hashtags=["ของดีบอกต่อ"],
+                views=1000,
+                likes=10,
+                comments=0,
+                shares=0,
+                has_yellow_basket=True,
+            )
+        ],
+        is_affiliate_spam_trap=True,
+    )
 
-    # Find a spam trap account
-    trap_kol = next((k for k in kols if k.is_affiliate_spam_trap), None)
-    assert trap_kol is not None, "Seed dataset must include at least one affiliate spam trap"
-
-    total_score, breakdown, why_text, hooks = scoring.evaluate_kol(trap_kol, srichand)
+    score, breakdown, why, hooks = scoring.evaluate_kol(spam_kol, brand)
     assert breakdown.affiliate_spam_penalty_applied is True
-    assert breakdown.affiliate_spam_penalty_points >= 40.0
-    assert "Penalized by Affiliate Spam Filter" in breakdown.affiliate_spam_reason
-    assert "[PENALIZED]" in why_text
+    assert breakdown.affiliate_spam_penalty_points == 55.0
+    assert "[PENALIZED]" in why
+    assert hooks == ["(N/A — Account flagged as affiliate spam)"]
 
 
-def test_legit_kol_scoring_and_signals():
-    repo = get_kol_repository()
-    scoring = get_scoring_engine()
-    analyzer = get_brand_analyzer()
-
-    srichand = analyzer.get_presets()[0]
-    kols = repo.get_all()
-
-    # Find a legitimate beauty KOL
-    fah_kol = next((k for k in kols if k.handle == "fah.skindiary"), None)
-    assert fah_kol is not None
-
-    total_score, breakdown, why_text, hooks = scoring.evaluate_kol(fah_kol, srichand)
-    assert breakdown.affiliate_spam_penalty_applied is False
-    assert total_score >= 70.0
-    assert breakdown.relevance_weighted > 0
-    assert breakdown.engagement_weighted > 0
-    assert breakdown.audience_weighted > 0
-    assert breakdown.confidence_level in ["High", "Medium"]
-    assert len(breakdown.evidence_list) >= 2
-    assert len(hooks) >= 1
-    assert "ศรีจันทร์" in hooks[0] or "สกินแคร์" in hooks[0] or "ผิวมัน" in hooks[0] or len(hooks) > 0
-
-
-@pytest.mark.asyncio
-async def test_langgraph_full_workflow():
-    analyzer = get_brand_analyzer()
-    srichand = analyzer.get_presets()[0]
-
-    response = await run_full_matching(
-        brand_dna=srichand,
-        top_k=5,
-        include_traps=True,
-    )
-
-    assert response.brand_dna.brand_name == srichand.brand_name
-    assert len(response.ranked_kols) == 5
-    # Top rank should be ordered descending
-    scores = [item.total_match_score for item in response.ranked_kols]
-    assert scores == sorted(scores, reverse=True)
-    # Spam traps separated
-    assert len(response.penalized_spam_kols) >= 1
-    assert len(response.workflow_trace) >= 4
-
-
-def test_fastapi_analyze_and_match_endpoints():
-    # 1. Test Analyze
-    analyze_res = client.post("/api/analyze-brand", json={"preset_id": "srichand-skincare"})
-    assert analyze_res.status_code == 200
-    brand_dna = analyze_res.json()
-    assert brand_dna["vertical"] == "Beauty & Skincare"
-
-    # 2. Test Match with Human-Reviewed DNA
-    match_res = client.post(
-        "/api/match-kols",
-        json={
-            "brand_dna": brand_dna,
-            "top_k": 6,
-            "include_penalized_traps": True,
-        }
-    )
-    assert match_res.status_code == 200
-    data = match_res.json()
-    assert len(data["ranked_kols"]) == 6
-    assert "total_candidates_evaluated" in data
-    assert len(data["penalized_spam_kols"]) >= 1
-
-    # 3. Test Auto Match (1-Click)
-    auto_res = client.post(
-        "/api/auto-match",
-        json={
-            "preset_id": "baantongkee-specialty-cafe",
-            "top_k": 4,
-        }
-    )
-    assert auto_res.status_code == 200
-    auto_data = auto_res.json()
-    assert auto_data["brand_dna"]["vertical"] == "Cafe / F&B & Lifestyle"
-    assert len(auto_data["ranked_kols"]) == 4
-
-
-def test_gemini_service_embedding_and_llm():
+def test_gemini_service_cosine_math():
     gemini = get_gemini_service()
-    assert gemini.embedding_model == "gemini-embedding-2"
-    assert "gemini" in gemini.llm_model
-    # Cosine similarity mathematical consistency
     v1 = [1.0, 0.0, 0.0]
     v2 = [1.0, 0.0, 0.0]
     v3 = [0.0, 1.0, 0.0]
     assert gemini.cosine_similarity(v1, v2) == 1.0
-    assert gemini.cosine_similarity(v1, v3) == 0.5 # mapped to [0, 1] range
-    # Verify scoring engine recorded gemini embedding model
-    scoring = get_scoring_engine()
-    analyzer = get_brand_analyzer()
-    repo = get_kol_repository()
-    kol = repo.get_all()[0]
-    brand = analyzer.get_presets()[0]
-    _, breakdown, _, _ = scoring.evaluate_kol(kol, brand)
-    assert "gemini-embedding-2" in breakdown.embedding_model
+    assert gemini.cosine_similarity(v1, v3) == 0.5
 
+
+def test_fastapi_analyze_endpoint():
+    res = client.post(
+        "/api/analyze-brand",
+        json={
+            "brand_name": "After You",
+            "custom_notes": "Bangkok dessert cafe Kakigori Shibuya toast",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert "After You" in data["brand_name"]
+    assert "thai_keywords" in data

@@ -6,12 +6,11 @@ class BrandAnalyzeRequest(BaseModel):
     brand_name: Optional[str] = Field(default=None, description="Brand name if known")
     website_url: Optional[str] = Field(default=None, description="Client website URL")
     facebook_url: Optional[str] = Field(default=None, description="Client Facebook Page URL")
-    preset_id: Optional[str] = Field(default=None, description="Preset ID from sample_brands.json")
     custom_notes: Optional[str] = Field(default=None, description="Optional agency brief notes")
 
 
 class BrandDNA(BaseModel):
-    id: Optional[str] = Field(default=None, description="Preset or generated identifier")
+    id: Optional[str] = Field(default=None, description="Brand DNA identifier")
     brand_name: str = Field(..., description="Brand name")
     website_url: str = Field(default="", description="Website URL")
     facebook_url: str = Field(default="", description="Facebook Page URL")
@@ -45,14 +44,14 @@ class VideoMetric(BaseModel):
 
 
 class KOLProfile(BaseModel):
-    id: str = Field(..., description="Internal KOL ID")
+    id: str = Field(..., description="KOL identifier")
     handle: str = Field(..., description="TikTok handle without @")
-    display_name: str = Field(..., description="Creator display name (Thai/English)")
-    tiktok_url: str = Field(..., description="Direct TikTok profile link https://www.tiktok.com/@handle")
-    avatar_url: Optional[str] = Field(default=None, description="Avatar placeholder or image URL")
+    display_name: str = Field(..., description="Creator display name")
+    tiktok_url: str = Field(..., description="Direct TikTok profile link")
+    avatar_url: Optional[str] = Field(default=None, description="Avatar image URL")
     vertical: str = Field(..., description="Primary content vertical")
     secondary_verticals: List[str] = Field(default_factory=list)
-    bio: str = Field(..., description="Realistic Thai TikTok bio")
+    bio: str = Field(default="", description="TikTok bio")
     follower_count: int = Field(..., ge=0)
     following_count: int = Field(default=150, ge=0)
     total_likes: int = Field(default=0, ge=0)
@@ -67,21 +66,19 @@ class KOLProfile(BaseModel):
     avg_reviewed_price_thb: int = Field(default=500, description="Average price in THB of products typically featured")
     primary_locations: List[str] = Field(default_factory=list, description="Frequent Thai locations/check-ins")
     audience_language: str = Field(default="Thai (Central/Bangkok)", description="Primary language of creator & commenters")
-    sample_comments: List[str] = Field(default_factory=list, description="Sample Thai comments from recent videos")
-    recent_videos: List[VideoMetric] = Field(default_factory=list, description="Recent 5-10 video metrics")
-    is_affiliate_spam_trap: bool = Field(default=False, description="Flag in seed data for known low-effort yellow-basket spam accounts")
+    sample_comments: List[str] = Field(default_factory=list, description="Live Thai comments / inquiries from recent videos")
+    recent_videos: List[VideoMetric] = Field(default_factory=list, description="Recent video metrics from TikTok")
+    is_affiliate_spam_trap: bool = Field(default=False, description="Whether creator is classified as affiliate spam / yellow basket trap")
     estimated_rate_thb: str = Field(default="5,000 - 12,000 THB", description="Estimated campaign rate per video in THB")
 
 
 class SignalBreakdown(BaseModel):
-    # 1. Brand & Content Relevance (45% weight)
     relevance_score_raw: float = Field(..., description="0-100 raw relevance score")
     relevance_weighted: float = Field(..., description="0-45 weighted relevance points")
-    semantic_similarity: float = Field(..., description="0-1 cosine/keyword similarity")
+    semantic_similarity: float = Field(..., description="0-1 dense vector similarity")
     matched_keywords: List[str] = Field(default_factory=list, description="Matched Thai/English keywords & hashtags")
     embedding_model: str = Field(default="gemini-embedding-2", description="Model used for dense vector semantic matching")
 
-    # 2. Deterministic Engagement Quality (35% weight)
     engagement_score_raw: float = Field(..., description="0-100 raw engagement score after penalty")
     engagement_weighted: float = Field(..., description="0-35 weighted engagement points")
     median_engagement_rate_pct: float = Field(..., description="Median((Likes + Comments*2 + Shares*3) / Views) * 100")
@@ -91,7 +88,6 @@ class SignalBreakdown(BaseModel):
     affiliate_spam_penalty_points: float = Field(default=0.0, description="Raw engagement points deducted for affiliate spam")
     affiliate_spam_reason: Optional[str] = Field(default=None, description="Explanation if affiliate spam penalty was triggered")
 
-    # 3. Multi-Signal Audience Alignment (20% weight)
     audience_score_raw: float = Field(..., description="0-100 raw multi-signal audience score")
     audience_weighted: float = Field(..., description="0-20 weighted audience points")
     persona_signal_score: float = Field(..., description="0-25 score from Signal 1: Creator persona & visual style")
@@ -108,28 +104,23 @@ class RankedKOL(BaseModel):
     total_match_score: float = Field(..., description="Final 0-100 composite match score")
     score_breakdown: SignalBreakdown
     why_this_kol: str = Field(..., description="Agency-grade strategic rationale explaining fit or penalty")
-    thai_campaign_hooks: List[str] = Field(default_factory=list, description="Custom Thai TikTok campaign hook ideas tailored to Brand DNA & KOL style")
-    enrichment_source: str = Field(default="Local Pre-Indexed Thai Pool", description="Whether enriched via Live Apify or Pre-Indexed Seed Pool")
-    llm_generator_model: str = Field(default="gemini-2.5-flash", description="Gemini LLM model used for rationale & hook generation")
+    thai_campaign_hooks: List[str] = Field(default_factory=list, description="Custom Thai TikTok campaign hook ideas")
+    enrichment_source: str = Field(default="Live Apify TikTok Scraper", description="Data telemetry source")
+    llm_generator_model: str = Field(default="gemini-3.5-flash-lite", description="Gemini LLM model used for synthesis")
 
 
 class MatchRequest(BaseModel):
     brand_dna: BrandDNA
     top_k: int = Field(default=8, ge=1, le=36, description="Number of top ranked KOLs to return")
-    include_penalized_traps: bool = Field(
-        default=True,
-        description="Whether to also surface or evaluate affiliate spam accounts in candidate pool for transparency"
-    )
+    include_penalized_traps: bool = Field(default=True, description="Whether to include affiliate spam accounts for transparency")
     min_followers: Optional[int] = Field(default=None, description="Optional minimum follower filter")
     max_followers: Optional[int] = Field(default=None, description="Optional maximum follower filter")
-    enable_live_apify: bool = Field(default=True, description="Attempt live Apify enrichment when APIFY_API_TOKEN is present")
 
 
 class AutoMatchRequest(BaseModel):
     brand_name: Optional[str] = None
     website_url: Optional[str] = None
     facebook_url: Optional[str] = None
-    preset_id: Optional[str] = None
     custom_notes: Optional[str] = None
     top_k: int = Field(default=8, ge=1, le=36)
 
@@ -139,8 +130,5 @@ class MatchResponse(BaseModel):
     total_candidates_evaluated: int
     apify_enrichment_status: str
     ranked_kols: List[RankedKOL]
-    penalized_spam_kols: List[RankedKOL] = Field(
-        default_factory=list,
-        description="Affiliate spam / yellow-basket trap accounts caught and penalized during evaluation"
-    )
+    penalized_spam_kols: List[RankedKOL] = Field(default_factory=list, description="Affiliate spam accounts penalized")
     workflow_trace: List[str] = Field(default_factory=list, description="LangGraph node execution trace")

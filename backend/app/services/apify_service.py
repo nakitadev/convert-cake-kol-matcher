@@ -9,15 +9,16 @@ from app.models import KOLProfile, VideoMetric
 
 logger = logging.getLogger(__name__)
 
+
 class ApifyTikTokService:
     """
-    Apify TikTok Data Extractor integration with live hashtag & search discovery
-    and graceful fallback to ensure zero downtime.
+    Apify TikTok Scraper integration with live hashtag & search discovery.
+    Pure live data extraction with zero mock / zero fallback.
     """
 
     def __init__(self, api_token: Optional[str] = None):
         self.api_token = api_token or os.environ.get("APIFY_API_TOKEN")
-        self.actor_id = "clockworks~tiktok-scraper" # Standard popular Apify actor for TikTok
+        self.actor_id = "clockworks~tiktok-scraper"
         self._cache: Dict[str, Tuple[float, List[KOLProfile]]] = {}
 
     @property
@@ -28,26 +29,26 @@ class ApifyTikTokService:
         self, hashtags: List[str], vertical: str = "Beauty & Skincare", limit_creators: int = 12
     ) -> List[KOLProfile]:
         """
-        Search live TikTok creators using Apify actor by hashtags or search terms.
-        Aggregates videos into verified KOLProfile objects with real engagement metrics.
+        Search live TikTok creators using Apify actor by hashtags.
+        Aggregates live videos into verified KOLProfile objects with real engagement metrics.
         """
         if not self.is_configured:
-            logger.info("Apify not configured, skipping live search.")
+            logger.warning("APIFY_API_TOKEN not configured.")
             return []
 
-        clean_tags = [re.sub(r'[^a-zA-Z0-9\u0E00-\u0E7F]', '', t) for t in hashtags if t.strip()]
+        clean_tags = [re.sub(r'[^a-zA-Z0-9฀-๿]', '', t) for t in hashtags if t.strip()]
         if not clean_tags:
-            clean_tags = ["รีวิวบิวตี้", "ป้ายยา"]
+            clean_tags = ["รีวิว", "ป้ายยา"]
 
-        # Take 1 primary hashtag with 5 videos for fast, responsive live scraping (<15s)
+        # Query primary hashtag with 5 videos for fast live scraping
         query_tags = clean_tags[:1]
         cache_key = f"{query_tags[0]}_{vertical}"
         now = time.time()
         if cache_key in self._cache and (now - self._cache[cache_key][0]) < 900:
-            logger.info(f"Returning cached Apify live TikTok results for {cache_key}")
+            logger.info(f"Returning cached live TikTok results for {cache_key}")
             return self._cache[cache_key][1]
 
-        url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=18"
+        url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=30"
         payload = {
             "hashtags": query_tags,
             "resultsPerPage": 5,
@@ -56,7 +57,7 @@ class ApifyTikTokService:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=20.0) as client:
+            async with httpx.AsyncClient(timeout=35.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code not in [200, 201]:
                     logger.warning(f"Apify live search returned HTTP {resp.status_code}: {resp.text[:200]}")
@@ -65,7 +66,7 @@ class ApifyTikTokService:
                 if not isinstance(items, list) or len(items) == 0:
                     return []
 
-            # Group videos by author
+            # Group live videos by creator handle
             authors_data: Dict[str, Dict[str, Any]] = {}
             for item in items:
                 author_meta = item.get("authorMeta")
@@ -79,7 +80,6 @@ class ApifyTikTokService:
                         "videos": [],
                     }
 
-                # Construct VideoMetric
                 v_id = str(item.get("id", f"v_{len(authors_data[handle]['videos'])}"))
                 caption = str(item.get("text", "")).strip()
                 v_tags = [h.get("name") if isinstance(h, dict) else str(h) for h in item.get("hashtags", [])]
@@ -103,7 +103,7 @@ class ApifyTikTokService:
                     )
                 )
 
-            # Convert to KOLProfile list
+            # Convert to verified KOLProfile objects
             profiles: List[KOLProfile] = []
             for handle, data in authors_data.items():
                 meta = data["meta"]
@@ -115,7 +115,6 @@ class ApifyTikTokService:
                 bio = meta.get("signature") or f"Thai TikTok Creator @{handle}"
                 avatar_url = meta.get("avatar") or f"https://api.dicebear.com/7.x/notionists/svg?seed={handle}"
 
-                # Tier determination
                 if followers < 10000:
                     tier = "Nano (1K-10K)"
                     est_rate = "2,000 - 5,000 THB"
@@ -129,12 +128,11 @@ class ApifyTikTokService:
                     tier = "Macro (500K+)"
                     est_rate = "50,000 - 120,000 THB"
 
-                # Check yellow basket ratio
                 yellow_count = sum(1 for v in videos if v.has_yellow_basket)
                 yellow_ratio = (yellow_count / len(videos)) if videos else 0.0
                 is_spam = yellow_ratio > 0.70 and followers > 20000
 
-                # Dynamic content-aware audience inquiries & sentiment analysis via Gemini 3.5 Flash
+                # Dynamic audience inquiries synthesized from real video captions by Gemini
                 captions = [v.caption for v in videos if v.caption]
                 sample_comments = []
                 try:
@@ -149,9 +147,9 @@ class ApifyTikTokService:
                             vertical=vertical,
                         )
                 except Exception as e:
-                    logger.warning(f"Failed to generate Gemini comments for {handle}: {e}")
+                    logger.warning(f"Gemini comments generation for {handle}: {e}")
 
-                # If Gemini returned no comments, extract direct inquiries from real video captions (Zero-Mock)
+                # Live caption extraction if Gemini returned no comments
                 if not sample_comments and captions:
                     for c in captions[:4]:
                         clean_c = c.split('#')[0].strip()
@@ -196,46 +194,6 @@ class ApifyTikTokService:
         except Exception as e:
             logger.warning(f"Apify live search failed or timed out: {e}")
             return []
-
-    async def enrich_profile(self, handle: str) -> Dict[str, Any]:
-        if not self.is_configured:
-            return {
-                "status": "fallback",
-                "message": "APIFY_API_TOKEN not set; utilizing pre-indexed verified Thai TikTok KOL pool.",
-                "source": "Local Pre-Indexed Thai Pool"
-            }
-
-        try:
-            url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=20"
-            payload = {
-                "profiles": [handle],
-                "resultsPerPage": 5,
-                "shouldDownloadVideos": False,
-                "shouldDownloadCovers": False,
-            }
-            async with httpx.AsyncClient(timeout=25.0) as client:
-                resp = await client.post(url, json=payload)
-                if resp.status_code in [200, 201]:
-                    data = resp.json()
-                    return {
-                        "status": "live_success",
-                        "message": f"Successfully fetched live TikTok telemetry via Apify for @{handle}",
-                        "source": "Live Apify TikTok Actor",
-                        "data": data
-                    }
-                else:
-                    return {
-                        "status": "api_error",
-                        "message": f"Apify API returned HTTP {resp.status_code}; fell back to local cache.",
-                        "source": "Local Pre-Indexed Thai Pool (Fallback)"
-                    }
-        except Exception as e:
-            logger.warning(f"Apify live enrichment timed out or failed: {e}")
-            return {
-                "status": "exception_fallback",
-                "message": f"Live Apify call exceeded timeout threshold; fallback activated smoothly.",
-                "source": "Local Pre-Indexed Thai Pool (Resilient Fallback)"
-            }
 
 
 _apify_instance: Optional[ApifyTikTokService] = None
