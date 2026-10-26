@@ -181,6 +181,50 @@ Return ONLY JSON:
             print(f"[GeminiService] LLM hooks generation error: {e}")
         return None, None
 
+    async def generate_audience_comments(
+        self, kol_name: str, handle: str, bio: str, captions: List[str], vertical: str
+    ) -> List[str]:
+        """
+        Uses Gemini to generate 4 realistic, context-specific Thai audience comments/inquiries
+        based on the creator's real video captions and content topics (eliminating static mocks).
+        """
+        if not self.is_configured:
+            return []
+
+        captions_sample = [c[:120] for c in captions if c][:4] if captions else []
+        prompt = f"""You are an expert analyzing real Thai TikTok audience engagement and prospective buyers.
+Creator: {kol_name} (@{handle})
+Vertical: {vertical}
+Bio: {bio}
+Recent Video Captions/Topics: {json.dumps(captions_sample, ensure_ascii=False) if captions_sample else 'General ' + vertical + ' content'}
+
+Based on this creator's actual content niche and brand vertical, generate 4 distinct, authentic, natural Thai audience comments or buyer inquiries that real followers would post under these videos (e.g. asking for price/where to buy, asking if suitable for their use case, sharing feedback, or asking for usage tips).
+IMPORTANT: Strictly match the vertical '{vertical}'! Do NOT use skincare comments for food or tech brands. Make them authentic and conversational.
+
+Return ONLY a valid JSON list of 4 strings:
+[
+  "comment 1 in natural Thai",
+  "comment 2 in natural Thai",
+  "comment 3 in natural Thai",
+  "comment 4 in natural Thai"
+]"""
+        try:
+            response = self.client.models.generate_content(
+                model=self.llm_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                ),
+            )
+            if response and response.text:
+                comments = json.loads(response.text)
+                if isinstance(comments, list) and len(comments) > 0:
+                    return [str(c).strip() for c in comments[:4] if str(c).strip()]
+        except Exception as e:
+            print(f"[GeminiService] Audience comments generation error: {e}")
+        return []
+
 
 _gemini_service_instance: Optional[GeminiService] = None
 

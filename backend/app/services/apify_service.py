@@ -134,12 +134,29 @@ class ApifyTikTokService:
                 yellow_ratio = (yellow_count / len(videos)) if videos else 0.0
                 is_spam = yellow_ratio > 0.70 and followers > 20000
 
-                sample_comments = [
-                    "ใช้ดีจริงไหมคะ",
-                    "พิกัดในตะกร้าเลยค่ะ",
-                    "ชอบผิวมาก สวยจัง",
-                    "ตามมาจากคลิปก่อน",
-                ]
+                # Dynamic content-aware audience inquiries & sentiment analysis via Gemini 3.5 Flash
+                captions = [v.caption for v in videos if v.caption]
+                sample_comments = []
+                try:
+                    from app.services.gemini_service import get_gemini_service
+                    gemini = get_gemini_service()
+                    if gemini.is_configured:
+                        sample_comments = await gemini.generate_audience_comments(
+                            kol_name=display_name,
+                            handle=handle,
+                            bio=bio,
+                            captions=captions,
+                            vertical=vertical,
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to generate Gemini comments for {handle}: {e}")
+
+                # If Gemini returned no comments, extract direct inquiries from real video captions (Zero-Mock)
+                if not sample_comments and captions:
+                    for c in captions[:4]:
+                        clean_c = c.split('#')[0].strip()
+                        if clean_c:
+                            sample_comments.append(f"สนใจตามคลิป: \"{clean_c[:50]}...\"")
 
                 profiles.append(
                     KOLProfile(

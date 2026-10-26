@@ -454,15 +454,15 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen text-slate-100 flex flex-col font-sans selection:bg-[#0536d2] selection:text-white">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans selection:bg-[#0536d2] selection:text-white">
       {/* TOP CONVERT CAKE BRAND HEADER */}
-      <header className="border-b border-[#1b2653] bg-[#070c22]/90 backdrop-blur-md sticky top-0 z-50 shadow-lg shadow-[#020027]/50">
+      <header className="border-b border-slate-200/90 bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           <div className="flex items-center space-x-3.5">
             {/* Official Convert Cake Monogram */}
             <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0536d2] via-[#0428a8] to-[#020027] border border-[#597ef3]/40 shadow-[0_0_20px_rgba(5,54,210,0.35)] shrink-0">
               <span className="text-base font-black tracking-tighter text-white font-mono">CC</span>
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#03e78b] border-2 border-[#070c22] shadow-sm" />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#03e78b] border-2 border-white shadow-sm" />
             </div>
 
             <div>
@@ -484,14 +484,14 @@ export default function HomePage() {
 
           {/* Live System Health Pill */}
           <div className="flex items-center space-x-3">
-            <div className="hidden md:flex items-center space-x-3 text-xs text-slate-400 pr-2 border-r border-[#1b2653]">
+            <div className="hidden md:flex items-center space-x-3 text-xs text-slate-400 pr-2 border-r border-slate-200/90">
               <span className="flex items-center space-x-1">
                 <Award className="w-3.5 h-3.5 text-[#597ef3]" />
                 <span>Official TikTok Partner Standard</span>
               </span>
             </div>
 
-            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium bg-[#0b1333] border border-[#1e2a5e]">
+            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-50 border border-slate-200">
               <span
                 className={`w-2.5 h-2.5 rounded-full ${
                   apiOnline === true
@@ -516,20 +516,20 @@ export default function HomePage() {
       {/* MAIN DASHBOARD CONTAINER */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* AGENCY HERO BANNER */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#070d29] via-[#09153f] to-[#04081b] border border-[#1e2b66] p-6 sm:p-8 shadow-[0_12px_40px_rgba(2,0,39,0.7)] backdrop-blur-md">
-          <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#0536d2]/25 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-[#03e78b]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-xs">
+          <div className="absolute -top-24 -left-24 w-72 h-72 bg-blue-50/60 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-slate-100/60 rounded-full blur-2xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-2.5 max-w-3xl">
-              <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#03e78b] bg-[#03e78b]/10 border border-[#03e78b]/20 px-3 py-1 rounded-full">
+              <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#0536d2] bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full">
                 <Sparkles className="w-3.5 h-3.5 text-[#03e78b]" />
                 <span>Built for Brands That Need Results, Not Reports</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-snug">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight leading-snug">
                 Live Thai TikTok KOL Discovery & Anti-Spam Intelligence
               </h2>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
                 Enter any client website or campaign brief. Our engine crawls real web content, extracts <strong>Brand DNA</strong> with Gemini 3.5 Flash Lite, searches <strong>live TikTok creators via Apify</strong>, and calculates a 3-part Hybrid Match Score (<strong>45% Relevance</strong>, <strong>35% Engagement & Spam Filter</strong>, <strong>20% Demographics</strong>) designed to maximize ROAS for performance campaigns.
               </p>
 
@@ -578,13 +578,13 @@ export default function HomePage() {
           {/* LEFT COLUMN: Input & Extracted DNA (5 Cols) */}
           <div className="lg:col-span-5 space-y-5">
             {/* Input Form Card */}
-            <div className="bg-[#080d24]/90 border border-[#1c2755] rounded-3xl p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.3)] space-y-4 backdrop-blur-md">
-              <div className="flex items-center justify-between border-b border-[#1b2653] pb-3.5">
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 backdrop-blur-md">
+              <div className="flex items-center justify-between border-b border-slate-200/90 pb-3.5">
                 <div className="flex items-center space-x-2.5">
                   <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-[#0536d2]/20 text-[#597ef3] text-xs font-black border border-[#0536d2]/40">
                     1
                   </span>
-                  <h3 className="font-bold text-white text-base">Input Brand Information</h3>
+                  <h3 className="font-bold text-slate-900 text-base">Input Brand Information</h3>
                 </div>
                 <span className="text-[11px] font-bold text-[#03e78b] bg-[#03e78b]/10 border border-[#03e78b]/25 px-2.5 py-0.5 rounded-full flex items-center space-x-1">
                   <Globe className="w-3 h-3" />
@@ -594,7 +594,7 @@ export default function HomePage() {
 
               {/* Sample Brand Chips */}
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
                   Quick Test With Real Thai Brands:
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -603,7 +603,7 @@ export default function HomePage() {
                       key={idx}
                       type="button"
                       onClick={() => fillQuickSample(s)}
-                      className="text-left px-3 py-1.5 rounded-xl bg-[#0d163d] hover:bg-[#121f54] border border-[#23326d] text-slate-300 hover:text-white text-xs font-medium transition cursor-pointer flex items-center space-x-1.5"
+                      className="text-left px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-[#0536d2] text-xs font-medium transition cursor-pointer flex items-center space-x-1.5"
                     >
                       <span>{s.label}</span>
                     </button>
@@ -612,9 +612,9 @@ export default function HomePage() {
               </div>
 
               {/* Input Fields */}
-              <div className="space-y-3 pt-2 border-t border-[#1b2653]/60">
+              <div className="space-y-3 pt-2 border-t border-slate-200/90/60">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Brand Name
                   </label>
                   <input
@@ -622,13 +622,13 @@ export default function HomePage() {
                     value={brandName}
                     onChange={e => setBrandName(e.target.value)}
                     placeholder="e.g. Her Hyness / Srichand / After You"
-                    className="w-full bg-[#04081c] border border-[#1e2a5f] rounded-2xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
                       Website URL
                     </label>
                     <input
@@ -636,11 +636,11 @@ export default function HomePage() {
                       value={websiteUrl}
                       onChange={e => setWebsiteUrl(e.target.value)}
                       placeholder="https://..."
-                      className="w-full bg-[#04081c] border border-[#1e2a5f] rounded-2xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                      className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
                       Facebook Page URL
                     </label>
                     <input
@@ -648,13 +648,13 @@ export default function HomePage() {
                       value={facebookUrl}
                       onChange={e => setFacebookUrl(e.target.value)}
                       placeholder="https://facebook.com/..."
-                      className="w-full bg-[#04081c] border border-[#1e2a5f] rounded-2xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                      className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
                     Campaign Focus & Target Audience Notes
                   </label>
                   <textarea
@@ -662,7 +662,7 @@ export default function HomePage() {
                     value={customNotes}
                     onChange={e => setCustomNotes(e.target.value)}
                     placeholder="Specific product lines, price points, target personas, or special campaign instructions..."
-                    className="w-full bg-[#04081c] border border-[#1e2a5f] rounded-2xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
                   />
                 </div>
               </div>
@@ -670,7 +670,7 @@ export default function HomePage() {
               <button
                 onClick={handleAnalyzeBrand}
                 disabled={isAnalyzing || isMatching}
-                className="w-full py-3 rounded-2xl bg-[#0d1945] hover:bg-[#122361] border border-[#2b3d87] text-white font-semibold text-xs transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 shadow-md"
+                className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-900 text-white font-semibold text-xs transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 shadow-md"
               >
                 {isAnalyzing ? (
                   <>
@@ -688,11 +688,11 @@ export default function HomePage() {
 
             {/* Extracted Brand DNA Card */}
             {brandDNA && (
-              <div className="bg-[#080d24]/90 border border-[#1c2755] rounded-3xl p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.3)] space-y-4 backdrop-blur-md animate-in fade-in duration-300">
-                <div className="flex items-center justify-between border-b border-[#1b2653] pb-3.5">
+              <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="flex items-center justify-between border-b border-slate-200/90 pb-3.5">
                   <div className="flex items-center space-x-2.5">
                     <CheckCircle2 className="w-5 h-5 text-[#03e78b]" />
-                    <h3 className="font-bold text-white text-base">Extracted Brand DNA</h3>
+                    <h3 className="font-bold text-slate-900 text-base">Extracted Brand DNA</h3>
                   </div>
                   <button
                     onClick={() => setIsEditingDNA(!isEditingDNA)}
@@ -721,26 +721,26 @@ export default function HomePage() {
                         rows={2}
                         value={brandDNA.target_audience}
                         onChange={e => setBrandDNA({ ...brandDNA, target_audience: e.target.value })}
-                        className="w-full bg-[#04081c] border border-[#2b3d87] rounded-xl p-2.5 text-xs text-slate-100 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none"
                       />
                     ) : (
-                      <p className="text-slate-200 bg-[#04081c]/90 p-3 rounded-2xl border border-[#1b2653] leading-relaxed">
+                      <p className="text-slate-800 bg-slate-50 p-3 rounded-2xl border border-slate-200 leading-relaxed">
                         {brandDNA.target_audience}
                       </p>
                     )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2.5 pt-1">
-                    <div className="bg-[#04081c]/90 p-3 rounded-2xl border border-[#1b2653]">
+                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
                       <span className="text-slate-400 block text-[10px] font-medium">Price Positioning</span>
-                      <span className="font-bold text-slate-100 text-xs mt-0.5 block">{brandDNA.price_positioning}</span>
-                      <span className="text-[#03e78b] block text-[11px] font-mono mt-0.5 font-semibold">
+                      <span className="font-bold text-slate-900 text-xs mt-0.5 block">{brandDNA.price_positioning}</span>
+                      <span className="text-emerald-600 block text-[11px] font-mono mt-0.5 font-bold">
                         ~{brandDNA.average_price_thb.toLocaleString()} THB
                       </span>
                     </div>
-                    <div className="bg-[#04081c]/90 p-3 rounded-2xl border border-[#1b2653]">
+                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
                       <span className="text-slate-400 block text-[10px] font-medium">Core Regions & Age</span>
-                      <span className="font-bold text-slate-100 text-xs mt-0.5 block truncate">
+                      <span className="font-bold text-slate-900 text-xs mt-0.5 block truncate">
                         {brandDNA.target_locations.slice(0, 2).join(', ')}
                       </span>
                       <span className="text-slate-400 block text-[11px] mt-0.5">
@@ -755,7 +755,7 @@ export default function HomePage() {
                       {brandDNA.brand_tone.map((tone, i) => (
                         <span
                           key={i}
-                          className="px-2.5 py-0.5 rounded-lg bg-[#0d163d] text-slate-300 text-[11px] border border-[#23326d] font-medium"
+                          className="px-2.5 py-0.5 rounded-lg bg-slate-50 text-slate-700 text-[11px] border border-slate-200 font-medium"
                         >
                           {tone}
                         </span>
@@ -802,17 +802,17 @@ export default function HomePage() {
           {/* RIGHT COLUMN: Results Dashboard (7 Cols) */}
           <div className="lg:col-span-7 space-y-4">
             {/* Filter Bar */}
-            <div className="bg-[#080d24]/90 border border-[#1c2755] rounded-3xl p-4 sm:p-5 shadow-[0_8px_30px_rgb(0,0,0,0.3)] flex flex-wrap items-center justify-between gap-3 backdrop-blur-md">
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-3 backdrop-blur-md">
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
                   <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-[#03e78b]/20 text-[#03e78b] text-xs font-black border border-[#03e78b]/35">
                     2
                   </span>
-                  <h3 className="font-bold text-white text-base">Creator Intelligence</h3>
+                  <h3 className="font-bold text-slate-900 text-base">Creator Intelligence</h3>
                 </div>
 
                 {matchResponse && (
-                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#0d163d] text-[#03e78b] border border-[#23326d]">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-[#0536d2] border border-blue-200">
                     {filteredRankedKOLs.length} Matches
                   </span>
                 )}
@@ -826,14 +826,14 @@ export default function HomePage() {
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Filter handle, bio..."
-                    className="bg-[#04081c] border border-[#1e2a5f] rounded-2xl pl-8.5 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] w-32 sm:w-44 transition"
+                    className="bg-white border border-slate-200 rounded-2xl pl-8.5 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] w-32 sm:w-44 transition"
                   />
                 </div>
 
                 <select
                   value={tierFilter}
                   onChange={e => setTierFilter(e.target.value)}
-                  className="bg-[#04081c] border border-[#1e2a5f] rounded-2xl px-3 py-2 text-slate-200 text-xs focus:outline-none focus:border-[#597ef3]"
+                  className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-slate-200 text-xs focus:outline-none focus:border-[#597ef3]"
                 >
                   <option value="All">All Tiers</option>
                   <option value="Nano">Nano (&lt;50K)</option>
@@ -845,7 +845,7 @@ export default function HomePage() {
                 <select
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value as any)}
-                  className="bg-[#04081c] border border-[#1e2a5f] rounded-2xl px-3 py-2 text-slate-200 text-xs focus:outline-none focus:border-[#597ef3]"
+                  className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-slate-200 text-xs focus:outline-none focus:border-[#597ef3]"
                 >
                   <option value="score">Sort: Match Score</option>
                   <option value="er">Sort: Highest ER%</option>
@@ -866,33 +866,33 @@ export default function HomePage() {
 
             {/* Loading Stepper Display */}
             {isMatching && (
-              <div className="bg-[#080d24]/90 border border-[#1c2755] rounded-3xl p-8 text-center space-y-6 shadow-[0_8px_30px_rgb(0,0,0,0.3)] backdrop-blur-md">
+              <div className="bg-white border border-slate-200/90 rounded-3xl p-8 text-center space-y-6 shadow-xs backdrop-blur-md">
                 <div className="relative flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full border-4 border-[#1b2653] border-t-[#0536d2] animate-spin flex items-center justify-center" />
+                  <div className="w-16 h-16 rounded-full border-4 border-slate-200/90 border-t-[#0536d2] animate-spin flex items-center justify-center" />
                   <Radio className="w-6 h-6 text-[#03e78b] absolute animate-pulse" />
                 </div>
 
                 <div className="space-y-1.5 max-w-md mx-auto">
-                  <h4 className="text-base font-bold text-white">Live TikTok Crawling & Scoring Engine Active</h4>
+                  <h4 className="text-base font-bold text-slate-900">Live TikTok Crawling & Scoring Engine Active</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     Fetching real-time video telemetry and creator profiles directly from TikTok via Apify Actor...
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 text-left text-xs max-w-xl mx-auto pt-2">
-                  <div className={`p-3 rounded-2xl border ${activeStep >= 1 ? 'bg-[#0536d2]/20 border-[#597ef3]/40 text-[#597ef3]' : 'bg-[#04081c] border-[#1b2653] text-slate-500'}`}>
+                  <div className={`p-3 rounded-2xl border ${activeStep >= 1 ? 'bg-blue-50 border-blue-200 text-[#0536d2] font-semibold' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
                     <span className="block font-bold text-[10px]">Step 1</span>
                     <span className="font-semibold">Brand DNA</span>
                   </div>
-                  <div className={`p-3 rounded-2xl border ${activeStep >= 2 ? 'bg-[#0536d2]/20 border-[#597ef3]/40 text-[#597ef3]' : 'bg-[#04081c] border-[#1b2653] text-slate-500'}`}>
+                  <div className={`p-3 rounded-2xl border ${activeStep >= 2 ? 'bg-blue-50 border-blue-200 text-[#0536d2] font-semibold' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
                     <span className="block font-bold text-[10px]">Step 2</span>
                     <span className="font-semibold">Apify Scraper</span>
                   </div>
-                  <div className={`p-3 rounded-2xl border ${activeStep >= 3 ? 'bg-[#0536d2]/20 border-[#597ef3]/40 text-[#597ef3]' : 'bg-[#04081c] border-[#1b2653] text-slate-500'}`}>
+                  <div className={`p-3 rounded-2xl border ${activeStep >= 3 ? 'bg-blue-50 border-blue-200 text-[#0536d2] font-semibold' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
                     <span className="block font-bold text-[10px]">Step 3</span>
                     <span className="font-semibold">Anti-Spam Filter</span>
                   </div>
-                  <div className={`p-3 rounded-2xl border ${activeStep >= 4 ? 'bg-[#0536d2]/20 border-[#597ef3]/40 text-[#597ef3]' : 'bg-[#04081c] border-[#1b2653] text-slate-500'}`}>
+                  <div className={`p-3 rounded-2xl border ${activeStep >= 4 ? 'bg-blue-50 border-blue-200 text-[#0536d2] font-semibold' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
                     <span className="block font-bold text-[10px]">Step 4</span>
                     <span className="font-semibold">Gemini Ranking</span>
                   </div>
@@ -902,12 +902,12 @@ export default function HomePage() {
 
             {/* Empty State before any search */}
             {!isMatching && !matchResponse && (
-              <div className="bg-[#080d24]/90 border border-[#1c2755] rounded-3xl p-12 text-center space-y-4 shadow-[0_8px_30px_rgb(0,0,0,0.3)] backdrop-blur-md">
-                <div className="w-16 h-16 rounded-2xl bg-[#0d163d] border border-[#23326d] flex items-center justify-center mx-auto text-slate-400 shadow-[0_0_20px_rgba(5,54,210,0.2)]">
+              <div className="bg-white border border-slate-200/90 rounded-3xl p-12 text-center space-y-4 shadow-xs backdrop-blur-md">
+                <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-[#0536d2] shadow-xs">
                   <Search className="w-8 h-8 text-[#597ef3]" />
                 </div>
                 <div className="space-y-1.5 max-w-sm mx-auto">
-                  <h4 className="text-base font-bold text-white">Ready for Live Performance Match</h4>
+                  <h4 className="text-base font-bold text-slate-900">Ready for Live Performance Match</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">
                     Select an example Thai brand above or enter custom client URLs, then click <strong>Extract Brand DNA</strong> to discover high-converting TikTok creators.
                   </p>
@@ -918,13 +918,13 @@ export default function HomePage() {
             {/* Nav Tabs for Results */}
             {!isMatching && matchResponse && (
               <>
-                <div className="flex items-center space-x-2 border-b border-[#1b2653] pb-2 text-xs font-semibold">
+                <div className="flex items-center space-x-2 border-b border-slate-200/90 pb-2 text-xs font-semibold">
                   <button
                     onClick={() => setActiveTab('ranked')}
                     className={`px-4 py-2 rounded-2xl transition cursor-pointer flex items-center space-x-2 ${
                       activeTab === 'ranked'
-                        ? 'bg-[#0536d2] text-white shadow-[0_0_15px_rgba(5,54,210,0.5)] border border-[#597ef3]/40'
-                        : 'text-slate-400 hover:text-white bg-[#04081c] border border-transparent'
+                        ? 'bg-[#0536d2] text-white font-bold shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200'
                     }`}
                   >
                     <span>Top Ranked Matches</span>
@@ -936,8 +936,8 @@ export default function HomePage() {
                     onClick={() => setActiveTab('spam')}
                     className={`px-4 py-2 rounded-2xl transition cursor-pointer flex items-center space-x-1.5 ${
                       activeTab === 'spam'
-                        ? 'bg-amber-500 text-slate-950 font-bold shadow-md'
-                        : 'text-amber-400 hover:bg-amber-500/10 bg-[#04081c] border border-amber-500/20'
+                        ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
+                        : 'text-amber-800 hover:bg-amber-100 bg-amber-50 border border-amber-200'
                     }`}
                   >
                     <ShieldAlert className="w-3.5 h-3.5" />
@@ -947,8 +947,8 @@ export default function HomePage() {
                     onClick={() => setActiveTab('trace')}
                     className={`px-4 py-2 rounded-2xl transition cursor-pointer ${
                       activeTab === 'trace'
-                        ? 'bg-[#1e2a5e] text-white'
-                        : 'text-slate-400 hover:text-white bg-[#04081c]'
+                        ? 'bg-slate-900 text-white font-bold shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200'
                     }`}
                   >
                     Pipeline Trace
@@ -956,7 +956,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Telemetry Status Bar */}
-                <div className="p-3.5 rounded-2xl bg-[#080d24]/80 border border-[#1c2755] text-xs text-slate-300 flex items-center justify-between backdrop-blur">
+                <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 text-xs text-slate-300 flex items-center justify-between backdrop-blur">
                   <div className="flex items-center space-x-2">
                     <ShieldCheck className="w-4 h-4 text-[#03e78b]" />
                     <span>Telemetry Source:</span>
@@ -979,7 +979,7 @@ export default function HomePage() {
                       return (
                         <div
                           key={item.kol.id}
-                          className="bg-[#080d24]/90 border border-[#1c2755] hover:border-[#597ef3]/50 rounded-3xl p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.3)] transition-all space-y-4 relative backdrop-blur-md"
+                          className="bg-white border border-slate-200/90 hover:border-[#597ef3]/50 rounded-3xl p-5 sm:p-6 shadow-xs transition-all space-y-4 relative backdrop-blur-md"
                         >
                           {/* Top Header: Avatar, Names, Links & Total Score */}
                           <div className="flex items-start justify-between gap-3">
@@ -989,7 +989,7 @@ export default function HomePage() {
                                 <img
                                   src={item.kol.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${item.kol.handle}`}
                                   alt={item.kol.display_name}
-                                  className="w-13 h-13 rounded-2xl bg-[#04081c] border-2 border-[#1e2a5f] object-cover shadow-md"
+                                  className="w-13 h-13 rounded-2xl bg-slate-100 border-2 border-slate-200 object-cover shadow-xs"
                                 />
                                 <span className="absolute -top-1.5 -left-1.5 flex items-center justify-center w-5 h-5 rounded-full bg-[#0536d2] text-white font-black text-[10px] shadow border border-[#597ef3]">
                                   #{item.rank}
@@ -998,7 +998,7 @@ export default function HomePage() {
 
                               <div>
                                 <div className="flex items-center space-x-2 flex-wrap">
-                                  <h4 className="font-bold text-white text-base hover:text-[#597ef3] transition">
+                                  <h4 className="font-bold text-slate-900 text-base hover:text-[#597ef3] transition">
                                     {item.kol.display_name}
                                   </h4>
                                   <a
@@ -1013,7 +1013,7 @@ export default function HomePage() {
                                 </div>
                                 <p className="text-xs text-slate-300 mt-1 line-clamp-1">{item.kol.bio}</p>
                                 <div className="flex items-center space-x-2 text-xs text-slate-400 mt-1.5 flex-wrap font-medium">
-                                  <span className="text-slate-100 font-semibold px-2 py-0.5 rounded-lg bg-[#0d163d] border border-[#23326d]">
+                                  <span className="text-slate-700 font-semibold px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200">
                                     {item.kol.tier}
                                   </span>
                                   <span>•</span>
@@ -1038,7 +1038,7 @@ export default function HomePage() {
                                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer ${
                                   isShortlisted
                                     ? 'bg-[#03e78b] text-slate-950 shadow-sm font-bold'
-                                    : 'bg-[#0d163d] hover:bg-[#121f54] text-slate-300 border border-[#23326d]'
+                                    : 'bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-[#0536d2] border border-slate-200'
                                 }`}
                               >
                                 {isShortlisted ? (
@@ -1057,7 +1057,7 @@ export default function HomePage() {
                           </div>
 
                           {/* 3-Part Hybrid Score Breakdown */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 rounded-2xl bg-[#04081c]/80 border border-[#1b2653] text-xs">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
                             {/* 1. Relevance (45%) */}
                             <div className="space-y-1.5">
                               <div className="flex justify-between items-center text-[11px]">
@@ -1066,7 +1066,7 @@ export default function HomePage() {
                                   {item.score_breakdown.relevance_weighted.toFixed(1)} / 45 pts
                                 </span>
                               </div>
-                              <div className="w-full h-2 rounded-full bg-[#0d163d] overflow-hidden">
+                              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
                                 <div
                                   className="h-full bg-gradient-to-r from-[#0536d2] to-[#597ef3] rounded-full transition-all duration-500"
                                   style={{
@@ -1090,7 +1090,7 @@ export default function HomePage() {
                                   {item.score_breakdown.engagement_weighted.toFixed(1)} / 35 pts
                                 </span>
                               </div>
-                              <div className="w-full h-2 rounded-full bg-[#0d163d] overflow-hidden">
+                              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
                                 <div
                                   className="h-full bg-gradient-to-r from-[#0428a8] to-[#03e78b] rounded-full transition-all duration-500"
                                   style={{
@@ -1117,7 +1117,7 @@ export default function HomePage() {
                                   {item.score_breakdown.audience_weighted.toFixed(1)} / 20 pts
                                 </span>
                               </div>
-                              <div className="w-full h-2 rounded-full bg-[#0d163d] overflow-hidden">
+                              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
                                 <div
                                   className="h-full bg-[#03e78b] rounded-full transition-all duration-500"
                                   style={{
@@ -1161,7 +1161,7 @@ export default function HomePage() {
                               {item.score_breakdown.evidence_list.map((ev, i) => (
                                 <span
                                   key={i}
-                                  className="px-2.5 py-1 rounded-xl bg-[#0d163d] text-slate-300 text-[11px] border border-[#23326d] leading-tight font-medium"
+                                  className="px-2.5 py-1 rounded-xl bg-slate-50 text-slate-700 text-[11px] border border-slate-200 leading-tight font-medium"
                                 >
                                   {ev}
                                 </span>
@@ -1170,7 +1170,7 @@ export default function HomePage() {
                           </div>
 
                           {/* Strategic Rationale */}
-                          <div className="p-3.5 rounded-2xl bg-[#04081c] border border-[#1b2653] text-xs leading-relaxed text-slate-300">
+                          <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-xs leading-relaxed text-slate-800">
                             <strong className="text-white font-semibold flex items-center space-x-1.5 mb-1">
                               <Award className="w-3.5 h-3.5 text-[#597ef3]" />
                               <span>Convert Cake Performance Rationale:</span>
@@ -1180,7 +1180,7 @@ export default function HomePage() {
 
                           {/* Campaign Pitch Hooks */}
                           {item.thai_campaign_hooks && item.thai_campaign_hooks.length > 0 && (
-                            <div className="space-y-2 pt-1 border-t border-[#1b2653]/60">
+                            <div className="space-y-2 pt-1 border-t border-slate-200/90/60">
                               <span className="text-xs font-semibold text-[#597ef3] flex items-center space-x-1.5">
                                 <Sparkles className="w-3.5 h-3.5 text-[#03e78b]" />
                                 <span>Suggested Thai TikTok Campaign Hooks (Ready for Pitch):</span>
@@ -1191,12 +1191,12 @@ export default function HomePage() {
                                   return (
                                     <div
                                       key={hIdx}
-                                      className="flex items-center justify-between p-2.5 rounded-xl bg-[#04081c]/90 border border-[#1e2a5f] text-xs text-slate-200 group"
+                                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 group"
                                     >
-                                      <span className="pr-2 italic text-slate-200">{hook}</span>
+                                      <span className="pr-2 italic text-slate-800">{hook}</span>
                                       <button
                                         onClick={() => copyToClipboard(hook, hookId)}
-                                        className="text-slate-400 hover:text-white transition p-1 cursor-pointer shrink-0 bg-[#0d163d] rounded-lg border border-[#23326d]"
+                                        className="text-slate-400 hover:text-[#0536d2] transition p-1.5 cursor-pointer shrink-0 bg-white hover:bg-blue-50 rounded-lg border border-slate-200"
                                         title="Copy Hook"
                                       >
                                         {copiedHook === hookId ? (
@@ -1214,10 +1214,10 @@ export default function HomePage() {
 
                           {/* Audited Video Telemetry Drawer */}
                           {item.kol.recent_videos && item.kol.recent_videos.length > 0 && (
-                            <div className="pt-1 border-t border-[#1b2653]/60">
+                            <div className="pt-1 border-t border-slate-200/90/60">
                               <button
                                 onClick={() => setExpandedKOLId(isExpanded ? null : item.kol.id)}
-                                className="w-full py-2.5 rounded-2xl bg-[#04081c] hover:bg-[#0d163d] text-xs text-slate-300 font-semibold transition flex items-center justify-center space-x-2 cursor-pointer border border-[#1b2653]"
+                                className="w-full py-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 font-semibold transition flex items-center justify-center space-x-2 cursor-pointer border border-slate-200"
                               >
                                 <BarChart3 className="w-3.5 h-3.5 text-[#597ef3]" />
                                 <span>
@@ -1233,7 +1233,7 @@ export default function HomePage() {
                               </button>
 
                               {isExpanded && (
-                                <div className="mt-3 space-y-3 bg-[#04081c] p-4 sm:p-5 rounded-2xl border border-[#1b2653] text-xs animate-in fade-in duration-300">
+                                <div className="mt-3 space-y-3 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 text-xs animate-in fade-in duration-300">
                                   <h5 className="font-bold text-white text-xs flex items-center space-x-2">
                                     <Eye className="w-3.5 h-3.5 text-[#597ef3]" />
                                     <span>Recent Videos Audited by Scoring Engine:</span>
@@ -1243,10 +1243,10 @@ export default function HomePage() {
                                     {item.kol.recent_videos.map((vid, vIdx) => (
                                       <div
                                         key={vIdx}
-                                        className="p-3 rounded-xl bg-[#080d24] border border-[#1c2755] space-y-1.5"
+                                        className="p-3 rounded-xl bg-white border border-slate-200/90 space-y-1.5"
                                       >
                                         <div className="flex items-start justify-between gap-2">
-                                          <p className="text-slate-200 text-xs font-medium line-clamp-1">
+                                          <p className="text-slate-900 text-xs font-medium line-clamp-1">
                                             {vid.caption || 'TikTok video clip'}
                                           </p>
                                           {vid.has_yellow_basket && (
@@ -1272,7 +1272,7 @@ export default function HomePage() {
 
                                   {/* Audience Comments */}
                                   {item.kol.sample_comments && item.kol.sample_comments.length > 0 && (
-                                    <div className="pt-2 border-t border-[#1b2653]">
+                                    <div className="pt-2 border-t border-slate-200/90">
                                       <h5 className="font-bold text-white text-xs mb-2 flex items-center space-x-2">
                                         <MessageSquare className="w-3.5 h-3.5 text-[#03e78b]" />
                                         <span>Audience Comments & Sentiment:</span>
@@ -1281,7 +1281,7 @@ export default function HomePage() {
                                         {item.kol.sample_comments.map((cmt, cIdx) => (
                                           <div
                                             key={cIdx}
-                                            className="p-2.5 rounded-xl bg-[#080d24] border border-[#1c2755] text-slate-300 text-[11px] italic"
+                                            className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-[11px] italic shadow-2xs"
                                           >
                                             "{cmt}"
                                           </div>
@@ -1315,7 +1315,7 @@ export default function HomePage() {
                     {matchResponse.penalized_spam_kols.map(item => (
                       <div
                         key={item.kol.id}
-                        className="bg-[#080d24]/90 border border-amber-500/30 rounded-3xl p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.3)] space-y-3 backdrop-blur-md"
+                        className="bg-white border border-amber-300 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3"
                       >
                         <div className="flex items-start justify-between">
                           <div>
@@ -1323,7 +1323,7 @@ export default function HomePage() {
                               <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-bold text-[10px] border border-rose-500/30">
                                 FLAGGED SPAM TRAP
                               </span>
-                              <h4 className="font-bold text-white text-base">{item.kol.display_name}</h4>
+                              <h4 className="font-bold text-slate-900 text-base">{item.kol.display_name}</h4>
                               <a
                                 href={item.kol.tiktok_url}
                                 target="_blank"
@@ -1347,25 +1347,25 @@ export default function HomePage() {
                           </div>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-[#04081c] border border-amber-500/20 text-xs text-amber-300 leading-relaxed">
+                        <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 text-xs text-amber-900 leading-relaxed">
                           <strong>Detection Trigger: </strong>
                           {item.score_breakdown.affiliate_spam_reason}
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 text-center text-xs text-slate-400 font-mono">
-                          <div className="bg-[#04081c] p-2.5 rounded-xl border border-[#1b2653]">
+                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                             <span className="block text-[10px] text-slate-400">Yellow-Basket Ratio</span>
                             <span className="font-bold text-rose-400 text-sm">
                               {Math.round(item.score_breakdown.yellow_basket_ratio * 100)}%
                             </span>
                           </div>
-                          <div className="bg-[#04081c] p-2.5 rounded-xl border border-[#1b2653]">
+                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                             <span className="block text-[10px] text-slate-400">Median ER</span>
                             <span className="font-bold text-slate-200 text-sm">
                               {item.score_breakdown.median_engagement_rate_pct.toFixed(1)}%
                             </span>
                           </div>
-                          <div className="bg-[#04081c] p-2.5 rounded-xl border border-[#1b2653]">
+                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                             <span className="block text-[10px] text-slate-400">Views-to-Followers</span>
                             <span className="font-bold text-slate-200 text-sm">
                               {item.score_breakdown.views_to_followers_ratio.toFixed(2)}
@@ -1379,7 +1379,7 @@ export default function HomePage() {
 
                 {/* TAB 3: WORKFLOW TRACE */}
                 {activeTab === 'trace' && (
-                  <div className="bg-[#080d24]/90 border border-[#1c2755] rounded-3xl p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.3)] space-y-4 backdrop-blur-md">
+                  <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 backdrop-blur-md">
                     <h4 className="text-sm font-bold text-white flex items-center space-x-2">
                       <RefreshCw className="w-4 h-4 text-[#597ef3]" />
                       <span>LangGraph Execution Nodes & State Transitions</span>
@@ -1388,7 +1388,7 @@ export default function HomePage() {
                       {matchResponse.workflow_trace.map((step, idx) => (
                         <div
                           key={idx}
-                          className="flex items-start space-x-3 p-3 rounded-2xl bg-[#04081c] border border-[#1b2653] text-xs font-mono text-slate-300"
+                          className="flex items-start space-x-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700"
                         >
                           <span className="text-[#03e78b] font-bold shrink-0">[{idx + 1}]</span>
                           <span>{step}</span>
@@ -1405,9 +1405,9 @@ export default function HomePage() {
 
       {/* CAMPAIGN SHORTLIST FLOATING DRAWER */}
       {shortlist.length > 0 && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-3xl bg-[#070c22]/95 border border-[#03e78b]/40 rounded-3xl p-4 shadow-[0_15px_50px_rgba(2,0,39,0.85)] backdrop-blur-xl flex items-center justify-between gap-4 animate-in slide-in-from-bottom duration-300">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-3xl bg-slate-950/95 border border-slate-800 rounded-3xl p-4 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-4 animate-in slide-in-from-bottom duration-300 text-white">
           <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#03e78b]/20 text-[#03e78b] border border-[#03e78b]/40 flex items-center justify-center font-black text-sm shrink-0 font-mono shadow-[0_0_15px_rgba(3,231,139,0.25)]">
+            <div className="w-11 h-11 rounded-2xl bg-[#0536d2] text-white flex items-center justify-center font-black text-sm shrink-0 font-mono shadow-md">
               {shortlist.length}
             </div>
             <div>
@@ -1427,23 +1427,23 @@ export default function HomePage() {
           <div className="flex items-center space-x-2">
             <button
               onClick={copyCampaignProposal}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#03e78b] to-[#00c572] hover:from-[#00c572] hover:to-[#00a760] text-slate-950 font-black text-xs transition flex items-center space-x-1.5 shadow-[0_0_15px_rgba(3,231,139,0.3)] cursor-pointer"
+              className="px-5 py-2.5 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] active:bg-[#031f7a] text-white font-bold text-xs transition flex items-center space-x-1.5 shadow-md shadow-blue-600/30 cursor-pointer border border-blue-500"
             >
               {copiedBrief ? (
                 <>
-                  <Check className="w-4 h-4 text-slate-950" />
+                  <Check className="w-4 h-4 text-white" />
                   <span>Copied Proposal!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4 text-slate-950" />
+                  <Copy className="w-4 h-4 text-white" />
                   <span>Copy Pitch Proposal</span>
                 </>
               )}
             </button>
             <button
               onClick={() => setShortlist([])}
-              className="p-2.5 rounded-2xl bg-[#0d163d] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-[#23326d] hover:border-rose-500/30 transition cursor-pointer"
+              className="p-2.5 rounded-2xl bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-800 transition cursor-pointer"
               title="Clear shortlist"
             >
               <Trash2 className="w-4 h-4" />

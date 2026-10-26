@@ -69,18 +69,12 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
                 candidates = live_candidates
                 trace.append(f"Discovered {len(candidates)} real live Thai TikTok creators via Apify Clockworks Actor")
         except Exception as e:
-            trace.append(f"Apify live search exception: {e}; activating verified fallback pool")
+            trace.append(f"Apify live search error: {e}")
+            raise RuntimeError(f"Live Apify TikTok Discovery failed: {e}. Zero-Mock Policy enforces 100% live data.")
 
-    # 2. Resilient Fallback to Verified Pool if Apify returns no items
     if not candidates:
-        repo = get_kol_repository()
-        candidates = repo.filter_candidates(
-            vertical=vertical,
-            min_followers=state.get("min_followers"),
-            max_followers=state.get("max_followers"),
-            include_penalized_traps=True,
-        )
-        trace.append(f"Retrieved {len(candidates)} Thai KOL candidate profiles from repository fallback pool")
+        trace.append("No live TikTok creators returned for given keywords")
+        raise RuntimeError(f"Zero live TikTok creators matched for hashtags {keywords}. No mock fallback allowed.")
 
     return {"candidates": candidates, "trace": trace}
 
