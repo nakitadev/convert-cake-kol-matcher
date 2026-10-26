@@ -24,7 +24,7 @@ class BrandAnalyzer:
             web_text, title = await self._scrape_website(req.website_url)
             if web_text:
                 scraped_text += f" Website Content: {web_text}"
-                scraped_sources.append(f"Live Website ({req.website_url})")
+                scraped_sources.append(f"Live Website via Jina Reader ({req.website_url})")
                 if not brand_name and title:
                     brand_name = title.split("|")[0].split("-")[0].strip()
 
@@ -79,7 +79,43 @@ class BrandAnalyzer:
         )
 
     async def _scrape_website(self, url: str) -> Tuple[str, str]:
+        """
+        Scrapes live website content using Jina Reader API (r.jina.ai) as primary engine
+        to convert client pages (including JS SPAs) into high-signal, LLM-ready markdown.
+        Falls back gracefully to direct HTTPX + BeautifulSoup4 if Jina experiences network timeouts.
+        """
         clean_url = url if url.startswith("http") else f"https://{url}"
+        import os
+
+        # 1. Primary Engine: Jina Reader API (https://r.jina.ai/)
+        try:
+            jina_url = f"https://r.jina.ai/{clean_url}"
+            jina_headers = {
+                "Accept": "text/plain",
+                "User-Agent": "ConvertCake-KOL-Matcher/1.0",
+                "X-Timeout": "10",
+            }
+            jina_key = os.environ.get("JINA_API_KEY")
+            if jina_key:
+                jina_headers["Authorization"] = f"Bearer {jina_key}"
+
+            async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+                resp = await client.get(jina_url, headers=jina_headers)
+                if resp.status_code == 200 and len(resp.text.strip()) > 80:
+                    raw_md = resp.text
+                    title = ""
+                    title_match = re.search(r"^Title:\s*(.+)$", raw_md, re.MULTILINE)
+                    if title_match:
+                        title = title_match.group(1).strip()
+                    # Strip Jina boilerplate headers
+                    clean_md = re.sub(r"^(Title|URL Source|Markdown Content):\s*.*$", "", raw_md, flags=re.MULTILINE).strip()
+                    # Clean excessive blank lines
+                    clean_md = re.sub(r"\n{3,}", "\n\n", clean_md)
+                    return clean_md[:3500], title
+        except Exception:
+            pass
+
+        # 2. Resilient Fallback: Direct HTTPX + BeautifulSoup4
         try:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"

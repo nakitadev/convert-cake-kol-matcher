@@ -37,7 +37,8 @@
 - **Workflow Orchestration:** LangGraph (StateGraph 4 Nodes: Extract DNA -> Discover Candidates -> Anti-Spam & Score -> Rank & Hook Generation)
 - **LLM Model:** `gemini-3.5-flash-lite` (วิเคราะห์ Brand DNA, สังเคราะห์คอมเมนต์ผู้ชม, สร้าง Campaign Hooks)
 - **Embedding Model:** `gemini-embedding-2` (เวกเตอร์ขนาด 3,072 มิติ ใช้คำนวณ Cosine Similarity)
-- **Scraping Engine:** Apify Actor `clockworks~tiktok-scraper` ค้นหาคลิปและครีเอเตอร์สดบน TikTok
+- **Web Scraping Engine (Brand DNA):** Jina Reader API (`r.jina.ai`) แปลง SPA/เว็บไซต์แบรนด์เป็น Clean Markdown สำหรับ LLM พร้อม Two-Tier Fallback สู่ HTTPX + BeautifulSoup4
+- **Scraping Engine (TikTok):** Apify Actor `clockworks~tiktok-scraper` ค้นหาคลิปและครีเอเตอร์สดบน TikTok
 - **Assistant Development Engine:** `agy` CLI v1.4.7 (`gemini-3.8-flash-high`)
 
 ---
