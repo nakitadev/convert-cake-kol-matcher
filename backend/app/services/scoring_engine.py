@@ -1,6 +1,6 @@
 import math
 import re
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
 
 from app.models import (
