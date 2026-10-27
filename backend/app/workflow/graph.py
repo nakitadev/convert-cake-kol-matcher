@@ -106,8 +106,9 @@ async def enrich_apify_node(state: MatcherState) -> Dict[str, Any]:
     trace.append("Node 3: enrich_apify_node started")
     candidates = state.get("candidates", [])
 
-    # Zero-Hardcode: Ensure any unclassified candidates are classified via Gemini Instructions
-    unclassified = [c for c in candidates if c.creator_archetype == "General Creator"]
+    # Zero-Hardcode: Ensure any unclassified candidates are classified via Gemini Instructions into the 4 Core Archetypes
+    valid_archetypes = {"Educated Guru", "Top Reviewer", "Lifestyle & Vlog", "Niche Enthusiast"}
+    unclassified = [c for c in candidates if c.creator_archetype not in valid_archetypes]
     if unclassified:
         gemini = get_gemini_service()
         if gemini.is_configured:
@@ -144,9 +145,9 @@ async def enrich_apify_node(state: MatcherState) -> Dict[str, Any]:
     return {"apify_status": apify_status, "candidates": candidates, "trace": trace}
 
 
-async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
+async def evaluate_and_rank_node(state: MatcherState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
-    trace.append("Node 4: score_and_rank_node started")
+    trace.append("Node 4: Creator Fit & Archetype Matching (Multi-Signal Evaluation & Ranking)")
 
     brand_dna = state.get("brand_dna")
     candidates = state.get("candidates", [])
@@ -206,13 +207,13 @@ def build_kol_matcher_graph():
     workflow.add_node("analyze_brand", analyze_brand_node)
     workflow.add_node("discover_candidates", discover_candidates_node)
     workflow.add_node("enrich_apify", enrich_apify_node)
-    workflow.add_node("score_and_rank", score_and_rank_node)
+    workflow.add_node("evaluate_and_rank", evaluate_and_rank_node)
 
     workflow.add_edge(START, "analyze_brand")
     workflow.add_edge("analyze_brand", "discover_candidates")
     workflow.add_edge("discover_candidates", "enrich_apify")
-    workflow.add_edge("enrich_apify", "score_and_rank")
-    workflow.add_edge("score_and_rank", END)
+    workflow.add_edge("enrich_apify", "evaluate_and_rank")
+    workflow.add_edge("evaluate_and_rank", END)
 
     return workflow.compile()
 

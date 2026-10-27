@@ -169,30 +169,6 @@ interface MatchResponse {
   workflow_trace: string[];
 }
 
-const SAMPLE_QUICK_TESTS = [
-  {
-    label: 'Her Hyness (Clean Skincare)',
-    name: 'Her Hyness',
-    url: 'https://herhyness.com',
-    fb: 'https://facebook.com/herhyness',
-    notes: 'Dermatological clean skincare for sensitive acne-prone Thai skin, price 400-900 THB',
-  },
-  {
-    label: 'After You (Cafe & Dessert)',
-    name: 'After You Dessert Cafe',
-    url: 'https://afteryoudessertcafe.com',
-    fb: 'https://facebook.com/afteryoucafe',
-    notes: 'Bangkok trendy dessert cafe, Kakigori, Shibuya toast, young adult foodies',
-  },
-  {
-    label: 'Bewell (Ergonomics & Tech)',
-    name: 'Bewell Ergonomics',
-    url: 'https://bewellstyle.com',
-    fb: 'https://facebook.com/bewellhealth',
-    notes: 'Ergonomic chairs, standing desks, pain-relief for Bangkok office workers WFH',
-  },
-];
-
 export default function HomePage() {
   // Brand Input State
   const [brandName, setBrandName] = useState('');
@@ -207,7 +183,7 @@ export default function HomePage() {
 
   // Match State
   const [matchResponse, setMatchResponse] = useState<MatchResponse | null>(null);
-  const [activeTab, setActiveTab] = useState<'ranked' | 'review' | 'guru' | 'reviewer' | 'lifestyle' | 'niche' | 'spam' | 'trace'>('ranked');
+  const [activeTab, setActiveTab] = useState<'ranked' | 'guru' | 'reviewer' | 'lifestyle' | 'niche' | 'spam' | 'trace'>('ranked');
   const [expandedKOLId, setExpandedKOLId] = useState<string | null>(null);
 
   // Shortlist Cart
@@ -237,14 +213,6 @@ export default function HomePage() {
       .then(() => setApiOnline(true))
       .catch(() => setApiOnline(false));
   }, []);
-
-  const fillQuickSample = (sample: typeof SAMPLE_QUICK_TESTS[0]) => {
-    setBrandName(sample.name);
-    setWebsiteUrl(sample.url);
-    setFacebookUrl(sample.fb);
-    setCustomNotes(sample.notes);
-    setManualCompetitors('');
-  };
 
   const handleAnalyzeBrand = async () => {
     if (!brandName && !websiteUrl && !facebookUrl && !customNotes) {
@@ -358,24 +326,24 @@ export default function HomePage() {
       } else if (elapsed < 32) {
         setActiveStep(3);
         setProgressStageTitle('Step 3/4: ประมวลผล Multi-Signal Telemetry & Work-Ready');
-        setProgressStageDesc('คำนวณ Median ER, Save-to-View Utility, สแกนสัญญาณพร้อมรับงาน และยอมรับสายรีวิวตะกร้า 100%...');
+        setProgressStageDesc('คำนวณ Median ER, Save-to-View Utility และสแกนสัญญาณพร้อมรับงาน...');
         setProgressPercent(Math.min(79, Math.round(55 + (elapsed - 18) * 1.8)));
         setLiveLogs(prev => !prev.some(l => l.includes('Telemetry')) ? [
           ...prev,
           `[Telemetry] Calculating Median ER & Utility Save-to-View ((Collect+0.7*Share)/Views)...`,
-          `[Yellow Basket] Reviewer 100% Yellow Basket allowance confirmed (No Spam Penalty)...`,
+          `[Signal Analysis] Evaluating Commercial & Content Signals...`,
           `[Work-Ready] Scanning bio signals: 'ติดต่องาน / For work' -> Sponsorship ready`
         ] : prev);
       } else {
         setActiveStep(4);
-        setProgressStageTitle('Step 4/4: คำนวณ Dynamic Scoring 40/35/25 & คัดเลือก Top Creators');
-        setProgressStageDesc('คำนวณ Semantic Cosine Similarity (gemini-embedding-2), จำแนก 4 Archetypes และจัดอันดับตามสูตร 40/35/25...');
+        setProgressStageTitle('Step 4/4: ประเมินความเข้ากันได้และจัดอันดับครีเอเตอร์ (Creator Fit & Archetype Matching)');
+        setProgressStageDesc('ประเมินความเข้ากันได้ Brand Relevance, Engagement Quality, Audience Fit และจำแนก 4 Creator Archetypes...');
         setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 32) * 0.7)));
         setLiveLogs(prev => !prev.some(l => l.includes('Embeddings')) ? [
           ...prev,
           `[Gemini Embeddings] Calculating 3,072-dimensional cosine similarity for Brand-Creator fit...`,
           `[Archetypes] Classifying Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast`,
-          `[Dynamic Scoring] Finalizing 40/35/25 rankings & strategic matchmaking rationale...`
+          `[Match Engine] Evaluating creator-brand fit across 4 archetypes & final ranking...`
         ] : prev);
       }
     }, 400);
@@ -397,7 +365,7 @@ export default function HomePage() {
       const data = await res.json();
       setProgressPercent(100);
       setProgressStageTitle('จัดอันดับและประมวลผลเสร็จสมบูรณ์ 100%!');
-      setProgressStageDesc(`พบครีเอเตอร์ ${data.ranked_kols.length} รายการ พร้อมแสดงผล Dynamic 40/35/25 Scoring Dashboard`);
+      setProgressStageDesc(`พบครีเอเตอร์ ${data.ranked_kols.length} รายการ พร้อมแสดงผล Multi-Signal Performance Dashboard`);
       setLiveLogs(prev => [...prev, `[Success] Pipeline finished with ${data.ranked_kols.length} creators ranked.`]);
       setMatchResponse(data);
       setActiveTab('ranked');
@@ -455,24 +423,24 @@ export default function HomePage() {
       } else if (elapsed < 34) {
         setActiveStep(3);
         setProgressStageTitle('Step 3/4: ประมวลผล Multi-Signal Telemetry & Work-Ready');
-        setProgressStageDesc('คำนวณ Median ER, Save-to-View Utility, สแกนสัญญาณพร้อมรับงาน และยอมรับสายรีวิวตะกร้า 100%...');
+        setProgressStageDesc('คำนวณ Median ER, Save-to-View Utility และสแกนสัญญาณพร้อมรับงาน...');
         setProgressPercent(Math.min(79, Math.round(55 + (elapsed - 20) * 1.7)));
         setLiveLogs(prev => !prev.some(l => l.includes('Telemetry')) ? [
           ...prev,
           `[Telemetry] Calculating Median ER & Utility Save-to-View ratio...`,
-          `[Yellow Basket] Top Reviewer 100% Yellow Basket allowance confirmed...`,
+          `[Signal Analysis] Evaluating Commercial & Content Signals...`,
           `[Work-Ready] Scanning bio signals: 'ติดต่องาน / For work' -> Sponsorship ready`
         ] : prev);
       } else {
         setActiveStep(4);
-        setProgressStageTitle('Step 4/4: คำนวณ Dynamic Scoring 40/35/25 & คัดเลือก Top Creators');
-        setProgressStageDesc('คำนวณ Semantic Cosine Similarity (gemini-embedding-2), จำแนก 4 Archetypes และจัดอันดับตามสูตร 40/35/25...');
+        setProgressStageTitle('Step 4/4: ประเมินความเข้ากันได้และจัดอันดับครีเอเตอร์ (Creator Fit & Archetype Matching)');
+        setProgressStageDesc('ประเมินความเข้ากันได้ Brand Relevance, Engagement Quality, Audience Fit และจำแนก 4 Creator Archetypes...');
         setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 34) * 0.7)));
         setLiveLogs(prev => !prev.some(l => l.includes('Embeddings')) ? [
           ...prev,
           `[Gemini Embeddings] Generating 3,072-dimensional vector representations...`,
           `[Archetypes] Classifying Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast`,
-          `[Dynamic Scoring] Finalizing 40/35/25 rankings & strategic matchmaking rationale...`
+          `[Match Engine] Evaluating creator-brand fit across 4 archetypes & final ranking...`
         ] : prev);
       }
     }, 400);
@@ -542,15 +510,7 @@ export default function HomePage() {
       list = list.filter(item => item.kol.tier.toLowerCase().includes(tierFilter.toLowerCase()));
     }
 
-    if (activeTab === 'review') {
-      list = list.filter(
-        item =>
-          item.kol.creator_category?.includes('รีวิว') ||
-          item.kol.creator_archetype === 'Top Reviewer' ||
-          item.score_breakdown.yellow_basket_ratio > 0 ||
-          item.kol.recent_videos.some(v => v.has_yellow_basket)
-      );
-    } else if (activeTab === 'guru') {
+    if (activeTab === 'guru') {
       list = list.filter(item => item.kol.creator_archetype === 'Educated Guru');
     } else if (activeTab === 'reviewer') {
       list = list.filter(item => item.kol.creator_archetype === 'Top Reviewer');
@@ -589,12 +549,12 @@ export default function HomePage() {
       'Work-Ready',
       'Competitor Conflict/Opportunity',
       'Total Match Score',
-      'Relevance (40%)',
-      'Engagement (35%)',
+      'Brand Relevance Score',
+      'Engagement Quality Score',
       'Median ER %',
       'Save-to-View Ratio',
       'View Consistency',
-      'Audience Score (25%)',
+      'Audience Signal Score',
       'Confidence',
       'Yellow Basket Ratio %',
       'Affiliate Penalized',
@@ -748,26 +708,26 @@ export default function HomePage() {
                 <span>Built for Brands That Need Results, Not Reports</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight leading-snug">
-                Live Thai TikTok KOL Discovery & Anti-Spam Intelligence
+                Live Thai TikTok Creator Intelligence & Matchmaking
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                Enter any client website or campaign brief. Our engine crawls real web content, extracts <strong>Brand DNA</strong> with Gemini 3.5 Flash Lite, searches <strong>live TikTok creators via Apify</strong>, and calculates a 3-part Dynamic Match Score (<strong>40% Brand Relevance</strong>, <strong>35% Engagement Quality</strong>, <strong>25% Audience & Commercial Viability</strong>) designed to maximize ROAS for performance campaigns.
+                วิเคราะห์และจับคู่ครีเอเตอร์ตัวจริงสำหรับตลาดไทย สกัด <strong>Brand DNA</strong> สดผ่าน Gemini 3.5 Flash Lite และ Jina Reader, ค้นหา TikTok ครีเอเตอร์สด 100% ผ่าน Apify และจำแนกตาม <strong>4 Core Creator Archetypes</strong> เพื่อสร้างผลลัพธ์แคมเปญที่วัดผลได้จริง
               </p>
 
               <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-600 font-medium">
                 <span className="flex items-center space-x-1.5 text-slate-700">
                   <CheckCircle className="w-4 h-4 text-emerald-600" />
-                  <span>100% Pure Live Scrape (No Mocks)</span>
+                  <span>100% Live TikTok Scraper (Zero-Mock)</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center space-x-1.5 text-slate-700">
-                  <ShoppingBag className="w-4 h-4 text-amber-600" />
-                  <span>Content Creator เน้นรีวิว (ยอมรับตะกร้าเหลือง 100%)</span>
+                  <Award className="w-4 h-4 text-[#0536d2]" />
+                  <span>4 Creator Archetypes Gating</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center space-x-1.5 text-slate-700">
-                  <Zap className="w-4 h-4 text-amber-500" />
-                  <span>AI Thai Campaign Pitch Hooks</span>
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Two-Stage Entity & Anti-Spam Filtering</span>
                 </span>
               </div>
             </div>
@@ -813,37 +773,18 @@ export default function HomePage() {
                 </span>
               </div>
 
-              {/* Sample Brand Chips */}
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                  Quick Test With Real Thai Brands:
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {SAMPLE_QUICK_TESTS.map((s, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => fillQuickSample(s)}
-                      className="text-left px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-[#0536d2] text-xs font-medium transition cursor-pointer flex items-center space-x-1.5"
-                    >
-                      <span>{s.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Input Fields */}
-              <div className="space-y-3 pt-2 border-t border-slate-200/90/60">
+              <div className="space-y-3.5 pt-1">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Brand Name
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Brand Name <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={brandName}
                     onChange={e => setBrandName(e.target.value)}
-                    placeholder="e.g. Her Hyness / Srichand / After You"
-                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                    placeholder="ระบุชื่อแบรนด์"
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-2 focus:ring-[#0536d2]/15 transition shadow-2xs"
                   />
                 </div>
 
@@ -856,8 +797,8 @@ export default function HomePage() {
                       type="text"
                       value={websiteUrl}
                       onChange={e => setWebsiteUrl(e.target.value)}
-                      placeholder="https://..."
-                      className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                      placeholder="https://brand.com"
+                      className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-1 focus:ring-[#0536d2]/20 transition"
                     />
                   </div>
                   <div>
@@ -868,8 +809,8 @@ export default function HomePage() {
                       type="text"
                       value={facebookUrl}
                       onChange={e => setFacebookUrl(e.target.value)}
-                      placeholder="https://facebook.com/..."
-                      className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                      placeholder="https://facebook.com/brand"
+                      className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-1 focus:ring-[#0536d2]/20 transition"
                     />
                   </div>
                 </div>
@@ -882,8 +823,8 @@ export default function HomePage() {
                     rows={2}
                     value={customNotes}
                     onChange={e => setCustomNotes(e.target.value)}
-                    placeholder="Specific product lines, price points, target personas, or special campaign instructions..."
-                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                    placeholder="ระบุจุดเด่นสินค้า กลุ่มเป้าหมาย หรือบรีฟแคมเปญเพิ่มเติม"
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-1 focus:ring-[#0536d2]/20 transition"
                   />
                 </div>
 
@@ -896,8 +837,8 @@ export default function HomePage() {
                     type="text"
                     value={manualCompetitors}
                     onChange={e => setManualCompetitors(e.target.value)}
-                    placeholder="e.g. Cerave, La Roche-Posay, Eucerin, Mizumi"
-                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-500 focus:outline-none focus:border-[#597ef3] focus:ring-1 focus:ring-[#597ef3] transition"
+                    placeholder="ระบุชื่อแบรนด์คู่แข่ง (คั่นด้วยเครื่องหมายจุลภาค)"
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-1 focus:ring-[#0536d2]/20 transition"
                   />
                 </div>
               </div>
@@ -1256,8 +1197,8 @@ export default function HomePage() {
                         <span className="w-2 h-2 rounded-full bg-slate-300" />
                       )}
                     </div>
-                    <span className="font-bold block text-xs">40/35/25 Scoring</span>
-                    <span className="text-[10px] opacity-80 block truncate">Archetypes & Rank</span>
+                    <span className="font-bold block text-xs">Match & Rank</span>
+                    <span className="text-[10px] opacity-80 block truncate">4 Archetypes & Fit</span>
                   </div>
                 </div>
 
@@ -1293,9 +1234,9 @@ export default function HomePage() {
                   <Search className="w-8 h-8 text-[#597ef3]" />
                 </div>
                 <div className="space-y-1.5 max-w-sm mx-auto">
-                  <h4 className="text-base font-bold text-slate-900">Ready for Live Performance Match</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Select an example Thai brand above or enter custom client URLs, then click <strong>Extract Brand DNA</strong> to discover high-converting TikTok creators.
+                  <h4 className="text-base font-bold text-slate-900">พร้อมสำหรับการค้นหาครีเอเตอร์</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    กรอกข้อมูลแบรนด์ เว็บไซต์ หรือ Facebook Page ทางด้านซ้าย แล้วกดปุ่มเพื่อเริ่มค้นหาและจับคู่ครีเอเตอร์ตาม 4 Archetypes
                   </p>
                 </div>
               </div>
@@ -1317,17 +1258,6 @@ export default function HomePage() {
                     <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 text-white font-bold">
                       {matchResponse.ranked_kols.length}
                     </span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('review')}
-                    className={`px-3.5 py-1.5 rounded-2xl transition cursor-pointer flex items-center space-x-1.5 ${
-                      activeTab === 'review'
-                        ? 'bg-amber-600 text-white font-bold shadow-xs'
-                        : 'text-amber-800 hover:bg-amber-100 bg-amber-50 border border-amber-200'
-                    }`}
-                  >
-                    <ShoppingBag className="w-3.5 h-3.5 text-amber-600" />
-                    <span>เน้นรีวิว/ตะกร้า ({matchResponse.ranked_kols.filter(k => (k.kol.creator_category?.includes('รีวิว') || k.kol.creator_archetype === 'Top Reviewer' || k.score_breakdown.yellow_basket_ratio > 0)).length})</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('guru')}
@@ -1407,7 +1337,7 @@ export default function HomePage() {
                 </div>
 
                 {/* TAB 1 & 2: RANKED KOLS LIST & ARCHETYPE TABS */}
-                {(activeTab === 'ranked' || activeTab === 'review' || activeTab === 'guru' || activeTab === 'reviewer' || activeTab === 'lifestyle' || activeTab === 'niche') && (
+                {(activeTab === 'ranked' || activeTab === 'guru' || activeTab === 'reviewer' || activeTab === 'lifestyle' || activeTab === 'niche') && (
                   <div className="space-y-4">
                     {filteredRankedKOLs.map(item => {
                       const isExpanded = expandedKOLId === item.kol.id;
