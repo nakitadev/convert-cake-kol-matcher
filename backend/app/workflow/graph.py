@@ -187,18 +187,65 @@ async def evaluate_and_rank_node(state: MatcherState) -> Dict[str, Any]:
 
     # Sort legitimate KOLs descending by total score
     ranked_results.sort(key=lambda x: x.total_match_score, reverse=True)
-    for idx, item in enumerate(ranked_results, 1):
-        item.rank = idx
 
     # Sort penalized traps descending
     spam_traps.sort(key=lambda x: x.total_match_score, reverse=True)
     for idx, item in enumerate(spam_traps, 1):
         item.rank = idx
 
-    top_ranked = ranked_results[:top_k]
+    # Balanced Top-K Selection (Archetype Quota Ranking):
+    # Guarantees representation across all 4 Core Creator Archetypes:
+    # 1. Educated Guru (Trust & Technical Coaching)
+    # 2. Top Reviewer (Product Review & Conversion)
+    # 3. Lifestyle & Vlog (Broad Reach & Lifestyle Integration)
+    # 4. Niche Enthusiast (Core Community & Deep Passion)
+    core_archetypes = ["Educated Guru", "Top Reviewer", "Lifestyle & Vlog", "Niche Enthusiast"]
+    selected_ids = set()
+    balanced_selection = []
 
+    # 1. First Pass: Guarantee top 2 creators per archetype if available in evaluated candidates
+    quota_per_archetype = 2
+    for archetype in core_archetypes:
+        archetype_candidates = [
+            r for r in ranked_results
+            if r.kol.creator_archetype == archetype and r.kol.id not in selected_ids
+        ]
+        archetype_candidates.sort(key=lambda x: x.total_match_score, reverse=True)
+        for c in archetype_candidates[:quota_per_archetype]:
+            balanced_selection.append(c)
+            selected_ids.add(c.kol.id)
+
+    # 2. Second Pass: Fill remaining slots up to max(top_k, len(balanced_selection))
+    # using highest-scoring overall candidates to maintain elite score quality
+    remaining_candidates = [r for r in ranked_results if r.kol.id not in selected_ids]
+    remaining_candidates.sort(key=lambda x: x.total_match_score, reverse=True)
+
+    target_total = max(top_k, len(balanced_selection))
+    slots_needed = target_total - len(balanced_selection)
+    if slots_needed > 0:
+        for c in remaining_candidates[:slots_needed]:
+            balanced_selection.append(c)
+            selected_ids.add(c.kol.id)
+
+    if len(balanced_selection) < top_k and remaining_candidates:
+        for c in remaining_candidates:
+            if c.kol.id not in selected_ids and len(balanced_selection) < top_k:
+                balanced_selection.append(c)
+                selected_ids.add(c.kol.id)
+
+    # Re-sort final balanced portfolio descending by total match score and assign rank 1..N
+    balanced_selection.sort(key=lambda x: x.total_match_score, reverse=True)
+    for idx, item in enumerate(balanced_selection, 1):
+        item.rank = idx
+
+    top_ranked = balanced_selection
+
+    archetype_counts = {
+        arch: sum(1 for r in top_ranked if r.kol.creator_archetype == arch)
+        for arch in core_archetypes
+    }
     trace.append(
-        f"Scored {len(candidates)} candidates: {len(top_ranked)} top ranked matches, "
+        f"Scored {len(candidates)} candidates: {len(top_ranked)} top ranked matches across all 4 archetypes {archetype_counts}, "
         f"{len(spam_traps)} affiliate spam accounts identified and penalized."
     )
 

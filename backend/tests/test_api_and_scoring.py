@@ -771,3 +771,112 @@ async def test_niche_consistency_ratio_and_5_clip_audit():
     assert score_spec > score_casual2
 
 
+@pytest.mark.asyncio
+async def test_balanced_archetype_portfolio_selection():
+    """
+    Verify that evaluate_and_rank_node produces a balanced portfolio across all 4 archetypes:
+    Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast,
+    ensuring every category tab has representation for media planning.
+    """
+    from app.workflow.graph import evaluate_and_rank_node
+    from app.models import BrandDNA, KOLProfile, VideoMetric
+
+    brand = BrandDNA(
+        brand_name="Proski Thailand",
+        brand_summary="Indoor Skiing",
+        target_audience="Skiers",
+        vertical="Ski & Snowboard",
+        thai_keywords=["สกี", "สโนว์บอร์ด"],
+    )
+
+    # Create candidate pool dominated by 10 lifestyle vloggers, but also containing 2 gurus, 2 reviewers, 2 niche
+    candidates = []
+    # 10 Lifestyle with very high followers (e.g. 500k)
+    for i in range(10):
+        candidates.append(
+            KOLProfile(
+                id=f"life_{i}",
+                handle=f"vlogger_{i}",
+                display_name=f"Lifestyle Star {i}",
+                tiktok_url=f"https://www.tiktok.com/@vlogger_{i}",
+                creator_persona="Lifestyle Creator",
+                vertical="Ski & Snowboard",
+                follower_count=500000 + i * 10000,
+                creator_archetype="Lifestyle & Vlog",
+                recent_videos=[VideoMetric(video_id=f"v_{i}", caption="เที่ยวสกีสนุกมาก #สกี", hashtags=["สกี"], views=100000, likes=5000, comments=200, shares=100)],
+            )
+        )
+    # 2 Gurus with lower followers (e.g. 50k)
+    for i in range(2):
+        candidates.append(
+            KOLProfile(
+                id=f"guru_{i}",
+                handle=f"coach_{i}",
+                display_name=f"Ski Coach {i}",
+                tiktok_url=f"https://www.tiktok.com/@coach_{i}",
+                creator_persona="Ski Coach",
+                vertical="Ski & Snowboard",
+                follower_count=50000 + i * 5000,
+                creator_archetype="Educated Guru",
+                recent_videos=[VideoMetric(video_id=f"vg_{i}", caption="สอนสกีขั้นพื้นฐาน ท่า carving #สกี #สอนสกี", hashtags=["สกี", "สอนสกี"], views=20000, likes=1000, comments=50, shares=30)],
+            )
+        )
+    # 2 Top Reviewers (e.g. 80k)
+    for i in range(2):
+        candidates.append(
+            KOLProfile(
+                id=f"rev_{i}",
+                handle=f"reviewer_{i}",
+                display_name=f"Ski Gear Review {i}",
+                tiktok_url=f"https://www.tiktok.com/@reviewer_{i}",
+                creator_persona="Ski Reviewer",
+                vertical="Ski & Snowboard",
+                follower_count=80000 + i * 5000,
+                creator_archetype="Top Reviewer",
+                recent_videos=[VideoMetric(video_id=f"vr_{i}", caption="รีวิวอุปกรณ์สกี พร้อมพิกัดตะกร้า #สกี", hashtags=["สกี"], has_yellow_basket=True, views=30000, likes=1500, comments=60, shares=40)],
+            )
+        )
+    # 2 Niche Enthusiasts (e.g. 40k)
+    for i in range(2):
+        candidates.append(
+            KOLProfile(
+                id=f"niche_{i}",
+                handle=f"snowboarder_{i}",
+                display_name=f"Hardcore Boarder {i}",
+                tiktok_url=f"https://www.tiktok.com/@snowboarder_{i}",
+                creator_persona="Niche Enthusiast",
+                vertical="Ski & Snowboard",
+                follower_count=40000 + i * 5000,
+                creator_archetype="Niche Enthusiast",
+                recent_videos=[VideoMetric(video_id=f"vn_{i}", caption="ซ้อมลานสกีทุกสัปดาห์ Passion ล้วนๆ #สกี", hashtags=["สกี"], views=15000, likes=900, comments=40, shares=20)],
+            )
+        )
+
+    state = {
+        "brand_dna": brand,
+        "candidates": candidates,
+        "top_k": 10,
+        "apify_status": "live_mock",
+        "trace": [],
+    }
+
+    result = await evaluate_and_rank_node(state)
+    top_ranked = result["ranked_kols"]
+
+    # Must return top_k (10)
+    assert len(top_ranked) >= 10
+
+    # Verify all 4 archetypes are represented in top_ranked
+    archetype_counts = {
+        "Educated Guru": sum(1 for r in top_ranked if r.kol.creator_archetype == "Educated Guru"),
+        "Top Reviewer": sum(1 for r in top_ranked if r.kol.creator_archetype == "Top Reviewer"),
+        "Lifestyle & Vlog": sum(1 for r in top_ranked if r.kol.creator_archetype == "Lifestyle & Vlog"),
+        "Niche Enthusiast": sum(1 for r in top_ranked if r.kol.creator_archetype == "Niche Enthusiast"),
+    }
+
+    assert archetype_counts["Educated Guru"] >= 2, f"Expected >= 2 Gurus, got {archetype_counts}"
+    assert archetype_counts["Top Reviewer"] >= 2, f"Expected >= 2 Reviewers, got {archetype_counts}"
+    assert archetype_counts["Niche Enthusiast"] >= 2, f"Expected >= 2 Niche Enthusiasts, got {archetype_counts}"
+    assert archetype_counts["Lifestyle & Vlog"] >= 2, f"Expected >= 2 Lifestyle Vloggers, got {archetype_counts}"
+
+

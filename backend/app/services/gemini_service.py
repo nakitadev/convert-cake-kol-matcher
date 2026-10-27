@@ -183,6 +183,7 @@ Respond ONLY with a valid JSON object matching this schema:
   "thai_keywords": ["5-8 direct organic consumer search terms and specific hashtags without slang (e.g. 'ไดร์เป่าผม', 'ครีมแต้มสิว', 'มอยส์เจอร์ไรเซอร์', 'เก้าอี้เพื่อสุขภาพ')"],
   "search_taxonomy": {{
     "niche_hashtags": ["2-4 specific niche Thai hashtags with #, e.g. '#สกินแคร์คนเป็นสิว', '#จัดโต๊ะทำงาน'"],
+    "educational_guru_queries": ["2-3 coaching, tutorial or technical knowledge phrases, e.g. 'สอนสกี', 'เทคนิคสโนว์บอร์ด', 'วิธีเล่นสกีสำหรับมือใหม่', 'วิธีเลือกเก้าอี้เพื่อสุขภาพ'"],
     "pain_point_queries": ["2-3 solution-oriented search phrases real Thai consumers search, e.g. 'กู้หน้าพัง', 'วิธีลดสิวอุดตันด้วยตัวเอง', 'ปวดหลังเลือกเก้าอี้ยังไง'"],
     "review_hook_queries": ["2-3 review phrases, e.g. 'รีวิวพลีชีพ', 'ซื้อซ้ำไม่ซ้ำ', 'คุ้มไหม', 'ใช้จริง'"],
     "lifestyle_persona_queries": ["2-3 lifestyle routine queries, e.g. 'รูทีนคนนอนดึก', 'แต่งหน้าไปเรียน', '1 วันกินอะไรบ้าง'"],

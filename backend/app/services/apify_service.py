@@ -53,16 +53,20 @@ class ApifyTikTokService:
 
         # Query hashtags and taxonomy queries to gather up to 30 creators
         query_tags = clean_tags[:2]
-        sq_list = []
+        target_queries = []
         if search_taxonomy:
-            for k in ["pain_point_queries", "review_hook_queries", "lifestyle_persona_queries", "competitor_seed_queries"]:
+            # Prioritize an educational/guru query (tutorials, coaching) to guarantee Guru archetype discovery
+            for gq in search_taxonomy.get("educational_guru_queries", []):
+                if gq and gq.strip() and gq.strip() not in target_queries:
+                    target_queries.append(gq.strip())
+                    break
+            # Then add review, pain point, or lifestyle queries to balance the sourcing angles
+            for k in ["review_hook_queries", "pain_point_queries", "lifestyle_persona_queries", "competitor_seed_queries"]:
                 for q in search_taxonomy.get(k, []):
-                    if q and q.strip() and q.strip() not in sq_list:
-                        sq_list.append(q.strip())
+                    if q and q.strip() and q.strip() not in target_queries and len(target_queries) < 2:
+                        target_queries.append(q.strip())
         elif search_queries:
-            sq_list = [q.strip() for q in search_queries if q and q.strip()]
-
-        target_queries = sq_list[:2]
+            target_queries = [q.strip() for q in search_queries if q and q.strip()][:2]
         total_targets = len(query_tags) + len(target_queries)
         results_per_tag = max(12, min(22, int((limit_creators * 1.4) // max(total_targets, 1))))
 
@@ -317,7 +321,9 @@ class ApifyTikTokService:
                 # 6. Query Origin & 5-Angle Taxonomy Attribution
                 query_origin = "niche_hashtags"
                 if search_taxonomy:
-                    if any(any(q.lower() in c for q in search_taxonomy.get("pain_point_queries", [])) for c in all_captions):
+                    if any(any(q.lower() in c for q in search_taxonomy.get("educational_guru_queries", [])) for c in all_captions):
+                        query_origin = "educational_guru_queries"
+                    elif any(any(q.lower() in c for q in search_taxonomy.get("pain_point_queries", [])) for c in all_captions):
                         query_origin = "pain_point_queries"
                     elif any(any(q.lower() in c for q in search_taxonomy.get("review_hook_queries", [])) for c in all_captions):
                         query_origin = "review_hook_queries"

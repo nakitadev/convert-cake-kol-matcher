@@ -33,12 +33,13 @@ class BrandDNA(BaseModel):
     search_taxonomy: Dict[str, List[str]] = Field(
         default_factory=lambda: {
             "niche_hashtags": [],
+            "educational_guru_queries": [],
             "pain_point_queries": [],
             "review_hook_queries": [],
             "lifestyle_persona_queries": [],
             "competitor_seed_queries": [],
         },
-        description="5-angle search taxonomy for TikTok discovery",
+        description="Search taxonomy across archetypes for TikTok discovery",
     )
     grounded_competitors: List[Dict[str, Any]] = Field(
         default_factory=list, description="Search-grounded Thai competitor dictionary with bilingual aliases"
