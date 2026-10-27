@@ -230,7 +230,6 @@ export default function HomePage() {
   const [liveLogs, setLiveLogs] = useState<string[]>([]);
   const [activeStep, setActiveStep] = useState<number>(0);
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
-  const [copiedHook, setCopiedHook] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
@@ -369,14 +368,14 @@ export default function HomePage() {
         ] : prev);
       } else {
         setActiveStep(4);
-        setProgressStageTitle('Step 4/4: คำนวณ Dynamic Scoring 40/35/25 & Thai Hooks');
-        setProgressStageDesc('คำนวณ Semantic Cosine Similarity (gemini-embedding-2), จำแนก 4 Archetypes และสร้าง Pitch Hooks...');
+        setProgressStageTitle('Step 4/4: คำนวณ Dynamic Scoring 40/35/25 & คัดเลือก Top Creators');
+        setProgressStageDesc('คำนวณ Semantic Cosine Similarity (gemini-embedding-2), จำแนก 4 Archetypes และจัดอันดับตามสูตร 40/35/25...');
         setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 32) * 0.7)));
         setLiveLogs(prev => !prev.some(l => l.includes('Embeddings')) ? [
           ...prev,
           `[Gemini Embeddings] Calculating 3,072-dimensional cosine similarity for Brand-Creator fit...`,
           `[Archetypes] Classifying Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast`,
-          `[AI Pitch Hooks] Synthesizing custom Thai Campaign Pitch Hooks per archetype...`
+          `[Dynamic Scoring] Finalizing 40/35/25 rankings & strategic matchmaking rationale...`
         ] : prev);
       }
     }, 400);
@@ -466,14 +465,14 @@ export default function HomePage() {
         ] : prev);
       } else {
         setActiveStep(4);
-        setProgressStageTitle('Step 4/4: คำนวณ Dynamic Scoring 40/35/25 & Thai Hooks');
-        setProgressStageDesc('คำนวณ Semantic Cosine Similarity (gemini-embedding-2), จำแนก 4 Archetypes และสร้าง Pitch Hooks...');
+        setProgressStageTitle('Step 4/4: คำนวณ Dynamic Scoring 40/35/25 & คัดเลือก Top Creators');
+        setProgressStageDesc('คำนวณ Semantic Cosine Similarity (gemini-embedding-2), จำแนก 4 Archetypes และจัดอันดับตามสูตร 40/35/25...');
         setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 34) * 0.7)));
         setLiveLogs(prev => !prev.some(l => l.includes('Embeddings')) ? [
           ...prev,
           `[Gemini Embeddings] Generating 3,072-dimensional vector representations...`,
           `[Archetypes] Classifying Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast`,
-          `[AI Pitch Hooks] Generating customized Thai Campaign Pitch Hooks per archetype...`
+          `[Dynamic Scoring] Finalizing 40/35/25 rankings & strategic matchmaking rationale...`
         ] : prev);
       }
     }, 400);
@@ -522,12 +521,6 @@ export default function HomePage() {
     } else {
       setShortlist([...shortlist, item]);
     }
-  };
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedHook(id);
-    setTimeout(() => setCopiedHook(null), 2000);
   };
 
   const filteredRankedKOLs = useMemo(() => {
@@ -605,8 +598,7 @@ export default function HomePage() {
       'Confidence',
       'Yellow Basket Ratio %',
       'Affiliate Penalized',
-      'Rationale',
-      'Primary Hook',
+      'Strategic Rationale',
     ];
     const rows = matchResponse.ranked_kols.map(item => [
       item.rank,
@@ -630,7 +622,6 @@ export default function HomePage() {
       `${Math.round(item.score_breakdown.yellow_basket_ratio * 100)}%`,
       item.score_breakdown.affiliate_spam_penalty_applied ? 'YES' : 'NO',
       `"${item.why_this_kol.replace(/"/g, '""')}"`,
-      `"${(item.thai_campaign_hooks[0] || '').replace(/"/g, '""')}"`,
     ]);
 
     const csvContent =
@@ -659,13 +650,13 @@ export default function HomePage() {
       `Selected Creators: ${shortlist.length} Influencers\n` +
       `Total Potential Reach: ${totalFollowers.toLocaleString()} Followers\n` +
       `Avg Median ER: ${avgER}%\n\n` +
-      `--- Recommended KOLs & Pitch Hooks ---\n` +
+      `--- Recommended KOLs & Match Rationale ---\n` +
       shortlist.map((item, idx) => 
         `${idx + 1}. ${item.kol.display_name} (@${item.kol.handle})\n` +
         `   • TikTok URL: ${item.kol.tiktok_url}\n` +
-        `   • Match Score: ${item.total_match_score.toFixed(1)}/100 | Tier: ${item.kol.tier}\n` +
+        `   • Match Score: ${item.total_match_score.toFixed(1)}/100 | Tier: ${item.kol.tier} | Archetype: ${item.kol.creator_archetype || 'Creator'}\n` +
         `   • Est Commercial Rate: ${item.kol.estimated_rate_thb}\n` +
-        `   • Primary Hook: "${item.thai_campaign_hooks[0] || ''}"\n`
+        `   • Performance Rationale: ${item.why_this_kol}\n`
       ).join('\n');
 
     navigator.clipboard.writeText(summary);
@@ -1266,7 +1257,7 @@ export default function HomePage() {
                       )}
                     </div>
                     <span className="font-bold block text-xs">40/35/25 Scoring</span>
-                    <span className="text-[10px] opacity-80 block truncate">Archetypes & Hooks</span>
+                    <span className="text-[10px] opacity-80 block truncate">Archetypes & Rank</span>
                   </div>
                 </div>
 
@@ -1675,40 +1666,6 @@ export default function HomePage() {
                             </strong>
                             {item.why_this_kol}
                           </div>
-
-                          {/* Campaign Pitch Hooks */}
-                          {item.thai_campaign_hooks && item.thai_campaign_hooks.length > 0 && (
-                            <div className="space-y-2 pt-1 border-t border-slate-200">
-                              <span className="text-xs font-semibold text-[#0536d2] flex items-center space-x-1.5">
-                                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Suggested Thai TikTok Campaign Hooks (Ready for Pitch):</span>
-                              </span>
-                              <div className="grid grid-cols-1 gap-1.5">
-                                {item.thai_campaign_hooks.map((hook, hIdx) => {
-                                  const hookId = `${item.kol.id}-${hIdx}`;
-                                  return (
-                                    <div
-                                      key={hIdx}
-                                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 group"
-                                    >
-                                      <span className="pr-2 italic text-slate-800">{hook}</span>
-                                      <button
-                                        onClick={() => copyToClipboard(hook, hookId)}
-                                        className="text-slate-400 hover:text-[#0536d2] transition p-1.5 cursor-pointer shrink-0 bg-white hover:bg-blue-50 rounded-lg border border-slate-200"
-                                        title="Copy Hook"
-                                      >
-                                        {copiedHook === hookId ? (
-                                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                        ) : (
-                                          <Copy className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
-                                        )}
-                                      </button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
 
                           {/* Audited Video Telemetry Drawer */}
                           {item.kol.recent_videos && item.kol.recent_videos.length > 0 && (

@@ -123,14 +123,14 @@ async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
     spam_traps: List[RankedKOL] = []
 
     for kol in candidates:
-        total_score, breakdown, why_text, hooks = scoring.evaluate_kol(kol, brand_dna)
+        total_score, breakdown, why_text, _ = scoring.evaluate_kol(kol, brand_dna)
         ranked_item = RankedKOL(
             rank=1,
             kol=kol,
             total_match_score=total_score,
             score_breakdown=breakdown,
             why_this_kol=why_text,
-            thai_campaign_hooks=hooks,
+            thai_campaign_hooks=[],
             enrichment_source=apify_status,
             llm_generator_model="gemini-3.5-flash-lite",
         )
@@ -150,30 +150,6 @@ async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
         item.rank = idx
 
     top_ranked = ranked_results[:top_k]
-
-    # Dynamic AI synthesis of personalized hooks and strategic rationale via Gemini 3.5 Flash Lite (Zero-Hardcode)
-    if gemini.is_configured and brand_dna:
-        for item in top_ranked:
-            try:
-                llm_rationale, llm_hooks = await gemini.generate_hooks_and_rationale(
-                    brand_name=brand_dna.brand_name,
-                    brand_vertical=brand_dna.vertical,
-                    brand_price=brand_dna.average_price_thb,
-                    kol_name=item.kol.display_name,
-                    kol_persona=item.kol.creator_persona,
-                    kol_styles=item.kol.content_styles,
-                    median_er=item.score_breakdown.median_engagement_rate_pct,
-                    is_spam=item.score_breakdown.affiliate_spam_penalty_applied,
-                    spam_reason=item.score_breakdown.affiliate_spam_reason or "",
-                    creator_archetype=item.kol.creator_archetype,
-                    is_review_creator=(item.kol.creator_category == "Content Creator (เน้นรีวิว)"),
-                )
-                if llm_rationale:
-                    item.why_this_kol = llm_rationale
-                if llm_hooks and len(llm_hooks) > 0:
-                    item.thai_campaign_hooks = llm_hooks
-            except Exception as e:
-                pass
 
     trace.append(
         f"Scored {len(candidates)} candidates: {len(top_ranked)} top ranked matches, "
