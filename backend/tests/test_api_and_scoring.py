@@ -510,3 +510,73 @@ async def test_parallel_brand_scrape_concurrent(monkeypatch):
     assert duration < 0.28
 
 
+@pytest.mark.asyncio
+async def test_apify_service_query_origin_and_profile_parsing(monkeypatch):
+    from app.services.apify_service import ApifyTikTokService
+    
+    service = ApifyTikTokService()
+    mock_items = [
+        {
+            "authorMeta": {
+                "name": "thaicreator_guru",
+                "nickName": "หมอนักสกี สอนเทคนิค",
+                "fans": 35000,
+                "following": 120,
+                "heart": 500000,
+                "signature": "ติดต่องาน contact@doctor.com สอนสกีสำหรับมือใหม่",
+                "avatar": "https://p16.tiktokcdn.com/avatar.jpg",
+            },
+            "id": "7123456789",
+            "text": "วิธีแก้ปัญหา ปวดเข่าเวลาเล่นสกี สโนว์บอร์ด #สกี #สโนว์บอร์ด #แก้ปวดเข่า",
+            "hashtags": [{"name": "สกี"}, {"name": "สโนว์บอร์ด"}],
+            "playCount": 85000,
+            "diggCount": 4200,
+            "commentCount": 210,
+            "shareCount": 150,
+            "collectCount": 890,
+            "hasTikTokShopProduct": False,
+            "locationCreated": "Bangkok, Thailand",
+        }
+    ]
+
+    class MockResponse:
+        status_code = 200
+        def json(self):
+            return mock_items
+
+    class MockClient:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+        async def post(self, url, json=None):
+            return MockResponse()
+
+    monkeypatch.setattr("httpx.AsyncClient", lambda *args, **kwargs: MockClient())
+
+    search_taxonomy = {
+        "niche_hashtags": ["สกี"],
+        "pain_point_queries": ["ปวดเข่า"],
+        "review_hook_queries": ["รีวิว"],
+        "lifestyle_persona_queries": [],
+        "competitor_seed_queries": [],
+    }
+
+    profiles = await service.search_live_kols_by_hashtags(
+        hashtags=["สกี"],
+        vertical="Ski & Snowboard",
+        limit_creators=5,
+        brand_name="SkiAddict",
+        search_taxonomy=search_taxonomy,
+    )
+
+    assert len(profiles) == 1
+    kol = profiles[0]
+    assert kol.handle == "thaicreator_guru"
+    assert kol.query_origin == "pain_point_queries"
+    assert kol.is_work_ready is True
+    assert kol.account_type == "real_kol"
+    assert kol.save_to_view_ratio > 0
+    assert kol.view_consistency_ratio > 0
+
+

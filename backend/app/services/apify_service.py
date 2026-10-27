@@ -272,7 +272,19 @@ class ApifyTikTokService:
                     c_name = list(detected_comps)[0].capitalize()
                     competitor_warning = f"⚠️ Competitor Conflict: Content features competitor '{c_name}'"
 
-                # 6. Creator Archetype Classification (Zero-Hardcode Policy)
+                # 6. Query Origin & 5-Angle Taxonomy Attribution
+                query_origin = "niche_hashtags"
+                if search_taxonomy:
+                    if any(any(q.lower() in c for q in search_taxonomy.get("pain_point_queries", [])) for c in all_captions):
+                        query_origin = "pain_point_queries"
+                    elif any(any(q.lower() in c for q in search_taxonomy.get("review_hook_queries", [])) for c in all_captions):
+                        query_origin = "review_hook_queries"
+                    elif any(any(q.lower() in c for q in search_taxonomy.get("lifestyle_persona_queries", [])) for c in all_captions):
+                        query_origin = "lifestyle_persona_queries"
+                    elif any(any(q.lower() in c for q in search_taxonomy.get("competitor_seed_queries", [])) for c in all_captions):
+                        query_origin = "competitor_seed_queries"
+
+                # 7. Creator Archetype Classification (Zero-Hardcode Policy)
                 # Archetype & Recommended Role are determined dynamically via Gemini LLM Instructions
                 # evaluating true content intent, knowledge depth, and style (Guru vs Lifestyle vs Reviewer vs Niche)
                 creator_archetype = "General Creator"
