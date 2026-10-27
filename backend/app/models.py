@@ -64,7 +64,8 @@ class KOLProfile(BaseModel):
     audience_language: str = Field(default="Thai", description="Primary language of creator & commenters")
     sample_comments: List[str] = Field(default_factory=list, description="Live Thai comments / inquiries from recent videos")
     recent_videos: List[VideoMetric] = Field(default_factory=list, description="Recent video metrics from TikTok")
-    is_affiliate_spam_trap: bool = Field(default=False, description="Whether creator is classified as affiliate spam / yellow basket trap")
+    creator_category: str = Field(default="Content Creator (ทั่วไป)", description="หมวดหมู่ครีเอเตอร์ เช่น Content Creator (เน้นรีวิว), Lifestyle, ฯลฯ")
+    is_affiliate_spam_trap: bool = Field(default=False, description="Whether creator is classified as fake affiliate bot/spam trap")
     estimated_rate_thb: str = Field(default="", description="Estimated campaign rate per video in THB")
 
 

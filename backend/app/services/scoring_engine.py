@@ -146,14 +146,15 @@ class ScoringEngine:
         penalty_points = 0.0
         penalty_reason = ""
 
-        if kol.is_affiliate_spam_trap or (yb_ratio >= 0.70 and (v_to_f < 0.10 or median_er < 1.5)):
+        # Spec: ยอมให้มีปักตะกร้าเหลืองได้ 100% โดยจัดเข้าหมวดหมู่ "Content Creator (เน้นรีวิว)"
+        # จะไม่หักคะแนนตะกร้าเหลือง หากเป็นครีเอเตอร์สายรีวิว (Shoppertainment / Review)
+        # จะ penalize เฉพาะบัญชีที่เป็น Fake/Bot Spam Trap ชัดเจน
+        if kol.is_affiliate_spam_trap:
             is_penalized = True
             penalty_points = 55.0
             base_engagement = max(5.0, base_engagement - penalty_points)
             penalty_reason = (
-                f"Penalized by Affiliate Spam Filter: High yellow-basket ratio ({int(yb_ratio*100)}%) "
-                f"with low authentic viewer retention (V/F: {v_to_f:.2f}, Median ER: {median_er:.1f}%). "
-                f"Indicates low-effort affiliate repost farm rather than genuine brand authority."
+                f"Penalized by Bot/Spam Filter: Account detected as automated affiliate repost farm."
             )
 
         final_eng = max(0.0, min(100.0, round(base_engagement, 1)))
@@ -241,16 +242,18 @@ class ScoringEngine:
     def _generate_strategic_rationale(self, kol: KOLProfile, brand: BrandDNA, b: SignalBreakdown) -> str:
         if b.affiliate_spam_penalty_applied:
             return (
-                f"[PENALIZED] {kol.display_name} was detected by the Anti-Spam Yellow-Basket Filter. "
+                f"[PENALIZED] {kol.display_name} was detected by the Bot/Spam Filter. "
                 f"{b.affiliate_spam_reason} "
-                f"Convert Cake Recommendation: Avoid partnering for premium brand campaigns."
+                f"Convert Cake Recommendation: Avoid partnering due to automated repost signals."
             )
 
         kw_str = f" (matched tags: {', '.join(b.matched_keywords[:3])})" if b.matched_keywords else ""
         loc_str = f"and active {', '.join(kol.primary_locations[:2])} audience footprint" if kol.primary_locations else "and nationwide audience reach"
         price_str = f" (~{kol.avg_reviewed_price_thb:,} THB)" if kol.avg_reviewed_price_thb > 0 else ""
+        cat_name = getattr(kol, 'creator_category', 'Content Creator (เน้นรีวิว)')
+        cat_str = f" [หมวดหมู่: {cat_name} | ตะกร้าเหลือง {int(b.yellow_basket_ratio*100)}%]" if b.yellow_basket_ratio > 0 else f" [หมวดหมู่: {cat_name}]"
         return (
-            f"{kol.display_name} is an ideal {kol.tier} partner for {brand.brand_name}. "
+            f"{kol.display_name}{cat_str} is an ideal {kol.tier} partner for {brand.brand_name}. "
             f"Delivers healthy engagement with a {b.median_engagement_rate_pct:.1f}% median ER and strong content relevance{kw_str}. "
             f"Audience alignment confidence is {b.confidence_level} based on price-point compatibility{price_str} "
             f"{loc_str}."
@@ -267,7 +270,14 @@ class ScoringEngine:
         price_tag = f"งบ {brand.average_price_thb:,} บาท" if brand.average_price_thb else "ราคาจับต้องได้"
         category_label = brand.sub_category or brand.vertical
 
-        # 100% Dynamic synthesis from real brand DNA and audited creator video context (Zero-Slang, Real Consumer Intent)
+        # Spec: สำหรับหมวดหมู่ Content Creator เน้นรีวิว (รองรับปักตะกร้าเหลือง 100%)
+        if getattr(kol, 'creator_category', '') == 'Content Creator (เน้นรีวิว)' or any(v.has_yellow_basket for v in kol.recent_videos):
+            h1 = f"\"ใครกำลังมองหา {category_label} หรือ {clean_topic} ปักตะกร้าเหลือง {brand.brand_name} {price_tag} ไว้ให้แล้ว รีวิวการใช้งานจริงตรงปก!\""
+            h2 = f"\"สรุปข้อดี-ข้อสังเกต {brand.brand_name} สำหรับ {category_label} คุ้มมั้ยกับราคานี้ พิกัดจิ้มตะกร้าเหลืองด้านล่างได้เลย\""
+            h3 = f"\"ทดลองใช้ {brand.brand_name} 7 วันเต็ม ตอบโจทย์คนหา {clean_topic} มั้ย สนใจกดสั่งซื้อตามในตะกร้าได้เลย!\""
+            return [h1, h2, h3]
+
+        # 100% Dynamic synthesis from real brand DNA and audited creator video context
         h1 = f"\"ใครกำลังมองหา {category_label} หรือ {clean_topic} มาดูรีวิวทดสอบ {brand.brand_name} {price_tag} ใช้งานจริงกัน\""
         h2 = f"\"สรุปข้อดี-ข้อสังเกต {brand.brand_name} สำหรับ {category_label} ตอบโจทย์มั้ยก่อนตัดสินใจซื้อ\""
         h3 = f"\"ทดลองใช้ {brand.brand_name} ติดต่อกัน 1 สัปดาห์ ประสิทธิภาพการใช้งานจริงเป็นยังไงมาดูกัน\""

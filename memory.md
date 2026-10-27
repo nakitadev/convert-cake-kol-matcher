@@ -67,10 +67,14 @@
 1. **Relevance Score (45%):**
    - Semantic Similarity ระหว่าง Brand DNA กับ Creator Content (Gemini Embeddings 3,072-dim)
    - Keyword & Thai Hashtag Matching ตรงตามกลุ่มเป้าหมายในตลาดไทย
-2. **Engagement & Anti-Spam Score (35%):**
+2. **Engagement & Content Creator Classification Score (35%):**
    - Median Engagement Rate (Likes + Comments + Shares / Views จากวิดีโอล่าสุด)
    - Views-to-Followers Retention Ratio
-   - **Anti-Spam Filter (Yellow-Basket Trap):** หากมี Yellow-Basket Ratio สูง (>70%) ร่วมกับ Median ER ต่ำ (<1.5%) หรือไม่มีปฏิสัมพันธ์จริง จะถูกหัก -55 แต้ม และถูกแยกไปไว้ในแท็บ "Affiliate Spam Traps" เพื่อเตือนแบรนด์ไม่ให้เสียเงินจ้างแอคเคานต์ฟาร์มคลิปจีน
+   - **Updated Spec — รองรับการปักตะกร้าเหลือง 100% สำหรับ "Content Creator (เน้นรีวิว)":**
+     - ยอมรับการปักตะกร้าเหลืองได้ถึง 100% โดยจัดเข้าหมวดหมู่ **"Content Creator (เน้นรีวิว)"** โดยตรง ไม่หักคะแนนหรือตีเป็น Spam Trap เพราะในตลาด TikTok ประเทศไทย ครีเอเตอร์สายรีวิว/Shoppertainment มักปักตะกร้าทุกคลิปเพื่อสร้าง Direct Conversion ให้แบรนด์
+     - ระบบมีแท็บและป้ายกำกับแยกเฉพาะ **"Content Creator เน้นรีวิว (ตะกร้าเหลือง 100%)"** เพื่อให้ทีม Performance Marketing เลือกใช้งานตามวัตถุประสงค์
+     - สร้าง Thai Campaign Hooks ที่รองรับการชี้เป้าพิกัดและปักตะกร้าเหลืองโดยเฉพาะ
+     - จะ Flag และหักคะแนน (-55 แต้ม) เฉพาะบัญชีที่เป็น Bot/Spam Farm ชัดเจน (เช่น Follower สูงผิดปกติแต่ยอด Like/Engagement แทบเป็นศูนย์)
 3. **Triangulation Demographics (20%):**
    - อนุมานข้อมูลประชากรผ่าน 4 มิติทางอ้อม (Price Proxy, Geo/Language Dialect, Creator Persona, Comment Intent)
    - **Confidence Level:** วัดจากจำนวนมิติที่มีหลักฐานยืนยัน (>=3 มิติ = High Confidence, 2 มิติ = Medium, 0-1 มิติ = Low)

@@ -156,7 +156,25 @@ class ApifyTikTokService:
 
                 yellow_count = sum(1 for v in videos if v.has_yellow_basket)
                 yellow_ratio = (yellow_count / len(videos)) if videos else 0.0
-                is_spam = yellow_ratio > 0.70 and followers > 20000
+
+                # Spec: ยอมให้มีปักตะกร้าเหลืองได้ 100% โดยจัดเข้าหมวดหมู่ "Content Creator (เน้นรีวิว)"
+                review_keywords = ["รีวิว", "ป้ายยา", "พิกัด", "ใช้ดี", "ลองแล้ว", "ตะกร้า", "ช้อปปิ้ง", "unboxing"]
+                all_captions = [v.caption.lower() for v in videos if v.caption]
+                has_review_signal = (
+                    yellow_ratio >= 0.50
+                    or any(any(kw in c for kw in review_keywords) for c in all_captions)
+                    or any(kw in bio.lower() for kw in review_keywords)
+                )
+
+                if has_review_signal or yellow_count > 0:
+                    creator_category = "Content Creator (เน้นรีวิว)"
+                else:
+                    creator_category = f"Content Creator ({vertical})"
+
+                # ตะกร้าเหลือง 100% ไม่ใช่ spam แต่คือครีเอเตอร์สายรีวิว; เฉพาะ bot ชัดเจนจึงเป็น spam
+                is_spam = False
+                if followers > 50000 and total_likes < 50:
+                    is_spam = True
 
                 # Dynamic audience inquiries synthesized from real video captions by Gemini
                 captions = [v.caption for v in videos if v.caption]
@@ -233,6 +251,7 @@ class ApifyTikTokService:
                         audience_language=audience_language,
                         sample_comments=sample_comments,
                         recent_videos=videos,
+                        creator_category=creator_category,
                         is_affiliate_spam_trap=is_spam,
                         estimated_rate_thb=est_rate,
                     )

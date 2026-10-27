@@ -144,6 +144,56 @@ def test_anti_spam_yellow_basket_penalty():
     assert hooks == ["(N/A — Account flagged as affiliate spam)"]
 
 
+def test_100_percent_yellow_basket_allowed_for_review_creator():
+    scoring = get_scoring_engine()
+    brand = BrandDNA(
+        id="b1",
+        brand_name="MizuMi",
+        vertical="Beauty & Skincare",
+        sub_category="Sunscreen & Acne Care",
+        brand_summary="Thai dermocosmetics sunscreen",
+        target_audience="Acne skin users in Thailand",
+        average_price_thb=690,
+        thai_keywords=["กันแดด", "สิว"],
+    )
+    review_kol = KOLProfile(
+        id="live_review_star",
+        handle="review.expert",
+        display_name="Review Expert Thailand",
+        tiktok_url="https://www.tiktok.com/@review.expert",
+        vertical="Beauty & Skincare",
+        bio="รีวิวสกินแคร์ใช้จริง ป้ายยาของดีในต๊อกๆ",
+        follower_count=85000,
+        tier="Micro (50K-250K)",
+        creator_persona="Skincare Reviewer",
+        creator_category="Content Creator (เน้นรีวิว)",
+        sample_comments=["ใช้ตามแล้วดีจริง", "พิกัดตะกร้าอยู่ตรงไหนคะ"],
+        recent_videos=[
+            VideoMetric(
+                video_id=f"v_{i}",
+                caption=f"รีวิวกันแดดสำหรับคนเป็นสิว คลิปที่ {i}",
+                hashtags=["รีวิวบิวตี้", "ของดีบอกต่อ"],
+                views=25000,
+                likes=1200,
+                comments=45,
+                shares=15,
+                has_yellow_basket=True,  # 100% yellow basket across all videos!
+            )
+            for i in range(5)
+        ],
+        is_affiliate_spam_trap=False,
+    )
+
+    score, breakdown, why, hooks = scoring.evaluate_kol(review_kol, brand)
+    # Spec: 100% yellow basket must NOT be penalized and should be categorized as review creator
+    assert breakdown.yellow_basket_ratio == 1.0
+    assert breakdown.affiliate_spam_penalty_applied is False
+    assert "[PENALIZED]" not in why
+    assert "Content Creator (เน้นรีวิว)" in why
+    assert "ตะกร้าเหลือง 100%" in why
+    assert any("ตะกร้าเหลือง" in h for h in hooks)
+
+
 def test_gemini_service_cosine_math():
     gemini = get_gemini_service()
     v1 = [1.0, 0.0, 0.0]

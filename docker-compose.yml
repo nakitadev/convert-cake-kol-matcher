@@ -6,6 +6,8 @@ services:
     container_name: convert-cake-backend
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - APIFY_API_TOKEN=${APIFY_API_TOKEN:-}
