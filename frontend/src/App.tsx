@@ -115,6 +115,8 @@ interface KOLProfile {
   query_origin?: string;
   save_to_view_ratio?: number;
   view_consistency_ratio?: number;
+  niche_consistency_ratio?: number;
+  is_casual_niche_fit?: boolean;
   is_affiliate_spam_trap: boolean;
   estimated_rate_thb: string;
 }
@@ -125,6 +127,8 @@ interface SignalBreakdown {
   semantic_similarity: number;
   semantic_points?: number;
   niche_keyword_points?: number;
+  niche_consistency_ratio?: number;
+  is_casual_niche_fit?: boolean;
   matched_keywords: string[];
   engagement_score_raw: number;
   engagement_weighted: number;
@@ -1425,6 +1429,21 @@ export default function HomePage() {
                                       </span>
                                     </>
                                   )}
+                                  {item.kol.is_casual_niche_fit ? (
+                                    <>
+                                      <span>•</span>
+                                      <span className="inline-flex items-center space-x-1 font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-300 shadow-2xs" title="ตรวจสอบจาก 5 คลิปล่าสุด พบว่าเป็นการเข้ามาสัมผัสชั่วคราว/ท่องเที่ยว (Casual Fit) ไม่ใช่ Core Specialist">
+                                        <span>💡 Casual Niche Fit ({Math.round((item.kol.niche_consistency_ratio ?? 0) * 100)}%)</span>
+                                      </span>
+                                    </>
+                                  ) : (item.kol.niche_consistency_ratio !== undefined && item.kol.niche_consistency_ratio >= 0.5) ? (
+                                    <>
+                                      <span>•</span>
+                                      <span className="inline-flex items-center space-x-1 font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-300 shadow-2xs" title="ตรวจสอบ 5 คลิปล่าสุด มีความเจาะจงใน Niche นี้สม่ำเสมอ">
+                                        <span>🎯 Core Niche ({Math.round(item.kol.niche_consistency_ratio * 100)}%)</span>
+                                      </span>
+                                    </>
+                                  ) : null}
                                   <span>•</span>
                                   <span className="inline-flex items-center space-x-1 font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 shadow-2xs">
                                     <ShoppingBag className="w-3 h-3 text-amber-600" />
