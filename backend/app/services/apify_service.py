@@ -51,7 +51,7 @@ class ApifyTikTokService:
             raise ValueError("Hashtags list cannot be empty. Zero-Hardcode Policy forbids fallback tags.")
 
         # Query hashtags and taxonomy queries to gather up to 50 creators
-        query_tags = clean_tags[:3]
+        query_tags = clean_tags[:2]
         sq_list = []
         if search_taxonomy:
             for k in ["pain_point_queries", "review_hook_queries", "lifestyle_persona_queries", "competitor_seed_queries"]:
@@ -61,22 +61,26 @@ class ApifyTikTokService:
         elif search_queries:
             sq_list = [q.strip() for q in search_queries if q and q.strip()]
 
-        cache_key = f"{query_tags[0]}_{vertical}_{'_'.join(sq_list[:2])}_{limit_creators}"
+        target_queries = sq_list[:2]
+        total_targets = len(query_tags) + len(target_queries)
+        results_per_tag = max(12, min(22, int((limit_creators * 1.4) // max(total_targets, 1))))
+
+        cache_key = f"{query_tags[0]}_{vertical}_{'_'.join(target_queries)}_{limit_creators}"
         now = time.time()
         if cache_key in self._cache and (now - self._cache[cache_key][0]) < 900:
             logger.info(f"Returning cached live TikTok results for {cache_key}")
             return self._cache[cache_key][1]
 
         url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=120"
-        results_per_tag = max(15, (limit_creators * 2) // max(len(query_tags), 1))
         payload: Dict[str, Any] = {
             "hashtags": query_tags,
             "resultsPerPage": results_per_tag,
+            "maxItems": int(limit_creators * 1.6),  # Cap total items to prevent Actor runaway
             "shouldDownloadVideos": False,
             "shouldDownloadCovers": False,
         }
-        if sq_list:
-            payload["searchQueries"] = sq_list[:3]
+        if target_queries:
+            payload["searchQueries"] = target_queries
 
         try:
             async with httpx.AsyncClient(timeout=130.0) as client:
