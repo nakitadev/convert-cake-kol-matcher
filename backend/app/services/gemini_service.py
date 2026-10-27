@@ -277,6 +277,104 @@ Return ONLY a valid JSON object:
         hooks = [match_data.get("conversion_angle")] if match_data and match_data.get("conversion_angle") else []
         return rationale, hooks
 
+    async def classify_creator_archetypes(
+        self,
+        creators: List[Dict[str, Any]],
+        batch_size: int = 20,
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Classifies creators into 4 Core Archetypes using LLM Instructions (Zero-Hardcode Policy).
+        Evaluates creator intent, content delivery style, and audience value proposition via Gemini LLM.
+        Differentiates Educated Guru (knowledge-sharing/technique/drills) from Lifestyle & Vlog (travel/daily routine),
+        Top Reviewer (product unboxing/comparison/buying intent), and Niche Enthusiast (subculture immersion).
+        """
+        if not self.is_configured or not creators:
+            return {}
+
+        import asyncio
+
+        chunks = [creators[i:i + batch_size] for i in range(0, len(creators), batch_size)]
+
+        async def _classify_chunk(chunk: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+            clean_items = []
+            for c in chunk:
+                clean_items.append({
+                    "id": c.get("id") or c.get("handle"),
+                    "handle": c.get("handle", ""),
+                    "display_name": c.get("display_name", ""),
+                    "bio": c.get("bio", ""),
+                    "recent_video_captions": [str(cap)[:150] for cap in c.get("captions", []) if cap][:5],
+                    "yellow_basket_ratio": c.get("yellow_basket_ratio", 0.0),
+                    "vertical": c.get("vertical", ""),
+                })
+
+            prompt = f"""You are the Lead Creator Categorization & Audience Strategist for TikTok Thailand at Convert Cake.
+Your task is to classify each creator into their true Creator Archetype and recommend their campaign role based on the INSTRUCTION CRITERIA below.
+
+CRITICAL INSTRUCTIONS - ZERO HARDCODED KEYWORDS:
+Do NOT simply match keywords or words in bio. Understand the semantics, tone, intent, and core value proposition that each creator provides to their viewers.
+
+4 Core Creator Archetypes & Classification Guidelines:
+
+1. 'Educated Guru' (Recommended Role: 'Trust & Credibility')
+   - Core Value: Knowledge transfer, skill training, technical analysis, and educational problem-solving.
+   - Content Focus: Deep educational breakdowns, step-by-step tutorials, technique drills, correcting common mistakes/posture, explaining the science/mechanics/ingredients, medical/health/sports coaching, professional advice.
+   - Distinction vs Lifestyle/Travel: A creator going on a ski trip or vacation vlog is NOT a guru; an instructor teaching edging drills, balance posture, and safety rules IS an Educated Guru.
+
+2. 'Top Reviewer' (Recommended Role: 'Conversion & Sales')
+   - Core Value: Product evaluation, buying decision assistance, and commercial shoppertainment.
+   - Content Focus: Hands-on testing, unboxings, comparative testing (A vs B), honest pros/cons, shopping haul reviews, price-to-value assessment, TikTok Shop yellow basket showcases.
+   - Distinction: Content explicitly tests items to tell followers whether to buy or where to get them (พิกัด).
+
+3. 'Lifestyle & Vlog' (Recommended Role: 'Brand Awareness & Discovery')
+   - Core Value: Entertainment, aesthetic relatability, and personal lifestyle inspiration.
+   - Content Focus: Daily life vlogs, travel diaries, holiday trips, aesthetic routines (GRWM, Day in my life), cafe hopping, food experiences, fashion/OOTD, humor, casual storytelling.
+   - Distinction vs Guru: They document their personal experiences, travels, and lifestyle rather than providing structured education or technical skill instruction.
+
+4. 'Niche Enthusiast' (Recommended Role: 'Hyper-Targeted Reach')
+   - Core Value: Subculture authenticity, passionate hobby immersion, and community connection.
+   - Content Focus: Deep immersion in a specific subculture, extreme sport, dedicated hobby, or passionate community (e.g., ski/snowboard riders, mechanical keyboards, custom car tuning, pet breeding, retro gaming).
+   - Distinction: Content is deeply embedded in the specific enthusiast community and subculture rather than general mass lifestyle.
+
+5. 'General Creator' (Recommended Role: 'Brand Awareness')
+   - Broad entertainment, comedy, or mixed casual content that doesn't strongly lean into one of the 4 defined archetypes.
+
+Creators to Classify:
+{json.dumps(clean_items, ensure_ascii=False, indent=2)}
+
+Return ONLY a valid JSON object mapping each creator's 'id' to their classification:
+{{
+  "<creator_id>": {{
+    "creator_archetype": "Educated Guru" | "Top Reviewer" | "Lifestyle & Vlog" | "Niche Enthusiast" | "General Creator",
+    "recommended_role": "Trust & Credibility" | "Conversion & Sales" | "Brand Awareness & Discovery" | "Hyper-Targeted Reach" | "Brand Awareness",
+    "reasoning": "A concise 1-sentence explanation in Thai explaining why their content fits this archetype based on the instructions"
+  }}
+}}
+"""
+            try:
+                response = await asyncio.to_thread(
+                    self.client.models.generate_content,
+                    model=self.llm_model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.2,
+                    ),
+                )
+                if response and response.text:
+                    parsed = json.loads(response.text)
+                    if isinstance(parsed, dict):
+                        return parsed
+            except Exception as e:
+                print(f"[GeminiService] Error classifying creator batch: {e}")
+            return {}
+
+        results = await asyncio.gather(*[_classify_chunk(chunk) for chunk in chunks])
+        merged = {}
+        for r in results:
+            merged.update(r)
+        return merged
+
     async def generate_audience_comments(
         self, kol_name: str, handle: str, bio: str, captions: List[str], vertical: str
     ) -> List[str]:

@@ -266,78 +266,11 @@ class ApifyTikTokService:
                     c_name = list(detected_comps)[0].capitalize()
                     competitor_warning = f"⚠️ Competitor Conflict: Content features competitor '{c_name}'"
 
-                # 6. Creator Archetype Classification (Spec 4.2)
-                # Differentiate true Educated Guru from Lifestyle & Travel vloggers
-                guru_keywords = [
-                    "ครู", "สอน", "อาจารย์", "โค้ช", "หมอ", "แพทย์", "เภสัช", "ผู้ฝึกสอน",
-                    "instructor", "coach", "trainer", "เทคนิคการเล่น", "ท่าที่ถูกต้อง",
-                    "แบบฝึกหัด", "drills", "form check", "tutorial", "ข้อควรระวังสำหรับมือใหม่",
-                    "วิทยาศาสตร์", "กลไก", "สารอาหาร", "วิจัย", "พื้นฐานการ"
-                ]
-                travel_vlog_keywords = [
-                    "vlog", "travel", "เที่ยว", "ท่องเที่ยว", "ประวัติศาสตร์", "lifestyle",
-                    "ชีวิตประจำวัน", "myday", "my day", "#vlog", "#grwm", "#ootd",
-                    "ไปเที่ยว", "คาเฟ่", "trip", "japan", "รีวิวที่เที่ยว", "กิจกรรมวันหยุด",
-                    "พากย์เสียง", "วันหนึ่ง", "แต่งตัว", "วันพักผ่อน", "culture", "landmarks"
-                ]
-                review_keywords = [
-                    "รีวิว", "พิกัด", "คุ้มไหม", "ใช้จริง", "เทียบกัน", "แกะกล่อง",
-                    "unboxing", "ของมันต้องมี", "ป้ายยา", "ชี้เป้า", "ราคา"
-                ]
-                niche_sports_keywords = [
-                    "rider", "snowboard", "ski", "skier", "สเก็ต", "เซิร์ฟ", "surf",
-                    "extreme", "กีฬา", "athlete", "ฝึกซ้อม", "สายลุย", "นักสกี", "นักกีฬา"
-                ]
-
-                avg_caption_len = (sum(len(v.caption) for v in videos) / len(videos)) if videos else 0
-
-                query_origin = "niche_hashtags"
-                if search_taxonomy:
-                    if any(any(q.lower() in c for q in search_taxonomy.get("pain_point_queries", [])) for c in all_captions):
-                        query_origin = "pain_point_queries"
-                    elif any(any(q.lower() in c for q in search_taxonomy.get("review_hook_queries", [])) for c in all_captions):
-                        query_origin = "review_hook_queries"
-                    elif any(any(q.lower() in c for q in search_taxonomy.get("lifestyle_persona_queries", [])) for c in all_captions):
-                        query_origin = "lifestyle_persona_queries"
-                    elif any(any(q.lower() in c for q in search_taxonomy.get("competitor_seed_queries", [])) for c in all_captions):
-                        query_origin = "competitor_seed_queries"
-
-                # Dissect signals
-                has_travel_lifestyle = (
-                    any(any(kw in c for kw in travel_vlog_keywords) for c in all_captions)
-                    or any(kw in bio.lower() for kw in travel_vlog_keywords)
-                    or query_origin == "lifestyle_persona_queries"
-                )
-                has_explicit_guru = (
-                    any(kw in bio.lower() for kw in ["ครู", "สอน", "อาจารย์", "โค้ช", "หมอ", "แพทย์", "เภสัช", "ผู้ฝึกสอน", "instructor", "coach", "trainer"])
-                    or any(any(kw in c for kw in ["เทคนิคการเล่น", "ท่าที่ถูกต้อง", "แบบฝึกหัด", "drills", "form check", "tutorial", "ข้อควรระวังสำหรับมือใหม่", "วิทยาศาสตร์"]) for c in all_captions)
-                    or (query_origin == "pain_point_queries" and (avg_caption_len >= 80 or save_to_view_ratio >= 0.04) and not has_travel_lifestyle)
-                )
-                has_review_signal = (
-                    creator_category == "Content Creator (เน้นรีวิว)"
-                    or query_origin == "review_hook_queries"
-                    or yellow_ratio >= 0.20
-                    or any(any(kw in c for kw in review_keywords) for c in all_captions)
-                )
-
-                if len(detected_comps) >= 2 or query_origin == "competitor_seed_queries":
-                    creator_archetype = "Niche Enthusiast"
-                    recommended_role = "Hyper-Targeted Reach"
-                elif has_explicit_guru and not (has_travel_lifestyle and not any(kw in bio.lower() for kw in ["ครู", "สอน", "โค้ช", "instructor", "coach"])):
-                    creator_archetype = "Educated Guru"
-                    recommended_role = "Trust & Credibility"
-                elif has_review_signal:
-                    creator_archetype = "Top Reviewer"
-                    recommended_role = "Conversion & Sales"
-                elif has_travel_lifestyle or yellow_ratio < 0.20:
-                    creator_archetype = "Lifestyle & Vlog"
-                    recommended_role = "Brand Awareness & Discovery"
-                elif any(any(kw in c for kw in niche_sports_keywords) for c in all_captions) or any(kw in bio.lower() for kw in niche_sports_keywords):
-                    creator_archetype = "Niche Enthusiast"
-                    recommended_role = "Hyper-Targeted Reach"
-                else:
-                    creator_archetype = "Lifestyle & Vlog"
-                    recommended_role = "Brand Awareness"
+                # 6. Creator Archetype Classification (Zero-Hardcode Policy)
+                # Archetype & Recommended Role are determined dynamically via Gemini LLM Instructions
+                # evaluating true content intent, knowledge depth, and style (Guru vs Lifestyle vs Reviewer vs Niche)
+                creator_archetype = "General Creator"
+                recommended_role = "Brand Awareness"
 
                 # Dynamic audience inquiries synthesized from real video captions by Gemini
                 captions = [v.caption for v in videos if v.caption]
@@ -430,6 +363,41 @@ class ApifyTikTokService:
 
                 if len(profiles) >= limit_creators:
                     break
+
+            # Zero-Hardcode: Classify Creator Archetypes via Gemini LLM Instructions
+            if profiles:
+                try:
+                    from app.services.gemini_service import get_gemini_service
+                    gemini = get_gemini_service()
+                    if gemini.is_configured:
+                        creators_to_classify = [
+                            {
+                                "id": p.id,
+                                "handle": p.handle,
+                                "display_name": p.display_name,
+                                "bio": p.bio,
+                                "captions": [v.caption for v in p.recent_videos if v.caption][:5],
+                                "yellow_basket_ratio": round(
+                                    sum(1 for v in p.recent_videos if v.has_yellow_basket) / max(len(p.recent_videos), 1),
+                                    2
+                                ),
+                                "vertical": p.vertical,
+                            }
+                            for p in profiles
+                        ]
+                        classification_map = await gemini.classify_creator_archetypes(creators_to_classify)
+                        for p in profiles:
+                            if p.id in classification_map:
+                                c_info = classification_map[p.id]
+                                p.creator_archetype = c_info.get("creator_archetype", p.creator_archetype)
+                                p.recommended_role = c_info.get("recommended_role", p.recommended_role)
+                                if p.creator_archetype == "Top Reviewer":
+                                    p.creator_category = "Content Creator (เน้นรีวิว)"
+                                if c_info.get("reasoning"):
+                                    p.creator_persona = f"{p.creator_persona} | {c_info['reasoning']}"
+                        logger.info(f"Classified {len(classification_map)} creators via Gemini LLM instructions (Zero-Hardcode)")
+                except Exception as e:
+                    logger.warning(f"Instruction-based creator classification error: {e}")
 
             logger.info(f"Discovered {len(profiles)} live creators from Apify for {query_tags}")
             if profiles:

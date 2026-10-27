@@ -238,6 +238,60 @@ async def test_zero_hardcode_discovery_policy():
         await discover_candidates_node({"brand_dna": bad_dna})
 
 
+@pytest.mark.asyncio
+async def test_creator_archetype_instruction_classification():
+    """
+    Tests that creator classification uses LLM instruction differentiating
+    Educated Guru (knowledge-sharing/techniques) from Lifestyle & Vlog (travel/daily life)
+    and Top Reviewer (unboxing/comparison/buying advice) without hardcoded keywords.
+    """
+    gemini = get_gemini_service()
+    if not gemini.is_configured:
+        pytest.skip("GEMINI_API_KEY not configured")
+
+    creators = [
+        {
+            "id": "guru_1",
+            "handle": "ski_instructor_th",
+            "display_name": "ครูอาร์ท สอนสกี",
+            "bio": "สอนสกีและสโนว์บอร์ดระดับมืออาชีพ อธิบายหลักการเบรกและการควบคุมบอร์ด",
+            "captions": ["3 ท่าฝึกซ้อมปรับสรีระร่างกายก่อนขึ้นลานหิมะจริง", "เทคนิคการถ่ายน้ำหนักขอบสกีเพื่อการเลี้ยวที่ปลอดภัย"],
+            "yellow_basket_ratio": 0.0,
+            "vertical": "Sports & Outdoors",
+        },
+        {
+            "id": "travel_1",
+            "handle": "japan_trip_vlogger",
+            "display_name": "แพรว พาหลงทาง",
+            "bio": "Vlogger ท่องเที่ยวญี่ปุ่น กิน เที่ยว พักผ่อน ชิลๆ กับธรรมชาติสวยๆ",
+            "captions": ["ไปเที่ยวลานสกีญี่ปุ่นวิวหิมะสวยตาแตกมากทุกคน แวะกินไอติมต่อ", "เช่าชุดเที่ยวเมืองหิมะ ถ่ายรูปมุมไหนก็ปัง #เที่ยวญี่ปุ่น"],
+            "yellow_basket_ratio": 0.0,
+            "vertical": "Travel & Lifestyle",
+        },
+        {
+            "id": "reviewer_1",
+            "handle": "honest_review_th",
+            "display_name": "รีวิวตามจริง",
+            "bio": "ซื้อเองรีวิวเอง ชี้เป้าของน่าใช้ พิกัดตะกร้าเหลือง",
+            "captions": ["เทียบแว่นกันแดด 3 รุ่น คุ้มไหมที่จะซื้อ มีพิกัดในตะกร้า", "เปิดกล่องลองของใหม่ ซื้อจากต๊อกต๊อกช็อป"],
+            "yellow_basket_ratio": 0.8,
+            "vertical": "Product Review",
+        },
+    ]
+    res = await gemini.classify_creator_archetypes(creators)
+    assert "guru_1" in res
+    assert res["guru_1"]["creator_archetype"] == "Educated Guru"
+    assert res["guru_1"]["recommended_role"] == "Trust & Credibility"
+
+    assert "travel_1" in res
+    assert res["travel_1"]["creator_archetype"] == "Lifestyle & Vlog"
+    assert res["travel_1"]["recommended_role"] == "Brand Awareness & Discovery"
+
+    assert "reviewer_1" in res
+    assert res["reviewer_1"]["creator_archetype"] == "Top Reviewer"
+    assert res["reviewer_1"]["recommended_role"] == "Conversion & Sales"
+
+
 def test_full_spec_40_35_25_and_archetypes():
     scoring = get_scoring_engine()
     brand = BrandDNA(

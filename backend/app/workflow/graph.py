@@ -103,9 +103,44 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
 async def enrich_apify_node(state: MatcherState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
     trace.append("Node 3: enrich_apify_node started")
+    candidates = state.get("candidates", [])
+
+    # Zero-Hardcode: Ensure any unclassified candidates are classified via Gemini Instructions
+    unclassified = [c for c in candidates if c.creator_archetype == "General Creator"]
+    if unclassified:
+        gemini = get_gemini_service()
+        if gemini.is_configured:
+            try:
+                creators_to_classify = [
+                    {
+                        "id": p.id,
+                        "handle": p.handle,
+                        "display_name": p.display_name,
+                        "bio": p.bio,
+                        "captions": [v.caption for v in p.recent_videos if v.caption][:5],
+                        "yellow_basket_ratio": round(
+                            sum(1 for v in p.recent_videos if v.has_yellow_basket) / max(len(p.recent_videos), 1),
+                            2
+                        ),
+                        "vertical": p.vertical,
+                    }
+                    for p in unclassified
+                ]
+                classification_map = await gemini.classify_creator_archetypes(creators_to_classify)
+                for p in unclassified:
+                    if p.id in classification_map:
+                        c_info = classification_map[p.id]
+                        p.creator_archetype = c_info.get("creator_archetype", p.creator_archetype)
+                        p.recommended_role = c_info.get("recommended_role", p.recommended_role)
+                        if p.creator_archetype == "Top Reviewer":
+                            p.creator_category = "Content Creator (เน้นรีวิว)"
+                trace.append(f"Classified {len(classification_map)} creators via Gemini Instructions (Zero-Hardcode)")
+            except Exception as e:
+                trace.append(f"Gemini instruction classification warning: {e}")
+
     apify_status = "Live TikTok Scraper Telemetry (Apify Clockworks Active)"
     trace.append(f"Apify telemetry status: {apify_status}")
-    return {"apify_status": apify_status, "trace": trace}
+    return {"apify_status": apify_status, "candidates": candidates, "trace": trace}
 
 
 async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
