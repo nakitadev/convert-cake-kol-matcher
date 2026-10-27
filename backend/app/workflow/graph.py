@@ -78,7 +78,7 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
             live_candidates = await apify.search_live_kols_by_hashtags(
                 hashtags=keywords,
                 vertical=vertical,
-                limit_creators=16,
+                limit_creators=50,
                 search_taxonomy=brand_dna.search_taxonomy,
                 grounded_competitors=brand_dna.grounded_competitors,
                 manual_competitors=brand_dna.manual_competitors,
@@ -216,7 +216,7 @@ def get_matcher_graph():
 async def run_full_matching(
     brand_request: Optional[BrandAnalyzeRequest] = None,
     brand_dna: Optional[BrandDNA] = None,
-    top_k: int = 8,
+    top_k: int = 20,
     include_traps: bool = True,
     min_followers: Optional[int] = None,
     max_followers: Optional[int] = None,

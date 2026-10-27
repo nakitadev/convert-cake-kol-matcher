@@ -146,7 +146,7 @@ class RankedKOL(BaseModel):
 
 class MatchRequest(BaseModel):
     brand_dna: BrandDNA
-    top_k: int = Field(default=8, ge=1, le=36, description="Number of top ranked KOLs to return")
+    top_k: int = Field(default=20, ge=1, le=50, description="Number of top ranked KOLs to return")
     include_penalized_traps: bool = Field(default=True, description="Whether to include affiliate spam accounts for transparency")
     min_followers: Optional[int] = Field(default=None, description="Optional minimum follower filter")
     max_followers: Optional[int] = Field(default=None, description="Optional maximum follower filter")
@@ -158,7 +158,7 @@ class AutoMatchRequest(BaseModel):
     facebook_url: Optional[str] = None
     custom_notes: Optional[str] = None
     manual_competitors: Optional[List[str]] = Field(default_factory=list)
-    top_k: int = Field(default=8, ge=1, le=36)
+    top_k: int = Field(default=20, ge=1, le=50)
 
 
 class MatchResponse(BaseModel):

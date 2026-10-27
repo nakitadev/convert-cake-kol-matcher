@@ -216,7 +216,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [tierFilter, setTierFilter] = useState('All');
   const [sortBy, setSortBy] = useState<'score' | 'er' | 'followers'>('score');
-  const [topK, setTopK] = useState(6);
+  const [topK, setTopK] = useState(20);
 
   // Loading & Diagnostics
   const [isAnalyzing, setIsAnalyzing] = useState(false);
