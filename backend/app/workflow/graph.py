@@ -114,7 +114,7 @@ async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
 
     brand_dna = state.get("brand_dna")
     candidates = state.get("candidates", [])
-    top_k = state.get("top_k", 8)
+    top_k = state.get("top_k", 20)
     apify_status = state.get("apify_status", "Live TikTok Scraper")
 
     scoring = get_scoring_engine()
