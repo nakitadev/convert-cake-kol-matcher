@@ -62,22 +62,38 @@
 
 ---
 
-### 6. Scoring Engine & Multi-Signal Algorithms (Hybrid 100 Pts)
-คะแนนรวม 100 คะแนน แบ่งออกเป็น 3 ส่วนไฮบริด:
-1. **Relevance Score (45%):**
-   - Semantic Similarity ระหว่าง Brand DNA กับ Creator Content (Gemini Embeddings 3,072-dim)
-   - Keyword & Thai Hashtag Matching ตรงตามกลุ่มเป้าหมายในตลาดไทย
-2. **Engagement & Content Creator Classification Score (35%):**
-   - Median Engagement Rate (Likes + Comments + Shares / Views จากวิดีโอล่าสุด)
-   - Views-to-Followers Retention Ratio
-   - **Updated Spec — รองรับการปักตะกร้าเหลือง 100% สำหรับ "Content Creator (เน้นรีวิว)":**
-     - ยอมรับการปักตะกร้าเหลืองได้ถึง 100% โดยจัดเข้าหมวดหมู่ **"Content Creator (เน้นรีวิว)"** โดยตรง ไม่หักคะแนนหรือตีเป็น Spam Trap เพราะในตลาด TikTok ประเทศไทย ครีเอเตอร์สายรีวิว/Shoppertainment มักปักตะกร้าทุกคลิปเพื่อสร้าง Direct Conversion ให้แบรนด์
+### 6. Scoring Engine & Multi-Signal Algorithms (Dynamic 40 / 35 / 25 Pts)
+คะแนนรวม 100 คะแนน แบ่งออกเป็น 3 มิติเชิงกลยุทธ์ตาม Full System Specification:
+1. **Relevance Score (40 คะแนน):**
+   - **Semantic Similarity (28 คะแนน):** Cosine Similarity ระหว่าง Brand DNA กับ Creator Content (Gemini Embeddings 3,072 มิติ)
+   - **Niche Keyword & Work-Ready Match (12 คะแนน):** จับคู่คีย์เวิร์ดแบรนด์ตรงตัว (8 คะแนน) + โบนัส Work-Ready Status พร้อมรับสปอนเซอร์ (4 คะแนน)
+2. **Engagement Quality (35 คะแนน):**
+   - **Median Engagement Rate (15 คะแนน):** วัดจาก `(Likes + 2*Comments + 3*Shares + Saves) / Views` ใช้ค่ามัธยฐานของคลิปย้อนหลัง
+   - **Save-to-View Utility Ratio (10 คะแนน):** คำนวณ `(Collects + 0.7*Shares) / Views` พร้อมโบนัส +2 คะแนนสำหรับครีเอเตอร์สาย Educated Guru
+   - **View Consistency Ratio (10 คะแนน):** คำนวณ `Median Views / Mean Views` ตรวจสอบความสม่ำเสมอของยอดวิว ไม่พึ่งพาไวรัลฟลุ๊ค
+   - **Updated Spec — รองรับการปักตะกร้าเหลือง 100% สำหรับ "Content Creator (เน้นรีวิว)" / Top Reviewer:**
+     - ยอมรับการปักตะกร้าเหลืองได้ถึง 100% โดยจัดเข้าหมวดหมู่ **"Content Creator (เน้นรีวิว)"** และ Archetype **"Top Reviewer"** ไม่หักคะแนนหรือตีเป็น Spam Trap เพราะในตลาด TikTok ประเทศไทย ครีเอเตอร์สายรีวิว/Shoppertainment จำเป็นต้องปักตะกร้าทุกคลิปเพื่อสร้าง Direct Conversion ให้แบรนด์
      - ระบบมีแท็บและป้ายกำกับแยกเฉพาะ **"Content Creator เน้นรีวิว (ตะกร้าเหลือง 100%)"** เพื่อให้ทีม Performance Marketing เลือกใช้งานตามวัตถุประสงค์
-     - สร้าง Thai Campaign Hooks ที่รองรับการชี้เป้าพิกัดและปักตะกร้าเหลืองโดยเฉพาะ
-     - จะ Flag และหักคะแนน (-55 แต้ม) เฉพาะบัญชีที่เป็น Bot/Spam Farm ชัดเจน (เช่น Follower สูงผิดปกติแต่ยอด Like/Engagement แทบเป็นศูนย์)
-3. **Triangulation Demographics (20%):**
-   - อนุมานข้อมูลประชากรผ่าน 4 มิติทางอ้อม (Price Proxy, Geo/Language Dialect, Creator Persona, Comment Intent)
-   - **Confidence Level:** วัดจากจำนวนมิติที่มีหลักฐานยืนยัน (>=3 มิติ = High Confidence, 2 มิติ = Medium, 0-1 มิติ = Low)
+     - จะ Flag และหักคะแนนเฉพาะบัญชีที่เป็น Bot/Spam Farm ชัดเจนเท่านั้น
+3. **Audience Proxy & Commercial Viability (25 คะแนน):**
+   - **Thai Audience Authenticity (10 คะแนน):** ตรวจจับสัดส่วนพยัญชนะ/สระภาษาไทยในแคปชันและคอมเมนต์ (Verified Thai Audience)
+   - **Buyer Intent Proxy (10 คะแนน):** คำนวณสัดส่วน Inquiry Ratio และคีย์เวิร์ดบอกความสนใจซื้อจริง (เช่น `พิกัด`, `ซื้อที่ไหน`, `ราคา`, `ใช้ดี`, `ป้ายยา`)
+   - **Affiliate Saturation Health (5 คะแนน):** ให้คะแนนสุขภาพความหนาแน่นของการขาย (เต็ม 5 คะแนนสำหรับสายรีวิวที่ปักตะกร้า 100%)
+
+---
+
+### 7. Creator Archetypes & Grounded Competitor Detection
+- **4 Creator Archetypes:**
+  1. **Educated Guru:** ครีเอเตอร์สายให้ความรู้ เจาะลึกส่วนผสม/กลไกการทำงาน (บทบาท: Trust & Credibility)
+  2. **Top Reviewer:** ครีเอเตอร์สายป้ายยา สาธิตการใช้งานจริง ยอมรับตะกร้าเหลือง 100% (บทบาท: Conversion & Sales)
+  3. **Lifestyle & Vlog:** ครีเอเตอร์สาย GRWM, Daily Vlog สอดแทรกสินค้าอย่างแนบเนียน (บทบาท: Brand Awareness)
+  4. **Niche Enthusiast:** ครีเอเตอร์สายเปรียบเทียบหลายแบรนด์ หรือเจาะลึกเฉพาะทาง (บทบาท: Hyper-Targeted Reach)
+- **Grounded Thai Competitor Detection (3 ระดับ):**
+  - *Layer 1:* Manual Competitor Input จากผู้ใช้
+  - *Layer 2:* Discovery Competitors จาก Gemini สกัดชื่อแบรนด์และชื่อเรียกภาษาไทย
+  - *Layer 3:* Live Caption Cross-Check ตรวจจับการพูดถึงคู่แข่ง หากพบ 1 แบรนด์จะติดป้ายเตือน `⚠️ Competitor Conflict` หากพบ >=2 แบรนด์จะระบุเป็น `🎯 Niche Enthusiast Opportunity`
+- **Two-Stage Entity Filtering:**
+  - กรองบัญชีร้านค้า Official/ตัวแทนจำหน่าย (`Official`, `Store`, `Shop`, `ราคาส่ง`, `เปิดบิล`) ออกตั้งแต่ต้นทาง เพื่อป้องกันผลลัพธ์ปนเปื้อน
 
 ---
 
