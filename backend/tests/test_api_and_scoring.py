@@ -580,3 +580,106 @@ async def test_apify_service_query_origin_and_profile_parsing(monkeypatch):
     assert kol.view_consistency_ratio > 0
 
 
+@pytest.mark.asyncio
+async def test_competitor_and_merchant_accounts_filtered_by_two_stage_filter(monkeypatch):
+    from app.services.apify_service import ApifyTikTokService
+    service = ApifyTikTokService(api_token="test_token")
+
+    mock_items = [
+        # 1. Competitor Venue / Official Shop: @ski.bkk
+        {
+            "id": "v_comp",
+            "text": "ซ้อมสโนว์บอร์ดวันหยุด #สกี #สโนว์บอร์ด",
+            "playCount": 12000,
+            "diggCount": 800,
+            "commentCount": 30,
+            "shareCount": 20,
+            "authorMeta": {
+                "name": "ski.bkk",
+                "nickName": "Ski BKK",
+                "signature": "Ski & Snowboard Club Ram Inthra 40 สอบถาม/จองคิว LINE: @skibkk",
+                "fans": 25000,
+                "heart": 15000,
+            },
+        },
+        # 2. Client's Own Brand Channel: @proski.thailand
+        {
+            "id": "v_own",
+            "text": "เปิดบริการแล้ววันนี้ Proski Thailand #สกี",
+            "playCount": 5000,
+            "diggCount": 300,
+            "authorMeta": {
+                "name": "proski.thailand",
+                "nickName": "Proski Thailand Official",
+                "signature": "Indoor Ski Simulator Thailand",
+                "fans": 12000,
+                "heart": 8000,
+            },
+        },
+        # 3. Pure Merchant Store
+        {
+            "id": "v_store",
+            "text": "ชุดสกีพร้อมส่ง #สกี",
+            "playCount": 3000,
+            "diggCount": 150,
+            "authorMeta": {
+                "name": "skistore_official",
+                "nickName": "Ski Equipment Store",
+                "signature": "ขายส่งอุปกรณ์สกี สั่งซื้อจิ้มลิงก์ ส่งฟรีทั่วไทย",
+                "fans": 10000,
+                "heart": 4000,
+            },
+        },
+        # 4. Legitimate KOL: @snow_vlogger
+        {
+            "id": "v_kol",
+            "text": "หัดเล่นสกีวันแรก ล้มไม่เป็นท่าแต่สนุกมาก #สกี #lifestyle",
+            "playCount": 85000,
+            "diggCount": 4500,
+            "commentCount": 150,
+            "shareCount": 320,
+            "collectCount": 410,
+            "authorMeta": {
+                "name": "snow_vlogger",
+                "nickName": "Snowy Journey",
+                "signature": "เที่ยวหน้าหนาว & Vlogger สอนเทคนิคสกีพื้นฐาน ติดต่องาน dm for work",
+                "fans": 42000,
+                "heart": 210000,
+            },
+        },
+    ]
+
+    class MockResponse:
+        status_code = 200
+        def json(self):
+            return mock_items
+
+    class MockClient:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+        async def post(self, url, json=None):
+            return MockResponse()
+
+    monkeypatch.setattr("httpx.AsyncClient", lambda *args, **kwargs: MockClient())
+
+    profiles = await service.search_live_kols_by_hashtags(
+        hashtags=["สกี"],
+        vertical="Ski & Snowboard",
+        limit_creators=5,
+        brand_name="Proski",
+        grounded_competitors=[{"brand_en": "Ski BKK", "aliases": ["ski.bkk", "skibkk"]}],
+        manual_competitors=["Ski Addict"],
+    )
+
+    handles = [p.handle for p in profiles]
+    # Verify that competitor account @ski.bkk, own brand account @proski.thailand, and pure store @skistore_official were ALL filtered out
+    assert "ski.bkk" not in handles
+    assert "proski.thailand" not in handles
+    assert "skistore_official" not in handles
+    # Only genuine creator remains
+    assert "snow_vlogger" in handles
+    assert len(profiles) == 1
+
+

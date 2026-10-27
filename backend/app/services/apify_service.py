@@ -171,6 +171,28 @@ class ApifyTikTokService:
                     )
                 )
 
+            # Grounded Competitor Dictionary & Competitor Entity Pre-computation
+            known_comps = []
+            if grounded_competitors:
+                for gc in grounded_competitors:
+                    b_en = gc.get("brand_en")
+                    if b_en:
+                        known_comps.append(b_en.lower())
+                    for a in gc.get("aliases", []):
+                        if a:
+                            known_comps.append(str(a).lower())
+            if manual_competitors:
+                for mc in manual_competitors:
+                    if mc:
+                        known_comps.append(str(mc).lower())
+
+            # Auto-enrich category competitors for specialized sports / ski venues
+            combined_context = f"{brand_name or ''} {vertical}".lower()
+            if any(w in combined_context for w in ["ski", "snowboard", "สกี", "สโนว์บอร์ด", "sports"]):
+                for sc in ["ski bkk", "ski.bkk", "skibkk", "ski addict", "skiaddict", "skiaddictbangkok", "ski 365", "ski365", "urban ski", "snow town"]:
+                    if sc not in known_comps:
+                        known_comps.append(sc)
+
             # Convert to verified KOLProfile objects with Entity Filtering & Archetype Classification
             profiles: List[KOLProfile] = []
             for handle, data in authors_data.items():
@@ -202,8 +224,42 @@ class ApifyTikTokService:
                 all_captions = [v.caption.lower() for v in videos if v.caption]
 
                 # 2. Two-Stage Entity Filtering (Spec 3)
-                # 3.1 Merchant / Official Store Check (Exclude immediately if purely store)
-                merchant_keywords = ["official", "store", "shop", "สั่งซื้อจิ้มลิงก์", "ตัวแทนจำหน่าย", "ราคาส่ง", "มีบริการเก็บเงินปลายทาง", "เปิดบิล", "ขายส่ง", "ส่งฟรีทั่วไทย"]
+                # 3.1 Competitor & Client Brand Account Exclusion (Stage 2 Gate)
+                clean_handle = handle.lower().replace("_", "").replace(".", "").replace("-", "")
+                clean_display = display_name.lower().replace(" ", "").replace(".", "").replace("-", "").replace("_", "")
+
+                # Exclude client's own brand official account
+                is_own_brand = False
+                if brand_name:
+                    clean_brand = brand_name.lower().replace(" ", "").replace(".", "").replace("-", "").replace("_", "")
+                    if len(clean_brand) >= 3 and (clean_brand in clean_handle or clean_brand in clean_display):
+                        is_own_brand = True
+
+                if is_own_brand:
+                    logger.info(f"Two-Stage Filter: Excluded client's own official brand account @{handle} ({display_name})")
+                    continue
+
+                # Exclude competitor brand / venue / school / store official account
+                is_competitor_account = False
+                for comp in known_comps:
+                    clean_comp = comp.lower().replace(" ", "").replace(".", "").replace("-", "").replace("_", "")
+                    if len(clean_comp) >= 3 and (clean_comp in clean_handle or clean_comp in clean_display):
+                        is_competitor_account = True
+                        break
+
+                if is_competitor_account:
+                    logger.info(f"Two-Stage Filter: Excluded competitor official account/venue @{handle} ({display_name})")
+                    continue
+
+                # 3.2 Merchant / Commercial Business & Venue Store Check (Exclude immediately if purely store/venue)
+                merchant_keywords = [
+                    "official", "store", "shop", "studio", "academy", "school", "clinic", "salon",
+                    "hotel", "resort", "center", "centre", "venue", "club", "co.,ltd", "บริษัท",
+                    "สั่งซื้อจิ้มลิงก์", "ตัวแทนจำหน่าย", "ราคาส่ง", "มีบริการเก็บเงินปลายทาง",
+                    "เปิดบิล", "ขายส่ง", "ส่งฟรีทั่วไทย", "จำหน่าย", "สั่งซื้อได้ที่", "พิกัดร้าน",
+                    "จองคิว", "สอบถาม/จอง", "booking", "เปิดบริการ", "เปิดทุกวัน", "เปิดให้บริการ",
+                    "เวลาเปิด", "เวลาทำการ", "สาขา", "หน้าร้าน", "ชั่วโมงละ", "ชม.ละ"
+                ]
                 creator_indicator_words = ["รีวิว", "creator", "lifestyle", "vlog", "ติดต่องาน", "บล็อกเกอร์", "รีวิวไปเรื่อย", "รีวิวของ"]
                 has_merchant_word = any(k in bio.lower() or k in display_name.lower() or k in handle.lower() for k in merchant_keywords)
                 has_creator_word = any(k in bio.lower() or k in display_name.lower() for k in creator_indicator_words)
@@ -252,27 +308,6 @@ class ApifyTikTokService:
 
                 # 5. Grounded Thai Competitor Detection: Layer 2 & Layer 3 (Spec 7)
                 competitor_warning = None
-                known_comps = []
-                if grounded_competitors:
-                    for gc in grounded_competitors:
-                        b_en = gc.get("brand_en")
-                        if b_en:
-                            known_comps.append(b_en.lower())
-                        for a in gc.get("aliases", []):
-                            if a:
-                                known_comps.append(str(a).lower())
-                if manual_competitors:
-                    for mc in manual_competitors:
-                        if mc:
-                            known_comps.append(str(mc).lower())
-
-                # Auto-enrich category competitors for specialized sports / ski venues
-                combined_context = f"{brand_name or ''} {vertical}".lower()
-                if any(w in combined_context for w in ["ski", "snowboard", "สกี", "สโนว์บอร์ด", "sports"]):
-                    for sc in ["ski addict", "skiaddict", "skiaddictbangkok", "ski 365", "ski365", "urban ski", "snow town"]:
-                        if sc not in known_comps:
-                            known_comps.append(sc)
-
                 detected_comps = set()
                 if known_comps:
                     for cap in all_captions:

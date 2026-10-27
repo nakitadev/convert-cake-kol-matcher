@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Sparkles,
   CheckCircle2,
@@ -206,6 +206,13 @@ export default function HomePage() {
   const [liveLogs, setLiveLogs] = useState<string[]>([]);
   const [activeStep, setActiveStep] = useState<number>(0);
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
+  const logsContainerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (logsContainerRef.current) {
+      logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
+    }
+  }, [liveLogs]);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
@@ -1212,7 +1219,7 @@ export default function HomePage() {
                       </span>
                       <span className="text-slate-400 font-mono">Stream Active</span>
                     </div>
-                    <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                    <div ref={logsContainerRef} className="space-y-1 max-h-28 overflow-y-auto pr-1">
                       {liveLogs.map((log, idx) => (
                         <div key={idx} className="flex items-start space-x-2 leading-relaxed">
                           <span className="text-[#03e78b] select-none">›</span>
