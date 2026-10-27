@@ -593,7 +593,7 @@ export default function HomePage() {
                 Live Thai TikTok KOL Discovery & Anti-Spam Intelligence
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                Enter any client website or campaign brief. Our engine crawls real web content, extracts <strong>Brand DNA</strong> with Gemini 3.5 Flash Lite, searches <strong>live TikTok creators via Apify</strong>, and calculates a 3-part Hybrid Match Score (<strong>45% Relevance</strong>, <strong>35% Engagement & Spam Filter</strong>, <strong>20% Demographics</strong>) designed to maximize ROAS for performance campaigns.
+                Enter any client website or campaign brief. Our engine crawls real web content, extracts <strong>Brand DNA</strong> with Gemini 3.5 Flash Lite, searches <strong>live TikTok creators via Apify</strong>, and calculates a 3-part Dynamic Match Score (<strong>40% Brand Relevance</strong>, <strong>35% Engagement Quality</strong>, <strong>25% Audience & Commercial Viability</strong>) designed to maximize ROAS for performance campaigns.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-600 font-medium">
@@ -930,6 +930,18 @@ export default function HomePage() {
                   <option value="followers">Sort: Followers</option>
                 </select>
 
+                <select
+                  value={topK}
+                  onChange={e => setTopK(Number(e.target.value))}
+                  className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-slate-800 text-xs focus:outline-none focus:border-[#0536d2] font-semibold text-[#0536d2]"
+                  title="Top K KOL Rank Cutoff"
+                >
+                  <option value={10}>Top 10 KOLs</option>
+                  <option value={20}>Top 20 KOLs</option>
+                  <option value={30}>Top 30 KOLs</option>
+                  <option value={50}>Top 50 KOLs</option>
+                </select>
+
                 {matchResponse && (
                   <button
                     onClick={exportToCSV}
@@ -1070,7 +1082,7 @@ export default function HomePage() {
                     }`}
                   >
                     <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>Spam Traps ({matchResponse.penalized_spam_kols.length})</span>
+                    <span>Bot & Farm Traps (-55) ({matchResponse.penalized_spam_kols.length})</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('trace')}
@@ -1438,7 +1450,7 @@ export default function HomePage() {
                                           )}
                                         </div>
 
-                                        <div className="flex items-center space-x-4 text-[11px] text-slate-500 font-mono flex-wrap">
+                                        <div className="flex items-center space-x-3 text-[11px] text-slate-500 font-mono flex-wrap gap-y-1">
                                           <span className="text-slate-800 font-semibold">{vid.views.toLocaleString()} views</span>
                                           <span>•</span>
                                           <span>{vid.likes.toLocaleString()} likes</span>
@@ -1446,6 +1458,14 @@ export default function HomePage() {
                                           <span>{vid.comments.toLocaleString()} comments</span>
                                           <span>•</span>
                                           <span>{vid.shares.toLocaleString()} shares</span>
+                                          <span>•</span>
+                                          <span className="text-[#0536d2] font-semibold">{(vid.collect_count ?? 0).toLocaleString()} saves</span>
+                                          {vid.location_tag && (
+                                            <>
+                                              <span>•</span>
+                                              <span className="text-emerald-700 font-sans font-medium">📍 {vid.location_tag}</span>
+                                            </>
+                                          )}
                                         </div>
                                       </div>
                                     ))}
@@ -1480,29 +1500,29 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {/* TAB 2: ANTI-SPAM TRAPS */}
+                {/* TAB 2: ANTI-SPAM & BOT REPOST TRAPS */}
                 {activeTab === 'spam' && (
                   <div className="space-y-4">
-                    <div className="p-5 rounded-3xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2 shadow-xs">
-                      <div className="flex items-center space-x-2 font-bold text-amber-800 text-sm">
-                        <ShieldAlert className="w-4 h-4 text-amber-600" />
-                        <span>Affiliate Spam / Yellow-Basket Protection Engine</span>
+                    <div className="p-5 rounded-3xl bg-rose-50 border border-rose-200 text-rose-950 text-xs space-y-2 shadow-xs">
+                      <div className="flex items-center space-x-2 font-bold text-rose-800 text-sm">
+                        <ShieldAlert className="w-4 h-4 text-rose-600" />
+                        <span>Bot & Repost Farm Trap Engine (-55 Pts Penalty)</span>
                       </div>
-                      <p className="leading-relaxed text-amber-800">
-                        Thai TikTok hashtags like #ป้ายยา and #รีวิวบิวตี่ are flooded with accounts that re-post low-effort product slides solely to earn 10% affiliate commissions via TikTok Shop (ตะกร้าเหลือง). Convert Cake detects these accounts when yellow-basket ratios exceed 70% alongside low view-to-follower retention, penalizing them 55 points to safeguard client media spend.
+                      <p className="leading-relaxed text-rose-900">
+                        ระบบตรวจจับและหักลบ -55 แต้มเฉพาะบัญชีที่เป็น Bot, ฟาร์มรีโพสต์ หรือบัญชีปั่นยอดวิวที่ไม่มี Engagement คุณภาพจริง <strong>(ครีเอเตอร์สายรีวิวที่ปักตะกร้าเหลือง 100% จะได้รับการยกเว้น ไม่ถูกจัดเป็น Spam Trap และถูกจัดเข้าหมวด Top Reviewer)</strong>
                       </p>
                     </div>
 
                     {matchResponse.penalized_spam_kols.map(item => (
                       <div
                         key={item.kol.id}
-                        className="bg-white border border-amber-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3"
+                        className="bg-white border border-rose-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3"
                       >
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center space-x-2">
                               <span className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200">
-                                FLAGGED SPAM TRAP
+                                FLAGGED BOT / FARM
                               </span>
                               <h4 className="font-bold text-slate-900 text-base">{item.kol.display_name}</h4>
                               <a
@@ -1519,25 +1539,25 @@ export default function HomePage() {
                           </div>
 
                           <div className="text-right">
-                            <span className="text-base font-extrabold text-amber-700 font-mono">
+                            <span className="text-base font-extrabold text-rose-700 font-mono">
                               {item.total_match_score.toFixed(1)} / 100
                             </span>
-                            <span className="block text-[10px] text-rose-600 font-semibold">
-                              -55 pts Penalty Applied
+                            <span className="block text-[10px] text-rose-600 font-semibold font-mono">
+                              -55 pts Bot Penalty
                             </span>
                           </div>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 leading-relaxed">
-                          <strong className="text-amber-950 font-bold">Detection Trigger: </strong>
+                        <div className="p-3 rounded-2xl bg-rose-50/80 border border-rose-200 text-xs text-rose-900 leading-relaxed">
+                          <strong className="text-rose-950 font-bold">Detection Trigger: </strong>
                           {item.score_breakdown.affiliate_spam_reason}
                         </div>
 
                         <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
                           <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                            <span className="block text-[10px] text-slate-500 font-sans font-medium">Yellow-Basket Ratio</span>
-                            <span className="font-bold text-rose-600 text-sm">
-                              {Math.round(item.score_breakdown.yellow_basket_ratio * 100)}%
+                            <span className="block text-[10px] text-slate-500 font-sans font-medium">Utility Save/View</span>
+                            <span className="font-bold text-slate-800 text-sm">
+                              {(item.kol.save_to_view_ratio || 0).toFixed(4)}
                             </span>
                           </div>
                           <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
@@ -1547,9 +1567,9 @@ export default function HomePage() {
                             </span>
                           </div>
                           <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                            <span className="block text-[10px] text-slate-500 font-sans font-medium">Views-to-Followers</span>
+                            <span className="block text-[10px] text-slate-500 font-sans font-medium">View Consistency</span>
                             <span className="font-bold text-slate-800 text-sm">
-                              {item.score_breakdown.views_to_followers_ratio.toFixed(2)}
+                              {(item.kol.view_consistency_ratio || 0).toFixed(2)}
                             </span>
                           </div>
                         </div>
