@@ -53,23 +53,19 @@ class KOLProfile(BaseModel):
     secondary_verticals: List[str] = Field(default_factory=list)
     bio: str = Field(default="", description="TikTok bio")
     follower_count: int = Field(..., ge=0)
-    following_count: int = Field(default=150, ge=0)
+    following_count: int = Field(default=0, ge=0)
     total_likes: int = Field(default=0, ge=0)
-    tier: Literal["Nano (1K-10K)", "Micro (10K-100K)", "Mid-Tier (100K-500K)", "Macro (500K+)"] = Field(
-        default="Micro (10K-100K)"
-    )
+    tier: str = Field(default="Micro (10K-100K)")
     creator_persona: str = Field(..., description="Creator archetype & visual aesthetic")
     content_styles: List[str] = Field(default_factory=list, description="Typical content formats")
-    typical_price_tier: Literal["Budget / Mass", "Mid-Range / Accessible", "Premium / Masstige", "Luxury / High-End"] = Field(
-        default="Mid-Range / Accessible"
-    )
-    avg_reviewed_price_thb: int = Field(default=500, description="Average price in THB of products typically featured")
+    typical_price_tier: str = Field(default="Dynamic")
+    avg_reviewed_price_thb: int = Field(default=0, description="Average price in THB of products typically featured")
     primary_locations: List[str] = Field(default_factory=list, description="Frequent Thai locations/check-ins")
-    audience_language: str = Field(default="Thai (Central/Bangkok)", description="Primary language of creator & commenters")
+    audience_language: str = Field(default="Thai", description="Primary language of creator & commenters")
     sample_comments: List[str] = Field(default_factory=list, description="Live Thai comments / inquiries from recent videos")
     recent_videos: List[VideoMetric] = Field(default_factory=list, description="Recent video metrics from TikTok")
     is_affiliate_spam_trap: bool = Field(default=False, description="Whether creator is classified as affiliate spam / yellow basket trap")
-    estimated_rate_thb: str = Field(default="5,000 - 12,000 THB", description="Estimated campaign rate per video in THB")
+    estimated_rate_thb: str = Field(default="", description="Estimated campaign rate per video in THB")
 
 
 class SignalBreakdown(BaseModel):

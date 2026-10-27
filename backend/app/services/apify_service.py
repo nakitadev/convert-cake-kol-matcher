@@ -114,17 +114,18 @@ class ApifyTikTokService:
                 shares = int(item.get("shareCount") or 0)
                 has_basket = bool(item.get("hasTikTokShopProduct", False))
 
+                loc_tag = str(item.get("locationCreated") or (item.get("poi") or {}).get("name") or "").strip()
                 authors_data[handle]["videos"].append(
                     VideoMetric(
                         video_id=v_id,
                         caption=caption[:200],
                         hashtags=v_tags[:6],
-                        views=max(views, 100),
+                        views=views,
                         likes=likes,
                         comments=comments,
                         shares=shares,
                         has_yellow_basket=has_basket,
-                        location_tag="Bangkok, Thailand",
+                        location_tag=loc_tag if loc_tag else None,
                     )
                 )
 
@@ -133,12 +134,12 @@ class ApifyTikTokService:
             for handle, data in authors_data.items():
                 meta = data["meta"]
                 videos = data["videos"]
-                followers = int(meta.get("fans") or 15000)
-                following = int(meta.get("following") or 200)
-                total_likes = int(meta.get("heart") or 50000)
-                display_name = meta.get("nickName") or handle
-                bio = meta.get("signature") or f"Thai TikTok Creator @{handle}"
-                avatar_url = meta.get("avatar") or f"https://api.dicebear.com/7.x/notionists/svg?seed={handle}"
+                followers = int(meta.get("fans") or 0)
+                following = int(meta.get("following") or 0)
+                total_likes = int(meta.get("heart") or 0)
+                display_name = str(meta.get("nickName") or handle).strip()
+                bio = str(meta.get("signature") or "").strip()
+                avatar_url = str(meta.get("avatar") or "").strip()
 
                 if followers < 10000:
                     tier = "Nano (1K-10K)"
@@ -202,8 +203,13 @@ class ApifyTikTokService:
                     typical_price_tier = "General / Organic"
 
                 creator_persona = bio.strip() if bio.strip() else f"@{handle} — Thai {vertical} Creator"
-                tags_in_vids = [t for v in video_metrics for t in v.hashtags if t]
-                styles = list(dict.fromkeys(tags_in_vids[:4])) if tags_in_vids else ["Short-Form Video", "Review"]
+                tags_in_vids = [t for v in videos for t in v.hashtags if t]
+                styles = list(dict.fromkeys(tags_in_vids[:4])) if tags_in_vids else []
+                secondary_verticals = [t for t in tags_in_vids[:3] if t.lower() != vertical.lower()]
+                detected_locs = [v.location_tag for v in videos if v.location_tag]
+                primary_locations = list(dict.fromkeys(detected_locs)) if detected_locs else []
+                has_thai = any(re.search(r'[\u0e00-\u0e7f]', v.caption) for v in videos) or bool(re.search(r'[\u0e00-\u0e7f]', bio))
+                audience_language = "Thai" if has_thai else "International"
 
                 profiles.append(
                     KOLProfile(
@@ -211,9 +217,9 @@ class ApifyTikTokService:
                         handle=handle,
                         display_name=display_name,
                         tiktok_url=f"https://www.tiktok.com/@{handle}",
-                        avatar_url=avatar_url,
+                        avatar_url=avatar_url if avatar_url else None,
                         vertical=vertical,
-                        secondary_verticals=["Lifestyle", "Product Review"],
+                        secondary_verticals=secondary_verticals,
                         bio=bio,
                         follower_count=followers,
                         following_count=following,
@@ -223,8 +229,8 @@ class ApifyTikTokService:
                         content_styles=styles,
                         typical_price_tier=typical_price_tier,
                         avg_reviewed_price_thb=avg_price,
-                        primary_locations=["Bangkok", "Thailand"],
-                        audience_language="Thai (Central/Bangkok)",
+                        primary_locations=primary_locations,
+                        audience_language=audience_language,
                         sample_comments=sample_comments,
                         recent_videos=videos,
                         is_affiliate_spam_trap=is_spam,

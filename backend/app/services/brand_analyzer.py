@@ -93,6 +93,10 @@ class BrandAnalyzer:
                 filtered_kws = [k.lstrip('#').strip() for k in thai_keywords if k and str(k).lstrip('#').strip() and str(k).lstrip('#').strip().lower() not in slang_filter]
                 final_keywords = filtered_kws if filtered_kws else [k.lstrip('#').strip() for k in thai_keywords if k and str(k).lstrip('#').strip()]
 
+                target_locations = llm_dna.get("target_locations") if isinstance(llm_dna.get("target_locations"), list) else []
+                brand_tone = llm_dna.get("brand_tone") if isinstance(llm_dna.get("brand_tone"), list) else []
+                content_styles = llm_dna.get("content_style_preferences") if isinstance(llm_dna.get("content_style_preferences"), list) else []
+
                 raw_id = re.sub(r'[^a-zA-Z0-9]', '', brand_name.lower())[:15] or "brand"
                 return BrandDNA(
                     id=f"live-{raw_id}",
@@ -102,11 +106,11 @@ class BrandAnalyzer:
                     vertical=vertical,
                     sub_category=llm_dna.get("sub_category") or vertical,
                     brand_summary=llm_dna.get("brand_summary") or f"{brand_name} ({vertical})",
-                    target_audience=llm_dna.get("target_audience") or "Thai consumer audience",
-                    target_age_range=llm_dna.get("target_age_range") or "All Ages",
-                    target_locations=llm_dna.get("target_locations") or ["Thailand"],
-                    brand_tone=llm_dna.get("brand_tone") or ["Professional"],
-                    content_style_preferences=llm_dna.get("content_style_preferences") or ["Short-Form"],
+                    target_audience=llm_dna.get("target_audience") or f"Target audience for {brand_name}",
+                    target_age_range=llm_dna.get("target_age_range") or "",
+                    target_locations=target_locations,
+                    brand_tone=brand_tone,
+                    content_style_preferences=content_styles,
                     price_positioning=llm_dna.get("price_positioning") or "Dynamic",
                     average_price_thb=int(llm_dna.get("average_price_thb") or 0),
                     thai_keywords=final_keywords,

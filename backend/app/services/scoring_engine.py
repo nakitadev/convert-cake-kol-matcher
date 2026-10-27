@@ -204,11 +204,17 @@ class ScoringEngine:
 
         if loc_matches:
             s3 = 25.0
-            evidence.append(f"Geo/Language Signal: Verified Thai audience hotspots in {', '.join([l.title() for l in loc_matches])}; natural Central/Bangkok dialect register.")
+            evidence.append(f"Geo/Language Signal: Verified Thai audience hotspots in {', '.join([l.title() for l in loc_matches])}.")
             signals_high_count += 1
+        elif kol.primary_locations:
+            s3 = 16.0
+            evidence.append(f"Geo/Language Signal: Creator active in {', '.join(kol.primary_locations)}.")
+        elif kol.audience_language.lower().startswith("thai"):
+            s3 = 14.0
+            evidence.append("Geo/Language Signal: Thai audience engagement verified across captions and language.")
         else:
-            s3 = 20.0
-            evidence.append("Geo/Language Signal: Broad nationwide Thai audience distribution verified.")
+            s3 = 8.0
+            evidence.append("Geo/Language Signal: No specific Thai geo-location checkins detected.")
 
         # Signal 4: Commenters Sample / Intent Analysis (0-25)
         s4 = 14.0
@@ -241,11 +247,13 @@ class ScoringEngine:
             )
 
         kw_str = f" (matched tags: {', '.join(b.matched_keywords[:3])})" if b.matched_keywords else ""
+        loc_str = f"and active {', '.join(kol.primary_locations[:2])} audience footprint" if kol.primary_locations else "and nationwide audience reach"
+        price_str = f" (~{kol.avg_reviewed_price_thb:,} THB)" if kol.avg_reviewed_price_thb > 0 else ""
         return (
             f"{kol.display_name} is an ideal {kol.tier} partner for {brand.brand_name}. "
             f"Delivers healthy engagement with a {b.median_engagement_rate_pct:.1f}% median ER and strong content relevance{kw_str}. "
-            f"Audience alignment confidence is {b.confidence_level} based on price-point compatibility (~{kol.avg_reviewed_price_thb:,} THB) "
-            f"and active {', '.join(kol.primary_locations[:2])} audience footprint."
+            f"Audience alignment confidence is {b.confidence_level} based on price-point compatibility{price_str} "
+            f"{loc_str}."
         )
 
     def _generate_thai_campaign_hooks(self, kol: KOLProfile, brand: BrandDNA) -> List[str]:

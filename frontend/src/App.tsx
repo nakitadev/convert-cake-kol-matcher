@@ -986,11 +986,17 @@ export default function HomePage() {
                             <div className="flex items-start space-x-3.5">
                               {/* Avatar */}
                               <div className="relative shrink-0">
-                                <img
-                                  src={item.kol.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${item.kol.handle}`}
-                                  alt={item.kol.display_name}
-                                  className="w-13 h-13 rounded-2xl bg-slate-100 border-2 border-slate-200 object-cover shadow-xs"
-                                />
+                                {item.kol.avatar_url ? (
+                                  <img
+                                    src={item.kol.avatar_url}
+                                    alt={item.kol.display_name}
+                                    className="w-13 h-13 rounded-2xl bg-slate-100 border-2 border-slate-200 object-cover shadow-xs"
+                                  />
+                                ) : (
+                                  <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#0536d2] to-[#597ef3] border-2 border-blue-400 text-white font-bold text-lg flex items-center justify-center shadow-xs uppercase">
+                                    {(item.kol.display_name || item.kol.handle).slice(0, 1)}
+                                  </div>
+                                )}
                                 <span className="absolute -top-1.5 -left-1.5 flex items-center justify-center w-5 h-5 rounded-full bg-[#0536d2] text-white font-black text-[10px] shadow border border-[#597ef3]">
                                   #{item.rank}
                                 </span>

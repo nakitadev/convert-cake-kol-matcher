@@ -12,6 +12,7 @@ from app.models import (
 from app.services.brand_analyzer import get_brand_analyzer
 from app.services.scoring_engine import get_scoring_engine
 from app.services.apify_service import get_apify_service
+from app.services.gemini_service import get_gemini_service
 
 
 class MatcherState(TypedDict, total=False):
@@ -101,7 +102,7 @@ async def enrich_apify_node(state: MatcherState) -> Dict[str, Any]:
     return {"apify_status": apify_status, "trace": trace}
 
 
-def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
+async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
     trace.append("Node 4: score_and_rank_node started")
 
@@ -111,6 +112,7 @@ def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
     apify_status = state.get("apify_status", "Live TikTok Scraper")
 
     scoring = get_scoring_engine()
+    gemini = get_gemini_service()
     ranked_results: List[RankedKOL] = []
     spam_traps: List[RankedKOL] = []
 
@@ -142,6 +144,29 @@ def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
         item.rank = idx
 
     top_ranked = ranked_results[:top_k]
+
+    # Dynamic AI synthesis of personalized hooks and strategic rationale via Gemini 3.5 Flash Lite (Zero-Hardcode)
+    if gemini.is_configured and brand_dna:
+        for item in top_ranked:
+            try:
+                llm_rationale, llm_hooks = await gemini.generate_hooks_and_rationale(
+                    brand_name=brand_dna.brand_name,
+                    brand_vertical=brand_dna.vertical,
+                    brand_price=brand_dna.average_price_thb,
+                    kol_name=item.kol.display_name,
+                    kol_persona=item.kol.creator_persona,
+                    kol_styles=item.kol.content_styles,
+                    median_er=item.score_breakdown.median_engagement_rate_pct,
+                    is_spam=item.score_breakdown.affiliate_spam_penalty_applied,
+                    spam_reason=item.score_breakdown.affiliate_spam_reason or "",
+                )
+                if llm_rationale:
+                    item.why_this_kol = llm_rationale
+                if llm_hooks and len(llm_hooks) > 0:
+                    item.thai_campaign_hooks = llm_hooks
+            except Exception as e:
+                pass
+
     trace.append(
         f"Scored {len(candidates)} candidates: {len(top_ranked)} top ranked matches, "
         f"{len(spam_traps)} affiliate spam accounts identified and penalized."
