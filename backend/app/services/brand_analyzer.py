@@ -88,6 +88,11 @@ class BrandAnalyzer:
                 if not thai_keywords or not isinstance(thai_keywords, list):
                     raise RuntimeError(f"Gemini LLM failed to return thai_keywords for '{brand_name}'. Zero-Hardcode Policy forbids fallback defaults.")
 
+                # Filter out generic marketing slang to maintain direct, authentic consumer search intent
+                slang_filter = {"ป้ายยา", "ของมันต้องมี", "ตัวดัง", "ใช้ดีบอกต่อ", "รีวิว", "ของดีบอกต่อ", "ไอเทมเด็ด", "ตัวแม่", "ตัวตึง", "พิกัดลับ"}
+                filtered_kws = [k.lstrip('#').strip() for k in thai_keywords if k and str(k).lstrip('#').strip() and str(k).lstrip('#').strip().lower() not in slang_filter]
+                final_keywords = filtered_kws if filtered_kws else [k.lstrip('#').strip() for k in thai_keywords if k and str(k).lstrip('#').strip()]
+
                 raw_id = re.sub(r'[^a-zA-Z0-9]', '', brand_name.lower())[:15] or "brand"
                 return BrandDNA(
                     id=f"live-{raw_id}",
@@ -104,7 +109,7 @@ class BrandAnalyzer:
                     content_style_preferences=llm_dna.get("content_style_preferences") or ["Short-Form"],
                     price_positioning=llm_dna.get("price_positioning") or "Dynamic",
                     average_price_thb=int(llm_dna.get("average_price_thb") or 0),
-                    thai_keywords=thai_keywords,
+                    thai_keywords=final_keywords,
                     scraped_sources=scraped_sources or ["Live Web Ingestion & Gemini 3.5 Flash-Lite"],
                 )
 

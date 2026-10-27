@@ -763,14 +763,15 @@ export default function HomePage() {
                   </div>
 
                   <div>
-                    <span className="text-slate-400 font-medium block mb-1.5">Live TikTok Search Hashtags:</span>
+                    <span className="text-slate-500 font-medium block mb-1.5">Target Consumer Search Keywords (คำค้นหาสินค้า):</span>
                     <div className="flex flex-wrap gap-1.5">
                       {brandDNA.thai_keywords.map((kw, i) => (
                         <span
                           key={i}
-                          className="px-2.5 py-0.5 rounded-full bg-[#0536d2]/15 text-[#597ef3] text-[11px] border border-[#597ef3]/30 font-mono font-medium"
+                          className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0536d2] text-[11px] border border-blue-200 font-medium flex items-center space-x-1"
                         >
-                          #{kw}
+                          <span>🔍</span>
+                          <span>{kw.replace(/^#/, '')}</span>
                         </span>
                       ))}
                     </div>

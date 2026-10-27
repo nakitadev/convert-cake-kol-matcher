@@ -116,7 +116,7 @@ Respond ONLY with a valid JSON object matching this schema:
   "content_style_preferences": ["Review", "Short-Form"],
   "price_positioning": "One of: 'Budget / Mass' | 'Mid-Range / Accessible' | 'Premium / Masstige' | 'Luxury / High-End'",
   "average_price_thb": 0,
-  "thai_keywords": ["5-8 high-intent Thai TikTok search tags and keywords without # extracted directly from brand context"]
+  "thai_keywords": ["5-8 direct organic search terms that real everyday Thai consumers actually type into search bars to find these products or solve this specific need (e.g. 'ไดร์เป่าผม', 'ครีมแต้มสิว', 'มอยส์เจอร์ไรเซอร์', 'เก้าอี้เพื่อสุขภาพ', 'กาแฟคั่วบด'). STRICT RULES: NO marketing buzzwords or slang like 'ป้ายยา', 'ใช้ดีบอกต่อ', 'ตัวดัง', 'ของมันต้องมี', 'ไอเทมเด็ด', 'ตัวแม่'. Focus purely on clear, plain product names, direct item categories, and real search queries without #."]
 }}
 """
         try:
@@ -146,8 +146,8 @@ Respond ONLY with a valid JSON object matching this schema:
         if not self.is_configured or is_spam:
             return None, None
 
-        prompt = f"""You are an award-winning Creative Director at Convert Cake, specializing in Thai TikTok viral campaigns.
-Draft 3 distinct, viral, high-converting Thai TikTok video opening hooks and a 2-sentence agency rationale for pairing this KOL with the client brand.
+        prompt = f"""You are an award-winning Creative Director at Convert Cake, specializing in Thai TikTok performance campaigns.
+Draft 3 distinct, high-converting Thai TikTok video opening hooks and a 2-sentence agency rationale for pairing this KOL with the client brand.
 
 Client Brand: {brand_name} (Vertical: {brand_vertical}, Price: {brand_price:,} THB)
 Creator: {kol_name}
@@ -155,13 +155,17 @@ Persona & Aesthetic: {kol_persona}
 Content Styles: {', '.join(kol_styles)}
 Median Engagement Rate: {median_er:.1f}%
 
+STRICT GUIDELINES FOR HOOKS (NO EXAGGERATED SLANG):
+- Do NOT use exaggerated influencer slang or buzzwords like 'ป้ายยา', 'ตัวแม่', 'จึ้งมาก', 'ของมันต้องมี', 'ตัวตึง', 'ฉ่ำๆ'.
+- Focus on natural, authentic consumer intent: real product use cases, practical problem-solving (e.g. treating acne, ergonomic setup, hair styling), price-to-value evaluation, and genuine user experience.
+
 Return ONLY JSON:
 {{
   "rationale": "2-sentence strategic justification for why this creator is an exceptional match for the brand",
   "hooks": [
-    "Hook 1: First 3 seconds spoken line or on-screen text in natural Thai language (engaging/curiosity)",
-    "Hook 2: Relatable problem/solution hook in Thai",
-    "Hook 3: GRWM / Storytelling / Aesthetic hook in Thai"
+    "Hook 1: First 3 seconds spoken line or on-screen text in natural everyday Thai language focused on product problem/benefit",
+    "Hook 2: Practical, authentic test or comparison hook in Thai",
+    "Hook 3: Realistic daily routine or use-case hook in Thai"
   ]
 }}
 """

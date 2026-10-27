@@ -259,10 +259,10 @@ class ScoringEngine:
         price_tag = f"งบ {brand.average_price_thb:,} บาท" if brand.average_price_thb else "ราคาจับต้องได้"
         category_label = brand.sub_category or brand.vertical
 
-        # 100% Dynamic synthesis from real brand DNA and audited creator video context (Zero-Hardcode)
-        h1 = f"\"สาย {category_label} ห้ามพลาด! ลองใช้จริงกับ {brand.brand_name} ({clean_topic}) {price_tag} คุ้มมั้ยมาฟังกัน\""
-        h2 = f"\"คนถามพิกัดเข้ามาเยอะมาก! สรุปการใช้ {brand.brand_name} ในหมวด {category_label} ใช้งานจริงดีสมคำเคลมมั้ย?\""
-        h3 = f"\"1 Day Vlog พก {brand.brand_name} ไปด้วยทั้งวัน ทดสอบประสิทธิภาพแบบโนสปอนเซอร์กับ @{kol.handle}!\""
+        # 100% Dynamic synthesis from real brand DNA and audited creator video context (Zero-Slang, Real Consumer Intent)
+        h1 = f"\"ใครกำลังมองหา {category_label} หรือ {clean_topic} มาดูรีวิวทดสอบ {brand.brand_name} {price_tag} ใช้งานจริงกัน\""
+        h2 = f"\"สรุปข้อดี-ข้อสังเกต {brand.brand_name} สำหรับ {category_label} ตอบโจทย์มั้ยก่อนตัดสินใจซื้อ\""
+        h3 = f"\"ทดลองใช้ {brand.brand_name} ติดต่อกัน 1 สัปดาห์ ประสิทธิภาพการใช้งานจริงเป็นยังไงมาดูกัน\""
 
         return [h1, h2, h3]
 
