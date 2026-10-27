@@ -16,8 +16,6 @@ services:
     env_file:
       - path: ./.env
         required: false
-      - path: ./backend/.env
-        required: false
     restart: unless-stopped
     networks:
       - convert-cake-network
