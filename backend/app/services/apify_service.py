@@ -246,6 +246,13 @@ class ApifyTikTokService:
                         if mc:
                             known_comps.append(str(mc).lower())
 
+                # Auto-enrich category competitors for specialized sports / ski venues
+                combined_context = f"{brand_name} {vertical}".lower()
+                if any(w in combined_context for w in ["ski", "snowboard", "สกี", "สโนว์บอร์ด", "sports"]):
+                    for sc in ["ski addict", "skiaddict", "skiaddictbangkok", "ski 365", "ski365", "urban ski", "snow town"]:
+                        if sc not in known_comps:
+                            known_comps.append(sc)
+
                 detected_comps = set()
                 if known_comps:
                     for cap in all_captions:
@@ -260,8 +267,28 @@ class ApifyTikTokService:
                     competitor_warning = f"⚠️ Competitor Conflict: Content features competitor '{c_name}'"
 
                 # 6. Creator Archetype Classification (Spec 4.2)
-                guru_keywords = ["วิธี", "กู้", "สอน", "ข้อสังเกต", "ทำไม", "สารอาหาร", "ส่วนผสม", "รีเสิร์ช", "หมอ", "แพทย์", "เภสัช", "วิทยาศาสตร์", "เทคนิค", "คู่มือ", "ขั้นตอน", "รู้หรือไม่", "แชร์ทริค"]
-                vlog_keywords = ["#vlog", "#grwm", "#ootd", "routine", "ชีวิตประจำวัน", "vlog", "พากย์เสียง", "วันหนึ่ง", "my day", "ไปเที่ยว", "แต่งตัว"]
+                # Differentiate true Educated Guru from Lifestyle & Travel vloggers
+                guru_keywords = [
+                    "ครู", "สอน", "อาจารย์", "โค้ช", "หมอ", "แพทย์", "เภสัช", "ผู้ฝึกสอน",
+                    "instructor", "coach", "trainer", "เทคนิคการเล่น", "ท่าที่ถูกต้อง",
+                    "แบบฝึกหัด", "drills", "form check", "tutorial", "ข้อควรระวังสำหรับมือใหม่",
+                    "วิทยาศาสตร์", "กลไก", "สารอาหาร", "วิจัย", "พื้นฐานการ"
+                ]
+                travel_vlog_keywords = [
+                    "vlog", "travel", "เที่ยว", "ท่องเที่ยว", "ประวัติศาสตร์", "lifestyle",
+                    "ชีวิตประจำวัน", "myday", "my day", "#vlog", "#grwm", "#ootd",
+                    "ไปเที่ยว", "คาเฟ่", "trip", "japan", "รีวิวที่เที่ยว", "กิจกรรมวันหยุด",
+                    "พากย์เสียง", "วันหนึ่ง", "แต่งตัว", "วันพักผ่อน", "culture", "landmarks"
+                ]
+                review_keywords = [
+                    "รีวิว", "พิกัด", "คุ้มไหม", "ใช้จริง", "เทียบกัน", "แกะกล่อง",
+                    "unboxing", "ของมันต้องมี", "ป้ายยา", "ชี้เป้า", "ราคา"
+                ]
+                niche_sports_keywords = [
+                    "rider", "snowboard", "ski", "skier", "สเก็ต", "เซิร์ฟ", "surf",
+                    "extreme", "กีฬา", "athlete", "ฝึกซ้อม", "สายลุย", "นักสกี", "นักกีฬา"
+                ]
+
                 avg_caption_len = (sum(len(v.caption) for v in videos) / len(videos)) if videos else 0
 
                 query_origin = "niche_hashtags"
@@ -275,35 +302,42 @@ class ApifyTikTokService:
                     elif any(any(q.lower() in c for q in search_taxonomy.get("competitor_seed_queries", [])) for c in all_captions):
                         query_origin = "competitor_seed_queries"
 
-                if len(detected_comps) >= 2 or query_origin == "competitor_seed_queries":
-                    creator_archetype = "Niche Enthusiast"
-                    recommended_role = "Hyper-Targeted Reach"
-                elif (
-                    query_origin == "pain_point_queries"
-                    or avg_caption_len >= 75
-                    or save_to_view_ratio >= 0.035
-                    or any(any(kw in c for kw in guru_keywords) for c in all_captions)
-                    or any(kw in bio.lower() for kw in guru_keywords)
-                ):
-                    creator_archetype = "Educated Guru"
-                    recommended_role = "Trust & Credibility"
-                elif (
+                # Dissect signals
+                has_travel_lifestyle = (
+                    any(any(kw in c for kw in travel_vlog_keywords) for c in all_captions)
+                    or any(kw in bio.lower() for kw in travel_vlog_keywords)
+                    or query_origin == "lifestyle_persona_queries"
+                )
+                has_explicit_guru = (
+                    any(kw in bio.lower() for kw in ["ครู", "สอน", "อาจารย์", "โค้ช", "หมอ", "แพทย์", "เภสัช", "ผู้ฝึกสอน", "instructor", "coach", "trainer"])
+                    or any(any(kw in c for kw in ["เทคนิคการเล่น", "ท่าที่ถูกต้อง", "แบบฝึกหัด", "drills", "form check", "tutorial", "ข้อควรระวังสำหรับมือใหม่", "วิทยาศาสตร์"]) for c in all_captions)
+                    or (query_origin == "pain_point_queries" and (avg_caption_len >= 80 or save_to_view_ratio >= 0.04) and not has_travel_lifestyle)
+                )
+                has_review_signal = (
                     creator_category == "Content Creator (เน้นรีวิว)"
                     or query_origin == "review_hook_queries"
                     or yellow_ratio >= 0.20
                     or any(any(kw in c for kw in review_keywords) for c in all_captions)
-                ):
+                )
+
+                if len(detected_comps) >= 2 or query_origin == "competitor_seed_queries":
+                    creator_archetype = "Niche Enthusiast"
+                    recommended_role = "Hyper-Targeted Reach"
+                elif has_explicit_guru and not (has_travel_lifestyle and not any(kw in bio.lower() for kw in ["ครู", "สอน", "โค้ช", "instructor", "coach"])):
+                    creator_archetype = "Educated Guru"
+                    recommended_role = "Trust & Credibility"
+                elif has_review_signal:
                     creator_archetype = "Top Reviewer"
                     recommended_role = "Conversion & Sales"
-                elif (
-                    query_origin == "lifestyle_persona_queries"
-                    or (yellow_ratio < 0.20 and any(any(kw in c for kw in vlog_keywords) for c in all_captions))
-                ):
+                elif has_travel_lifestyle or yellow_ratio < 0.20:
+                    creator_archetype = "Lifestyle & Vlog"
+                    recommended_role = "Brand Awareness & Discovery"
+                elif any(any(kw in c for kw in niche_sports_keywords) for c in all_captions) or any(kw in bio.lower() for kw in niche_sports_keywords):
+                    creator_archetype = "Niche Enthusiast"
+                    recommended_role = "Hyper-Targeted Reach"
+                else:
                     creator_archetype = "Lifestyle & Vlog"
                     recommended_role = "Brand Awareness"
-                else:
-                    creator_archetype = "Top Reviewer" if yellow_count > 0 else "Lifestyle & Vlog"
-                    recommended_role = "Conversion & Sales" if yellow_count > 0 else "Brand Awareness"
 
                 # Dynamic audience inquiries synthesized from real video captions by Gemini
                 captions = [v.caption for v in videos if v.caption]

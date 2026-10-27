@@ -133,13 +133,22 @@ class SignalBreakdown(BaseModel):
     evidence_list: List[str] = Field(default_factory=list, description="Concrete evidence statements")
 
 
+class BrandCustomerMatch(BaseModel):
+    target_customer_persona: str = Field(default="", description="Matching customer persona between brand and creator's audience")
+    buyer_intent_fit: str = Field(default="", description="Why this audience has purchasing intent for the brand")
+    pain_points_addressed: List[str] = Field(default_factory=list, description="Customer pain points addressed by the brand")
+    customer_journey_stage: str = Field(default="Consideration & Conversion", description="Primary stage in customer buyer journey")
+    conversion_angle: str = Field(default="", description="Recommended conversion and positioning angle for this customer segment")
+
+
 class RankedKOL(BaseModel):
     rank: int = Field(..., ge=1)
     kol: KOLProfile
     total_match_score: float = Field(..., description="Final 0-100 composite match score")
     score_breakdown: SignalBreakdown
     why_this_kol: str = Field(..., description="Agency-grade strategic rationale explaining fit or penalty")
-    thai_campaign_hooks: List[str] = Field(default_factory=list, description="Custom Thai TikTok campaign hook ideas tailored to archetype")
+    brand_customer_match: Optional[BrandCustomerMatch] = Field(default=None, description="In-depth Brand-to-Customer matching analysis")
+    thai_campaign_hooks: List[str] = Field(default_factory=list, description="Optional / legacy list of hooks")
     enrichment_source: str = Field(default="Live Apify TikTok Scraper", description="Data telemetry source")
     llm_generator_model: str = Field(default="gemini-3.5-flash-lite", description="Gemini LLM model used for synthesis")
 

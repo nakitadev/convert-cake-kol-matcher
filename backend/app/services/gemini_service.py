@@ -153,6 +153,95 @@ Respond ONLY with a valid JSON object matching this schema:
             print(f"[GeminiService] LLM BrandDNA generation error: {e}")
         return None
 
+    async def generate_brand_customer_match(
+        self,
+        brand_name: str,
+        brand_vertical: str,
+        brand_summary: str,
+        target_audience: str,
+        brand_price: int,
+        kol_name: str,
+        kol_handle: str,
+        kol_persona: str,
+        kol_styles: List[str],
+        creator_archetype: str = "General Creator",
+        is_review_creator: bool = False,
+        sample_comments: Optional[List[str]] = None,
+        recent_captions: Optional[List[str]] = None,
+        median_er: float = 0.0,
+        is_spam: bool = False,
+    ) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
+        """
+        Uses Gemini Main LLM to produce deep Brand-to-Customer Matching Analysis.
+        Focuses on consumer persona overlap, buyer intent, customer pain points,
+        and commercial conversion strategy instead of generic pitch hooks.
+        """
+        if not self.is_configured or is_spam:
+            return None, None
+
+        comments_preview = ", ".join(sample_comments[:3]) if sample_comments else "N/A"
+        captions_preview = ", ".join(recent_captions[:3]) if recent_captions else "N/A"
+
+        prompt = f"""You are a Lead Consumer Insights & Brand Matchmaking Strategist at Convert Cake.
+Your mission is to perform an in-depth BRAND-TO-CUSTOMER MATCHING analysis between the Client Brand and the Creator's specific audience/customer base in Thailand.
+DO NOT generate generic AI pitch hooks or script lines. Focus exclusively on audience persona fit, buyer intent, customer pain points, and commercial conversion strategy.
+
+[Client Brand]
+Brand Name: {brand_name}
+Vertical / Category: {brand_vertical}
+Brand Summary: {brand_summary}
+Target Audience / Core Demographic: {target_audience}
+Average Price: {brand_price:,} THB
+
+[Creator & Audience Telemetry]
+Creator: {kol_name} (@{kol_handle})
+Creator Archetype: {creator_archetype} {('(Specializes in Product Reviews / TikTok Shop Yellow Basket)' if is_review_creator else '')}
+Persona & Aesthetic: {kol_persona}
+Content Styles: {', '.join(kol_styles)}
+Median Engagement Rate: {median_er:.1f}%
+Sample Audience Comments: {comments_preview}
+Recent Content Topics: {captions_preview}
+
+Analyze the Brand-to-Customer Fit:
+1. Target Customer Persona: Detail the specific customer segment among this creator's followers that matches this brand (e.g., age, lifestyle, mindset, beauty/consumer habits).
+2. Buyer Intent Fit: Explain why this audience has genuine purchasing willingness and affordability for this {brand_price:,} THB price point.
+3. Pain Points Addressed: Exactly 3 specific customer pain points this brand solves for this creator's audience.
+4. Customer Journey Stage: What stage does this audience operate in? Choose the best fit from: 'Problem Awareness & Education', 'Consideration & Comparison', or 'Decision & Direct Purchase (TikTok Shop)'.
+5. Conversion Angle: Strategic positioning advice on how to present the brand naturally to resonate with this customer mindset.
+6. Rationale: 2-3 sentence strategic brand-to-customer matching rationale in Thai.
+
+Return ONLY a valid JSON object:
+{{
+  "rationale": "2-3 sentence strategic brand-to-customer matching rationale in Thai",
+  "brand_customer_match": {{
+    "target_customer_persona": "Detailed customer profile in Thai",
+    "buyer_intent_fit": "Analysis of customer buying intent and price-point compatibility in Thai",
+    "pain_points_addressed": [
+      "Customer pain point 1 in Thai",
+      "Customer pain point 2 in Thai",
+      "Customer pain point 3 in Thai"
+    ],
+    "customer_journey_stage": "Consideration & Comparison",
+    "conversion_angle": "Strategic customer conversion angle in Thai"
+  }}
+}}
+"""
+        try:
+            response = self.client.models.generate_content(
+                model=self.llm_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.6,
+                ),
+            )
+            if response and response.text:
+                data = json.loads(response.text)
+                return data.get("rationale"), data.get("brand_customer_match")
+        except Exception as e:
+            print(f"[GeminiService] LLM brand-customer matching error: {e}")
+        return None, None
+
     async def generate_hooks_and_rationale(
         self,
         brand_name: str,
@@ -168,54 +257,25 @@ Respond ONLY with a valid JSON object matching this schema:
         is_review_creator: bool = False,
     ) -> Tuple[Optional[str], Optional[List[str]]]:
         """
-        Uses Gemini Main LLM to produce creative agency-grade Thai TikTok campaign hooks
-        tailored to the creator's archetype (Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast)
-        and customized strategic matching rationale.
+        Legacy wrapper maintained for backwards compatibility.
         """
-        if not self.is_configured or is_spam:
-            return None, None
-
-        prompt = f"""You are an award-winning Creative Director at Convert Cake, specializing in Thai TikTok performance campaigns.
-Draft 3 distinct, high-converting Thai TikTok video opening hooks (3-second pitch hooks) and a 2-sentence agency rationale for pairing this KOL with the client brand.
-
-Client Brand: {brand_name} (Vertical: {brand_vertical}, Price: {brand_price:,} THB)
-Creator: {kol_name}
-Creator Archetype: {creator_archetype} {('(Specializes in Product Reviews / TikTok Shop Yellow Basket)' if is_review_creator else '')}
-Persona & Aesthetic: {kol_persona}
-Content Styles: {', '.join(kol_styles)}
-Median Engagement Rate: {median_er:.1f}%
-
-STRICT GUIDELINES FOR ARCHETYPE-TAILORED 3-SECOND PITCH HOOKS:
-- If Archetype is 'Educated Guru': Focus on clinical evidence, deep testing, ingredient analysis, or problem-solving mechanisms.
-- If Archetype is 'Top Reviewer': Focus on value-for-money, real unboxing, pros & cons, and clear yellow basket (ปักตะกร้าเหลือง) call-to-action.
-- If Archetype is 'Lifestyle & Vlog': Focus on daily routines, GRWM, aesthetic lifestyle moments where the product is naturally embedded.
-- If Archetype is 'Niche Enthusiast': Focus on category comparisons (vs other brands), enthusiast rankings, and honest verdict.
-
-Return ONLY JSON:
-{{
-  "rationale": "2-sentence strategic justification for why this creator fits this campaign role",
-  "hooks": [
-    "Hook 1 in natural Thai suited to {creator_archetype}",
-    "Hook 2 in natural Thai suited to {creator_archetype}",
-    "Hook 3 in natural Thai suited to {creator_archetype}"
-  ]
-}}
-"""
-        try:
-            response = self.client.models.generate_content(
-                model=self.llm_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.7,
-                ),
-            )
-            if response and response.text:
-                data = json.loads(response.text)
-                return data.get("rationale"), data.get("hooks")
-        except Exception as e:
-            print(f"[GeminiService] LLM hooks generation error: {e}")
-        return None, None
+        rationale, match_data = await self.generate_brand_customer_match(
+            brand_name=brand_name,
+            brand_vertical=brand_vertical,
+            brand_summary="",
+            target_audience="",
+            brand_price=brand_price,
+            kol_name=kol_name,
+            kol_handle="",
+            kol_persona=kol_persona,
+            kol_styles=kol_styles,
+            creator_archetype=creator_archetype,
+            is_review_creator=is_review_creator,
+            median_er=median_er,
+            is_spam=is_spam,
+        )
+        hooks = [match_data.get("conversion_angle")] if match_data and match_data.get("conversion_angle") else []
+        return rationale, hooks
 
     async def generate_audience_comments(
         self, kol_name: str, handle: str, bio: str, captions: List[str], vertical: str

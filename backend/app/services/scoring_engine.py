@@ -266,12 +266,22 @@ class ScoringEngine:
         comp_str = f" {kol.competitor_warning}." if kol.competitor_warning else ""
         work_str = " ✅ Open for Sponsor / พร้อมรับงาน" if kol.is_work_ready else ""
 
+        role_context = ""
+        if kol.creator_archetype == "Lifestyle & Vlog":
+            role_context = f" เหมาะอย่างยิ่งสำหรับเป้าหมายเปิดการมองเห็นร้านเปิดใหม่ (Brand Awareness) เพื่อพากลุ่มผู้ติดตามสายท่องเที่ยว/ไลฟ์สไตล์มาเปิดประสบการณ์กิจกรรมจำลองในร่ม"
+        elif kol.creator_archetype == "Educated Guru":
+            role_context = f" เหมาะสำหรับการสร้างความน่าเชื่อถือ อธิบายเทคนิค ท่าฝึกที่ถูกต้อง และกลไกของเครื่องเล่นจำลอง (Trust & Credibility)"
+        elif kol.creator_archetype == "Top Reviewer":
+            role_context = f" เหมาะสำหรับกระตุ้นการตัดสินใจ จองคอร์สทดลอง หรือซื้อแพ็กเกจ (Conversion & Sales)"
+        elif kol.creator_archetype == "Niche Enthusiast":
+            role_context = f" เหมาะสำหรับเจาะกลุ่มผู้เล่นประจำที่กำลังมองหาสถานที่ซ้อมสกีก่อนออกทริปจริง (Hyper-Targeted Reach)"
+
         return (
             f"{kol.display_name}{cat_str}{archetype_str} is an ideal {kol.tier} partner for {brand.brand_name}."
             f"{work_str} Delivers healthy engagement with a {b.median_engagement_rate_pct:.1f}% median ER and strong content relevance{kw_str}. "
             f"Save-to-View utility points ({b.save_to_view_points}/10) & Thai Authenticity ({b.thai_authenticity_points}/10) confirm genuine local reach. "
             f"Audience alignment confidence is {b.confidence_level} based on price-point compatibility{price_str} "
-            f"{loc_str}.{comp_str}"
+            f"{loc_str}.{role_context}{comp_str}"
         )
 
     def _generate_thai_campaign_hooks(self, kol: KOLProfile, brand: BrandDNA) -> List[str]:
