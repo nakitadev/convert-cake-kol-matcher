@@ -218,7 +218,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [tierFilter, setTierFilter] = useState('All');
   const [sortBy, setSortBy] = useState<'score' | 'er' | 'followers'>('score');
-  const [topK, setTopK] = useState(20);
+  const [topK, setTopK] = useState(10);
 
   // Loading & Diagnostics
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -348,7 +348,7 @@ export default function HomePage() {
       } else if (elapsed < 18) {
         setActiveStep(2);
         setProgressStageTitle('Step 2/4: ค้นหา TikTok ครีเอเตอร์สดผ่าน Apify Scraper');
-        setProgressStageDesc('ยิง Apify Clockworks Actor ดึงวิดีโอสด 50 รายการ และกรอง Two-Stage Entity Filter ตัดร้านค้า Official...');
+        setProgressStageDesc('ยิง Apify Clockworks Actor ดึงวิดีโอสด 30 รายการ และกรอง Two-Stage Entity Filter ตัดร้านค้า Official...');
         setProgressPercent(Math.min(54, Math.round(24 + (elapsed - 6) * 2.5)));
         setLiveLogs(prev => !prev.some(l => l.includes('Clockworks')) ? [
           ...prev,
@@ -445,7 +445,7 @@ export default function HomePage() {
       } else if (elapsed < 20) {
         setActiveStep(2);
         setProgressStageTitle('Step 2/4: ค้นหา TikTok ครีเอเตอร์สดผ่าน Apify Scraper');
-        setProgressStageDesc('ยิง Apify Clockworks Actor ดึงวิดีโอสด 50 รายการ และกรอง Two-Stage Entity Filter...');
+        setProgressStageDesc('ยิง Apify Clockworks Actor ดึงวิดีโอสด 30 รายการ และกรอง Two-Stage Entity Filter...');
         setProgressPercent(Math.min(54, Math.round(25 + (elapsed - 8) * 2.4)));
         setLiveLogs(prev => !prev.some(l => l.includes('Clockworks')) ? [
           ...prev,

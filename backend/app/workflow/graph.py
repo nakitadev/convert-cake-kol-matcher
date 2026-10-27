@@ -78,7 +78,7 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
             live_candidates = await apify.search_live_kols_by_hashtags(
                 hashtags=keywords,
                 vertical=vertical,
-                limit_creators=50,
+                limit_creators=30,
                 search_taxonomy=brand_dna.search_taxonomy,
                 grounded_competitors=brand_dna.grounded_competitors,
                 manual_competitors=brand_dna.manual_competitors,
@@ -150,7 +150,7 @@ async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
 
     brand_dna = state.get("brand_dna")
     candidates = state.get("candidates", [])
-    top_k = state.get("top_k", 20)
+    top_k = state.get("top_k", 10)
     apify_status = state.get("apify_status", "Live TikTok Scraper")
 
     scoring = get_scoring_engine()
@@ -158,7 +158,7 @@ async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
     ranked_results: List[RankedKOL] = []
     spam_traps: List[RankedKOL] = []
 
-    # Batch Embeddings & Scoring for all candidates (50 KOLs) asynchronously
+    # Batch Embeddings & Scoring for all candidates (30 KOLs) asynchronously
     eval_results = await scoring.evaluate_kols_batch(candidates, brand_dna)
     for kol, (total_score, breakdown, why_text, _) in zip(candidates, eval_results):
         ranked_item = RankedKOL(
@@ -229,7 +229,7 @@ def get_matcher_graph():
 async def run_full_matching(
     brand_request: Optional[BrandAnalyzeRequest] = None,
     brand_dna: Optional[BrandDNA] = None,
-    top_k: int = 20,
+    top_k: int = 10,
     include_traps: bool = True,
     min_followers: Optional[int] = None,
     max_followers: Optional[int] = None,

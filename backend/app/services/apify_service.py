@@ -31,7 +31,7 @@ class ApifyTikTokService:
         self,
         hashtags: List[str],
         vertical: str,
-        limit_creators: int = 50,
+        limit_creators: int = 30,
         search_queries: Optional[List[str]] = None,
         search_taxonomy: Optional[Dict[str, List[str]]] = None,
         grounded_competitors: Optional[List[Dict[str, Any]]] = None,
@@ -51,7 +51,7 @@ class ApifyTikTokService:
         if not clean_tags:
             raise ValueError("Hashtags list cannot be empty. Zero-Hardcode Policy forbids fallback tags.")
 
-        # Query hashtags and taxonomy queries to gather up to 50 creators
+        # Query hashtags and taxonomy queries to gather up to 30 creators
         query_tags = clean_tags[:2]
         sq_list = []
         if search_taxonomy:
