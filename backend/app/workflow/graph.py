@@ -82,6 +82,7 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
                 search_taxonomy=brand_dna.search_taxonomy,
                 grounded_competitors=brand_dna.grounded_competitors,
                 manual_competitors=brand_dna.manual_competitors,
+                brand_name=brand_dna.brand_name,
             )
             if live_candidates:
                 candidates = live_candidates

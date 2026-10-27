@@ -35,6 +35,7 @@ class ApifyTikTokService:
         search_taxonomy: Optional[Dict[str, List[str]]] = None,
         grounded_competitors: Optional[List[Dict[str, Any]]] = None,
         manual_competitors: Optional[List[str]] = None,
+        brand_name: Optional[str] = None,
     ) -> List[KOLProfile]:
         """
         Search live TikTok creators using Apify actor by hashtags & searchQueries (5-Angle Taxonomy).
@@ -50,7 +51,7 @@ class ApifyTikTokService:
             raise ValueError("Hashtags list cannot be empty. Zero-Hardcode Policy forbids fallback tags.")
 
         # Query hashtags and taxonomy queries to gather up to 50 creators
-        query_tags = clean_tags[:4]
+        query_tags = clean_tags[:3]
         sq_list = []
         if search_taxonomy:
             for k in ["pain_point_queries", "review_hook_queries", "lifestyle_persona_queries", "competitor_seed_queries"]:
@@ -66,7 +67,7 @@ class ApifyTikTokService:
             logger.info(f"Returning cached live TikTok results for {cache_key}")
             return self._cache[cache_key][1]
 
-        url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=90"
+        url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=120"
         results_per_tag = max(15, (limit_creators * 2) // max(len(query_tags), 1))
         payload: Dict[str, Any] = {
             "hashtags": query_tags,
@@ -75,10 +76,10 @@ class ApifyTikTokService:
             "shouldDownloadCovers": False,
         }
         if sq_list:
-            payload["searchQueries"] = sq_list[:5]
+            payload["searchQueries"] = sq_list[:3]
 
         try:
-            async with httpx.AsyncClient(timeout=95.0) as client:
+            async with httpx.AsyncClient(timeout=130.0) as client:
                 resp = await client.post(url, json=payload)
                 if resp.status_code not in [200, 201]:
                     logger.warning(f"Apify live search returned HTTP {resp.status_code}: {resp.text[:200]}")
@@ -95,6 +96,7 @@ class ApifyTikTokService:
                             if ds_id:
                                 ds_items = (await client.get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={self.api_token}")).json()
                                 if isinstance(ds_items, list) and len(ds_items) > 0:
+                                    logger.info(f"Successfully rescued {len(ds_items)} live items from dataset of timed-out Apify run {run_id}")
                                     items = ds_items
                                 else:
                                     return []
@@ -247,7 +249,7 @@ class ApifyTikTokService:
                             known_comps.append(str(mc).lower())
 
                 # Auto-enrich category competitors for specialized sports / ski venues
-                combined_context = f"{brand_name} {vertical}".lower()
+                combined_context = f"{brand_name or ''} {vertical}".lower()
                 if any(w in combined_context for w in ["ski", "snowboard", "สกี", "สโนว์บอร์ด", "sports"]):
                     for sc in ["ski addict", "skiaddict", "skiaddictbangkok", "ski 365", "ski365", "urban ski", "snow town"]:
                         if sc not in known_comps:
