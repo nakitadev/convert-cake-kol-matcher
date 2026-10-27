@@ -103,42 +103,50 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
 
 async def enrich_apify_node(state: MatcherState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
-    trace.append("Node 3: enrich_apify_node started")
+    trace.append("Node 3: enrich_apify_node started (5-Clip Multi-Video Audit & 4 Archetypes)")
     candidates = state.get("candidates", [])
 
-    # Zero-Hardcode: Ensure any unclassified candidates are classified via Gemini Instructions into the 4 Core Archetypes
-    valid_archetypes = {"Educated Guru", "Top Reviewer", "Lifestyle & Vlog", "Niche Enthusiast"}
-    unclassified = [c for c in candidates if c.creator_archetype not in valid_archetypes]
-    if unclassified:
-        gemini = get_gemini_service()
-        if gemini.is_configured:
-            try:
-                creators_to_classify = [
-                    {
-                        "id": p.id,
-                        "handle": p.handle,
-                        "display_name": p.display_name,
-                        "bio": p.bio,
-                        "captions": [v.caption for v in p.recent_videos if v.caption][:5],
-                        "yellow_basket_ratio": round(
-                            sum(1 for v in p.recent_videos if v.has_yellow_basket) / max(len(p.recent_videos), 1),
-                            2
-                        ),
-                        "vertical": p.vertical,
-                    }
-                    for p in unclassified
-                ]
-                classification_map = await gemini.classify_creator_archetypes(creators_to_classify)
-                for p in unclassified:
-                    if p.id in classification_map:
-                        c_info = classification_map[p.id]
-                        p.creator_archetype = c_info.get("creator_archetype", p.creator_archetype)
-                        p.recommended_role = c_info.get("recommended_role", p.recommended_role)
-                        if p.creator_archetype == "Top Reviewer":
-                            p.creator_category = "Content Creator (เน้นรีวิว)"
-                trace.append(f"Classified {len(classification_map)} creators via Gemini Instructions (Zero-Hardcode)")
-            except Exception as e:
-                trace.append(f"Gemini instruction classification warning: {e}")
+    apify = get_apify_service()
+    if apify.is_configured and candidates:
+        try:
+            # Enrich top candidate creators with up to 5 profile videos to audit true content consistency
+            await apify.enrich_creators_recent_videos(candidates, max_videos_per_creator=5, max_profiles_to_enrich=8)
+            trace.append("Audited up to 5 recent TikTok videos per creator to evaluate Niche Consistency")
+        except Exception as e:
+            trace.append(f"Profile 5-video enrichment note: {e}")
+
+    # Zero-Hardcode: Classify creators via Gemini Instructions into the 4 Core Archetypes with 5-clip captions
+    gemini = get_gemini_service()
+    if gemini.is_configured and candidates:
+        try:
+            creators_to_classify = [
+                {
+                    "id": p.id,
+                    "handle": p.handle,
+                    "display_name": p.display_name,
+                    "bio": p.bio,
+                    "captions": [v.caption for v in p.recent_videos if v.caption][:5],
+                    "yellow_basket_ratio": round(
+                        sum(1 for v in p.recent_videos if v.has_yellow_basket) / max(len(p.recent_videos), 1),
+                        2
+                    ),
+                    "vertical": p.vertical,
+                }
+                for p in candidates
+            ]
+            classification_map = await gemini.classify_creator_archetypes(creators_to_classify)
+            for p in candidates:
+                if p.id in classification_map:
+                    c_info = classification_map[p.id]
+                    p.creator_archetype = c_info.get("creator_archetype", p.creator_archetype)
+                    p.recommended_role = c_info.get("recommended_role", p.recommended_role)
+                    if p.creator_archetype == "Top Reviewer":
+                        p.creator_category = "Content Creator (เน้นรีวิว)"
+                    if c_info.get("reasoning"):
+                        p.creator_persona = f"{p.creator_persona} | {c_info['reasoning']}"
+            trace.append(f"Classified {len(classification_map)} creators across 4 Archetypes with 5-clip context")
+        except Exception as e:
+            trace.append(f"Gemini instruction classification warning: {e}")
 
     apify_status = "Live TikTok Scraper Telemetry (Apify Clockworks Active)"
     trace.append(f"Apify telemetry status: {apify_status}")

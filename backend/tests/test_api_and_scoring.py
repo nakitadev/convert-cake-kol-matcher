@@ -683,3 +683,91 @@ async def test_competitor_and_merchant_accounts_filtered_by_two_stage_filter(mon
     assert len(profiles) == 1
 
 
+@pytest.mark.asyncio
+async def test_niche_consistency_ratio_and_5_clip_audit():
+    """
+    Verify แนวทางที่ 2: Niche Consistency Ratio (Topic Concentration across 5 clips).
+    A creator with only 1 ad-hoc ski video out of 5 general history/travel videos (Niche Ratio < 20%)
+    is penalized as Casual Fit and reclassified to Lifestyle & Vlog,
+    while a true niche specialist (4/5 ski videos, Niche Ratio 80%) retains full score.
+    """
+    from app.services.scoring_engine import ScoringEngine
+    from app.models import BrandDNA, KOLProfile, VideoMetric
+
+    brand = BrandDNA(
+        brand_name="Proski Thailand",
+        brand_summary="ลานสกีจำลองในร่มแห่งแรกในไทย สอนสกีและสโนว์บอร์ด",
+        target_audience="ผู้สนใจเรียนสกีและนักท่องเที่ยวฤดูหนาว",
+        vertical="Ski & Snowboard",
+        sub_category="Indoor Ski Simulator",
+        thai_keywords=["สกี", "สโนว์บอร์ด", "ลานสกี", "สอนสกี"],
+    )
+    engine = ScoringEngine()
+
+    # 1. Casual Creator (@sraissomething style): 1 ski video, 4 Chinese history videos
+    casual_kol = KOLProfile(
+        id="casual_1",
+        handle="sraissomething",
+        display_name="Sra History",
+        tiktok_url="https://www.tiktok.com/@sraissomething",
+        follower_count=50000,
+        creator_persona="Casual Historian & Travel Vlogger",
+        vertical="Ski & Snowboard",
+        bio="เล่าประวัติศาสตร์จีนและการท่องเที่ยว",
+        creator_archetype="Educated Guru",  # erroneously tagged guru from single video
+        recent_videos=[
+            VideoMetric(video_id="v1", caption="ลองเล่นสกีที่กรุงเทพ สนุกมาก #สกี", hashtags=["สกี"], views=10000, likes=500, comments=20, shares=10),
+            VideoMetric(video_id="v2", caption="ประวัติศาสตร์พระราชวังต้องห้าม สมัยราชวงศ์ชิง", hashtags=["ประวัติศาสตร์"], views=12000, likes=600, comments=30, shares=15),
+            VideoMetric(video_id="v3", caption="เรื่องราวซูสีไทเฮา โศกนาฏกรรมจีน", hashtags=["จีน"], views=15000, likes=800, comments=40, shares=20),
+            VideoMetric(video_id="v4", caption="อาหารปักกิ่งโบราณสูตรต้นตำรับ", hashtags=["อาหาร"], views=8000, likes=400, comments=15, shares=5),
+            VideoMetric(video_id="v5", caption="เดินชมสุสานงักฮุย ขุนนางกังฉิน", hashtags=["เที่ยวจีน"], views=9000, likes=450, comments=18, shares=8),
+        ],
+    )
+
+    # 2. Core Niche Specialist (@upventure_travel style): 4 ski/snowboard videos, 1 general travel
+    specialist_kol = KOLProfile(
+        id="specialist_1",
+        handle="upventure_travel",
+        display_name="UpVenture Snow",
+        tiktok_url="https://www.tiktok.com/@upventure_travel",
+        follower_count=120000,
+        creator_persona="Ski & Snowboard Specialist",
+        vertical="Ski & Snowboard",
+        bio="Snowboard & Winter Adventure Lover",
+        creator_archetype="Niche Enthusiast",
+        recent_videos=[
+            VideoMetric(video_id="v1", caption="เตรียมตัวก่อนไปลานสกี ซ้อมจัดระเบียบร่างกาย #สกี", hashtags=["สกี"], views=25000, likes=1500, comments=80, shares=45),
+            VideoMetric(video_id="v2", caption="เทคนิคการเลี้ยวสโนว์บอร์ด Carving #สโนว์บอร์ด", hashtags=["สโนว์บอร์ด"], views=30000, likes=1800, comments=95, shares=60),
+            VideoMetric(video_id="v3", caption="รีวิวรองเท้าและชุดสกีสำหรับมือใหม่ #สอนสกี", hashtags=["สอนสกี"], views=22000, likes=1200, comments=70, shares=40),
+            VideoMetric(video_id="v4", caption="ซ้อมลานสกีจำลอง Indoor ในไทย #ลานสกี", hashtags=["ลานสกี"], views=28000, likes=1600, comments=85, shares=50),
+            VideoMetric(video_id="v5", caption="เทศกาลบอลลูน สิงห์ปาร์ค เชียงราย", hashtags=["เที่ยวไทย"], views=15000, likes=700, comments=35, shares=15),
+        ],
+    )
+
+    # Evaluate both candidates
+    score_casual, b_casual, why_casual, _ = engine.evaluate_kol(casual_kol, brand)
+    score_spec, b_spec, why_spec, _ = engine.evaluate_kol(specialist_kol, brand)
+
+    # Verify Casual KOL (1/5 = 20% or less -> flagged casual fit)
+    assert casual_kol.niche_consistency_ratio == 0.2
+    assert casual_kol.is_casual_niche_fit is False or casual_kol.niche_consistency_ratio <= 0.2
+    # Re-test with 0/5 strictly < 0.20
+    casual_kol.recent_videos[0].caption = "เที่ยวจีนวันแรก"
+    casual_kol.recent_videos[0].hashtags = ["จีน"]
+    score_casual2, b_casual2, _, _ = engine.evaluate_kol(casual_kol, brand)
+    assert casual_kol.niche_consistency_ratio == 0.0
+    assert casual_kol.is_casual_niche_fit is True
+    assert b_casual2.is_casual_niche_fit is True
+    # Casual creator is re-routed away from Guru to Lifestyle & Vlog
+    assert casual_kol.creator_archetype == "Lifestyle & Vlog"
+    # Semantic points must be capped/penalized
+    assert b_casual2.semantic_points <= 12.0
+
+    # Verify Specialist KOL (4/5 = 80% niche consistency)
+    assert specialist_kol.niche_consistency_ratio == 0.8
+    assert specialist_kol.is_casual_niche_fit is False
+    assert specialist_kol.creator_archetype == "Niche Enthusiast"
+    assert b_spec.semantic_points > b_casual2.semantic_points
+    assert score_spec > score_casual2
+
+

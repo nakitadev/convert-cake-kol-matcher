@@ -68,6 +68,8 @@ class ScoringEngine:
             semantic_similarity=sem_sim,
             semantic_points=sem_pts,
             niche_keyword_points=kw_pts,
+            niche_consistency_ratio=getattr(kol, 'niche_consistency_ratio', 1.0),
+            is_casual_niche_fit=getattr(kol, 'is_casual_niche_fit', False),
             matched_keywords=matched_kw,
             embedding_model=emb_model,
             engagement_score_raw=eng_raw,
@@ -145,6 +147,37 @@ class ScoringEngine:
         sem_pts = round(sem_sim * 28.0, 2)
         work_ready_bonus = 4.0 if kol.is_work_ready else 0.0
         kw_pts = round(min(8.0, (len(matched_kw) / max(len(brand.thai_keywords), 1)) * 8.0) + work_ready_bonus, 2)
+
+        # แนวทางที่ 2: Niche Consistency Ratio (Topic Concentration across audited videos)
+        total_recent = len(kol.recent_videos)
+        brand_kws = [k.strip().lower() for k in brand.thai_keywords if k and k.strip()]
+        niche_video_count = 0
+        for v in kol.recent_videos:
+            v_text = f"{v.caption} {' '.join(v.hashtags)}".lower()
+            is_niche = (
+                any(kw in v_text for kw in brand_kws) or
+                (brand.vertical.lower() in v_text) or
+                (brand.sub_category.lower() in v_text if brand.sub_category else False)
+            )
+            if is_niche:
+                niche_video_count += 1
+
+        niche_ratio = (niche_video_count / total_recent) if total_recent > 0 else 1.0
+        kol.niche_consistency_ratio = round(niche_ratio, 2)
+
+        # แนวทางที่ 2 Rule: If audited videos >= 3 and Niche Ratio < 0.20 (e.g. 0/5 or 1/5 clips)
+        # This creator is an Ad-hoc / Casual Niche Visitor (e.g. tourist trip or single ski resort visit)
+        # Reduce relevance to Casual Fit level (max 12 pts out of 28, or 50% discount)
+        if total_recent >= 3 and niche_ratio < 0.20:
+            kol.is_casual_niche_fit = True
+            sem_pts = round(min(sem_pts * 0.5, 12.0), 2)
+            # Reclassify to Lifestyle & Vlog if erroneously classified as Guru / Niche Enthusiast
+            if kol.creator_archetype in ["Educated Guru", "Niche Enthusiast"]:
+                kol.creator_archetype = "Lifestyle & Vlog"
+                kol.recommended_role = "Brand Awareness & Discovery (Casual Fit)"
+        else:
+            kol.is_casual_niche_fit = False
+
         raw_score = round(((sem_pts + kw_pts) / 40.0) * 100.0, 1)
         return raw_score, sem_sim, matched_kw, emb_model, sem_pts, kw_pts
 
@@ -325,6 +358,7 @@ class ScoringEngine:
         cat_name = getattr(kol, 'creator_category', 'Content Creator (เน้นรีวิว)')
         cat_str = f" [หมวดหมู่: {cat_name} | ตะกร้าเหลือง {int(b.yellow_basket_ratio*100)}%]" if b.yellow_basket_ratio > 0 else f" [หมวดหมู่: {cat_name}]"
         archetype_str = f" [Archetype: {kol.creator_archetype} ({kol.recommended_role})]" if kol.creator_archetype else ""
+        niche_str = f" [💡 Casual Niche Fit: {int(b.niche_consistency_ratio*100)}%]" if getattr(b, 'is_casual_niche_fit', False) else (f" [🎯 Core Niche Specialist: {int(b.niche_consistency_ratio*100)}%]" if getattr(b, 'niche_consistency_ratio', 1.0) >= 0.6 else "")
         comp_str = f" {kol.competitor_warning}." if kol.competitor_warning else ""
         work_str = " ✅ Open for Sponsor / พร้อมรับงาน" if kol.is_work_ready else ""
 
@@ -339,7 +373,7 @@ class ScoringEngine:
             role_context = f" เหมาะสำหรับเจาะกลุ่มผู้เล่นประจำที่กำลังมองหาสถานที่ซ้อมสกีก่อนออกทริปจริง (Hyper-Targeted Reach)"
 
         return (
-            f"{kol.display_name}{cat_str}{archetype_str} is an ideal {kol.tier} partner for {brand.brand_name}."
+            f"{kol.display_name}{cat_str}{archetype_str}{niche_str} is an ideal {kol.tier} partner for {brand.brand_name}."
             f"{work_str} Delivers healthy engagement with a {b.median_engagement_rate_pct:.1f}% median ER and strong content relevance{kw_str}. "
             f"Save-to-View utility points ({b.save_to_view_points}/10) & Thai Authenticity ({b.thai_authenticity_points}/10) confirm genuine local reach. "
             f"Audience alignment confidence is {b.confidence_level} based on price-point compatibility{price_str} "

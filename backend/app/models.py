@@ -93,6 +93,8 @@ class KOLProfile(BaseModel):
     query_origin: Optional[str] = Field(default=None, description="Taxonomy query angle that discovered this creator")
     save_to_view_ratio: float = Field(default=0.0, description="Save-to-view utility ratio")
     view_consistency_ratio: float = Field(default=0.0, description="Median views / mean views ratio")
+    niche_consistency_ratio: float = Field(default=1.0, description="Ratio of recent videos matching core niche (0.0 - 1.0)")
+    is_casual_niche_fit: bool = Field(default=False, description="Whether creator only casually touched the niche (<20%)")
     is_affiliate_spam_trap: bool = Field(default=False, description="Whether creator is classified as fake affiliate bot/spam trap")
     estimated_rate_thb: str = Field(default="", description="Estimated campaign rate per video in THB")
 
@@ -103,6 +105,8 @@ class SignalBreakdown(BaseModel):
     semantic_similarity: float = Field(..., description="0-1 dense vector similarity")
     semantic_points: float = Field(default=0.0, description="0-28 semantic relevance points")
     niche_keyword_points: float = Field(default=0.0, description="0-12 keyword & work-ready points")
+    niche_consistency_ratio: float = Field(default=1.0, description="0.0 - 1.0 topic concentration ratio across recent videos")
+    is_casual_niche_fit: bool = Field(default=False, description="Whether creator is a casual/one-off mention rather than core niche specialist")
     matched_keywords: List[str] = Field(default_factory=list, description="Matched Thai/English keywords & hashtags")
     embedding_model: str = Field(default="gemini-embedding-2", description="Model used for dense vector semantic matching")
 

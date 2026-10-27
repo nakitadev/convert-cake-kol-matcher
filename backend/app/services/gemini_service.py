@@ -377,7 +377,11 @@ Do NOT simply match keywords or words in bio. Understand the semantics, tone, in
 1. 'Educated Guru' (Recommended Role: 'Trust & Credibility')
    - Core Value: Knowledge transfer, skill training, technical analysis, and educational problem-solving.
    - Content Focus: Deep educational breakdowns, step-by-step tutorials, technique drills, correcting common mistakes/posture, explaining the science/mechanics/ingredients, medical/health/sports coaching, professional advice.
-   - Distinction vs Lifestyle/Travel: A creator going on a ski trip or vacation vlog is NOT a guru; an instructor teaching edging drills, balance posture, and safety rules IS an Educated Guru.
+   - STRICT EXCLUSIONS (Do NOT classify as Guru):
+     * Travel itineraries ('แจกแพลนเที่ยว', 'แนะนำที่พัก/ที่เที่ยว', 'พิกัดเดินทาง') -> MUST be 'Lifestyle & Vlog'
+     * Vacation/trip vlogs, skiing for leisure, exploring cafes/destinations -> MUST be 'Lifestyle & Vlog'
+     * Product unboxings or shopping reviews -> MUST be 'Top Reviewer'
+   - An instructor teaching technical skiing drills, balance posture, and safety mechanics IS an Educated Guru. A traveler sharing a ski trip itinerary or fun vlog is 'Lifestyle & Vlog'.
 
 2. 'Top Reviewer' (Recommended Role: 'Conversion & Sales')
    - Core Value: Product evaluation, buying decision assistance, and commercial shoppertainment.
@@ -385,9 +389,9 @@ Do NOT simply match keywords or words in bio. Understand the semantics, tone, in
    - Note on Yellow Basket: Yellow basket presence is strictly an evaluation signal that indicates affiliate review content to help classify into this 'Top Reviewer' archetype.
 
 3. 'Lifestyle & Vlog' (Recommended Role: 'Brand Awareness & Discovery')
-   - Core Value: Entertainment, aesthetic relatability, and personal lifestyle inspiration.
-   - Content Focus: Daily life vlogs, travel diaries, holiday trips, aesthetic routines (GRWM, Day in my life), cafe hopping, food experiences, fashion/OOTD, humor, casual storytelling.
-   - Distinction vs Guru: They document their personal experiences, travels, and lifestyle rather than providing structured education or technical skill instruction.
+   - Core Value: Entertainment, aesthetic relatability, personal experiences, and travel inspiration.
+   - Content Focus: Daily life vlogs, travel itineraries ('แจกแพลนเที่ยว 3 วัน 2 คืน', 'รีวิวทริป', 'พิกัดถ่ายรูป'), holiday trips, outdoor adventures/hiking for leisure, aesthetic routines (GRWM, Day in my life), cafe hopping, food experiences, fashion/OOTD, humor, casual storytelling.
+   - Distinction: Even if they share travel tips or itineraries, this is experiential lifestyle sharing, NOT academic or professional skill coaching.
 
 4. 'Niche Enthusiast' (Recommended Role: 'Hyper-Targeted Reach')
    - Core Value: Subculture authenticity, passionate hobby immersion, and community connection.

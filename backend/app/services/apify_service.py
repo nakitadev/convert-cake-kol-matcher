@@ -479,6 +479,86 @@ class ApifyTikTokService:
             logger.warning(f"Apify live search failed or timed out: {e}")
             return []
 
+    async def enrich_creators_recent_videos(
+        self,
+        profiles: List[KOLProfile],
+        max_videos_per_creator: int = 5,
+        max_profiles_to_enrich: int = 8,
+    ) -> List[KOLProfile]:
+        """
+        Enriches candidate creators with up to 5 recent videos from their TikTok profile.
+        Allows auditing true content consistency (One-off casual experience vs Dedicated Niche Specialist).
+        Uses live Apify profile scraper concurrently with bounded concurrency to prevent timeouts.
+        """
+        if not self.is_configured or not profiles:
+            return profiles
+
+        targets = [p for p in profiles if len(p.recent_videos) < max_videos_per_creator][:max_profiles_to_enrich]
+        if not targets:
+            return profiles
+
+        import asyncio
+        sem = asyncio.Semaphore(3)
+
+        async def _enrich_single_profile(p: KOLProfile):
+            async with sem:
+                url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=45"
+                payload = {
+                    "profiles": [p.handle],
+                    "resultsPerPage": max_videos_per_creator,
+                    "shouldDownloadVideos": False,
+                    "shouldDownloadCovers": False,
+                }
+                try:
+                    async with httpx.AsyncClient(timeout=50.0) as client:
+                        resp = await client.post(url, json=payload)
+                        if resp.status_code in [200, 201]:
+                            items = resp.json()
+                            if isinstance(items, list) and len(items) > 0:
+                                new_videos: List[VideoMetric] = []
+                                for item in items[:max_videos_per_creator]:
+                                    v_id = str(item.get("id", f"v_{len(new_videos)}"))
+                                    caption = str(item.get("text", "")).strip()
+                                    v_tags = [h.get("name") if isinstance(h, dict) else str(h) for h in item.get("hashtags", [])]
+                                    views = int(item.get("playCount") or 0)
+                                    likes = int(item.get("diggCount") or 0)
+                                    comments = int(item.get("commentCount") or 0)
+                                    shares = int(item.get("shareCount") or 0)
+                                    collect_count = int(item.get("collectCount") or 0)
+                                    has_basket = bool(item.get("hasTikTokShopProduct", False))
+                                    loc_tag = str(item.get("locationCreated") or (item.get("poi") or {}).get("name") or "").strip()
+                                    new_videos.append(
+                                        VideoMetric(
+                                            video_id=v_id,
+                                            caption=caption[:200],
+                                            hashtags=v_tags[:6],
+                                            views=views,
+                                            likes=likes,
+                                            comments=comments,
+                                            shares=shares,
+                                            collect_count=collect_count,
+                                            has_yellow_basket=has_basket,
+                                            location_tag=loc_tag if loc_tag else None,
+                                        )
+                                    )
+                                if len(new_videos) >= len(p.recent_videos):
+                                    p.recent_videos = new_videos
+                                    views_list = [v.views for v in new_videos if v.views > 0]
+                                    if views_list:
+                                        import numpy as np
+                                        median_views = float(np.median(views_list))
+                                        mean_views = float(np.mean(views_list))
+                                        p.view_consistency_ratio = round(median_views / max(mean_views, 1.0), 3)
+                                        total_collects = sum(v.collect_count for v in new_videos)
+                                        total_views = sum(v.views for v in new_videos)
+                                        p.save_to_view_ratio = round(total_collects / max(total_views, 1), 4)
+                                    logger.info(f"Enriched @{p.handle} to {len(p.recent_videos)} live profile videos")
+                except Exception as e:
+                    logger.warning(f"Profile video enrichment for @{p.handle} error: {e}")
+
+        await asyncio.gather(*[_enrich_single_profile(p) for p in targets], return_exceptions=True)
+        return profiles
+
     async def scrape_facebook_page(self, facebook_url: str) -> Dict[str, Any]:
         """
         Scrapes a live Facebook Page using Apify actor 'apify~facebook-pages-scraper'.
