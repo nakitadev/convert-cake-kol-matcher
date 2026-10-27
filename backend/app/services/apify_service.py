@@ -186,13 +186,6 @@ class ApifyTikTokService:
                     if mc:
                         known_comps.append(str(mc).lower())
 
-            # Auto-enrich category competitors for specialized sports / ski venues
-            combined_context = f"{brand_name or ''} {vertical}".lower()
-            if any(w in combined_context for w in ["ski", "snowboard", "สกี", "สโนว์บอร์ด", "sports"]):
-                for sc in ["ski bkk", "ski.bkk", "skibkk", "ski addict", "skiaddict", "skiaddictbangkok", "ski 365", "ski365", "urban ski", "snow town"]:
-                    if sc not in known_comps:
-                        known_comps.append(sc)
-
             # Convert to verified KOLProfile objects with Entity Filtering & Archetype Classification
             profiles: List[KOLProfile] = []
             for handle, data in authors_data.items():

@@ -190,8 +190,8 @@ Respond ONLY with a valid JSON object matching this schema:
   }},
   "grounded_competitors": [
     {{
-      "brand_en": "Competitor English Name",
-      "aliases": ["English Name", "ชื่อภาษาไทยทับศัพท์", "ชื่อย่อโซเชียล"]
+      "brand_en": "Real Thai Competitor / Alternative Brand, Venue, or Academy Name",
+      "aliases": ["English Name", "Thai Name", "Common social handle or abbreviation e.g. skibkk"]
     }}
   ]
 }}
