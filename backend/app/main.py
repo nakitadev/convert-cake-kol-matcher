@@ -80,7 +80,7 @@ async def analyze_brand(req: BrandAnalyzeRequest):
 async def match_kols(req: MatchRequest):
     """
     Stage 2: Evaluate & rank live Thai TikTok creators against Brand DNA
-    using the 3-part Hybrid Scoring Engine (Relevance 45%, Engagement 35%, Multi-Signal Audience 20%).
+    using the Archetype-Aware Dynamic Scoring Engine (Relevance 40%, Engagement 35%, Multi-Signal Audience 25%).
     """
     try:
         response = await run_full_matching(
@@ -106,6 +106,7 @@ async def auto_match(req: AutoMatchRequest):
             website_url=req.website_url,
             facebook_url=req.facebook_url,
             custom_notes=req.custom_notes,
+            manual_competitors=req.manual_competitors,
         )
         response = await run_full_matching(
             brand_request=brand_req,

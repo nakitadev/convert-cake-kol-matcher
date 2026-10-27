@@ -236,3 +236,90 @@ async def test_zero_hardcode_discovery_policy():
     )
     with pytest.raises(ValueError, match="BrandDNA vertical is required"):
         await discover_candidates_node({"brand_dna": bad_dna})
+
+
+def test_full_spec_40_35_25_and_archetypes():
+    scoring = get_scoring_engine()
+    brand = BrandDNA(
+        id="live-skincare",
+        brand_name="MizuMi Skincare",
+        vertical="Beauty & Skincare",
+        sub_category="Sunscreen & Acne",
+        brand_summary="Thai derm skincare for sensitive skin",
+        target_audience="Acne prone teens and working adults",
+        thai_keywords=["กันแดด", "สิว", "รีวิว"],
+        grounded_competitors=[{"brand_en": "Biore", "aliases": ["บิโอเร", "บีโอเร"]}],
+        manual_competitors=["Canmake"],
+    )
+
+    # 1. Educated Guru profile
+    guru_kol = KOLProfile(
+        id="guru_derm",
+        handle="dr_skin_guru",
+        display_name="Dr. Skin Guru",
+        tiktok_url="https://www.tiktok.com/@dr_skin_guru",
+        vertical="Beauty & Skincare",
+        bio="เภสัชกรสอนเลือกสารกันแดด ติดต่องาน: work@gmail.com",
+        follower_count=120000,
+        tier="Mid-Tier (100K-500K)",
+        creator_persona="Educated Guru",
+        creator_archetype="Educated Guru",
+        recommended_role="Trust & Credibility",
+        is_work_ready=True,
+        save_to_view_ratio=0.045,
+        view_consistency_ratio=0.85,
+        sample_comments=["สารตัวนี้ดีมาก", "พิกัดซื้อที่ไหนคะ", "ผิวแพ้ง่ายใช้ได้ไหม"],
+        recent_videos=[
+            VideoMetric(
+                video_id="v1",
+                caption="วิธีเลือกกันแดดสำหรับคนเป็นสิว ผิวแพ้ง่าย #สาระ",
+                views=80000,
+                likes=6000,
+                comments=240,
+                shares=500,
+                collect_count=900,
+                has_yellow_basket=False,
+            )
+        ],
+    )
+
+    score, breakdown, why, hooks = scoring.evaluate_kol(guru_kol, brand)
+    # Check 40/35/25 breakdown constraints
+    assert breakdown.relevance_weighted <= 40.0
+    assert breakdown.engagement_weighted <= 35.0
+    assert breakdown.audience_weighted <= 25.0
+    assert score == round(breakdown.relevance_weighted + breakdown.engagement_weighted + breakdown.audience_weighted, 1)
+    assert breakdown.save_to_view_points >= 8.0
+    assert "[Archetype: Educated Guru (Trust & Credibility)]" in why
+    assert "Open for Sponsor" in why
+    assert len(hooks) == 3
+
+    # 2. Competitor Conflict Check
+    comp_kol = KOLProfile(
+        id="comp_kol",
+        handle="comp_reviewer",
+        display_name="Beauty Fan",
+        tiktok_url="https://www.tiktok.com/@comp_reviewer",
+        vertical="Beauty & Skincare",
+        bio="รีวิวเครื่องสำอาง",
+        follower_count=20000,
+        tier="Micro (10K-100K)",
+        creator_persona="Top Reviewer",
+        creator_archetype="Top Reviewer",
+        competitor_warning="⚠️ Competitor Conflict: Content features competitor 'Biore'",
+        sample_comments=["ใช้ตาม"],
+        recent_videos=[
+            VideoMetric(
+                video_id="v2",
+                caption="เปรียบเทียบกันแดด biore กับแบรนด์อื่น",
+                views=10000,
+                likes=500,
+                comments=20,
+                shares=10,
+                has_yellow_basket=True,
+            )
+        ],
+    )
+    c_score, c_breakdown, c_why, _ = scoring.evaluate_kol(comp_kol, brand)
+    assert "⚠️ Competitor Conflict" in c_why
+

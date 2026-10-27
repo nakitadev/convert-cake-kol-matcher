@@ -78,6 +78,7 @@ class BrandAnalyzer:
                 brand_name=brand_name,
                 website_url=req.website_url or "",
                 fb_url=req.facebook_url or "",
+                manual_competitors=req.manual_competitors,
             )
             if llm_dna:
                 vertical = llm_dna.get("vertical")
@@ -97,6 +98,22 @@ class BrandAnalyzer:
                 brand_tone = llm_dna.get("brand_tone") if isinstance(llm_dna.get("brand_tone"), list) else []
                 content_styles = llm_dna.get("content_style_preferences") if isinstance(llm_dna.get("content_style_preferences"), list) else []
 
+                # 5-Angle Search Taxonomy from Spec 2.2
+                search_taxonomy = llm_dna.get("search_taxonomy") or {
+                    "niche_hashtags": [f"#{k}" for k in final_keywords[:3]],
+                    "pain_point_queries": [f"วิธีแก้ {brand_name}", f"กู้ {vertical}"],
+                    "review_hook_queries": [f"รีวิว {brand_name}", f"คุ้มไหม {brand_name}"],
+                    "lifestyle_persona_queries": [f"รูทีน {vertical}"],
+                    "competitor_seed_queries": [f"รีวิว {c}" for c in (req.manual_competitors or [])],
+                }
+
+                # Grounded Competitor Dictionary with bilingual aliases
+                grounded_comps = llm_dna.get("grounded_competitors") or []
+                if req.manual_competitors:
+                    for mc in req.manual_competitors:
+                        if not any(mc.lower() == c.get("brand_en", "").lower() for c in grounded_comps):
+                            grounded_comps.append({"brand_en": mc, "aliases": [mc]})
+
                 raw_id = re.sub(r'[^a-zA-Z0-9]', '', brand_name.lower())[:15] or "brand"
                 return BrandDNA(
                     id=f"live-{raw_id}",
@@ -115,6 +132,9 @@ class BrandAnalyzer:
                     average_price_thb=int(llm_dna.get("average_price_thb") or 0),
                     thai_keywords=final_keywords,
                     scraped_sources=scraped_sources or ["Live Web Ingestion & Gemini 3.5 Flash-Lite"],
+                    manual_competitors=req.manual_competitors or [],
+                    search_taxonomy=search_taxonomy,
+                    grounded_competitors=grounded_comps,
                 )
 
         # 4. Strict Zero-Mock & Zero-Fallback Policy: No heuristic synthetic fallback

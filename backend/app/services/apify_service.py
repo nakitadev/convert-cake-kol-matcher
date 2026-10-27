@@ -27,11 +27,19 @@ class ApifyTikTokService:
         return bool(self.api_token and len(self.api_token.strip()) > 5)
 
     async def search_live_kols_by_hashtags(
-        self, hashtags: List[str], vertical: str, limit_creators: int = 12
+        self,
+        hashtags: List[str],
+        vertical: str,
+        limit_creators: int = 12,
+        search_queries: Optional[List[str]] = None,
+        search_taxonomy: Optional[Dict[str, List[str]]] = None,
+        grounded_competitors: Optional[List[Dict[str, Any]]] = None,
+        manual_competitors: Optional[List[str]] = None,
     ) -> List[KOLProfile]:
         """
-        Search live TikTok creators using Apify actor by hashtags.
-        Aggregates live videos into verified KOLProfile objects with real engagement metrics.
+        Search live TikTok creators using Apify actor by hashtags & searchQueries (5-Angle Taxonomy).
+        Implements Two-Stage Entity Filtering (Merchants vs Bots vs Work-Ready Creators),
+        Creator Archetypes classification, and Grounded Thai Competitor Detection.
         """
         if not self.is_configured:
             logger.warning("APIFY_API_TOKEN not configured.")
@@ -42,20 +50,31 @@ class ApifyTikTokService:
             raise ValueError("Hashtags list cannot be empty. Zero-Hardcode Policy forbids fallback tags.")
 
         # Query primary hashtag with 5 videos for fast live scraping
-        query_tags = clean_tags[:1]
-        cache_key = f"{query_tags[0]}_{vertical}"
+        query_tags = clean_tags[:2]
+        sq_list = []
+        if search_taxonomy:
+            for k in ["pain_point_queries", "review_hook_queries", "lifestyle_persona_queries", "competitor_seed_queries"]:
+                for q in search_taxonomy.get(k, []):
+                    if q and q.strip() and q.strip() not in sq_list:
+                        sq_list.append(q.strip())
+        elif search_queries:
+            sq_list = [q.strip() for q in search_queries if q and q.strip()]
+
+        cache_key = f"{query_tags[0]}_{vertical}_{'_'.join(sq_list[:2])}"
         now = time.time()
         if cache_key in self._cache and (now - self._cache[cache_key][0]) < 900:
             logger.info(f"Returning cached live TikTok results for {cache_key}")
             return self._cache[cache_key][1]
 
         url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=90"
-        payload = {
+        payload: Dict[str, Any] = {
             "hashtags": query_tags,
             "resultsPerPage": 5,
             "shouldDownloadVideos": False,
             "shouldDownloadCovers": False,
         }
+        if sq_list:
+            payload["searchQueries"] = sq_list[:3]
 
         try:
             async with httpx.AsyncClient(timeout=95.0) as client:
@@ -115,6 +134,7 @@ class ApifyTikTokService:
                 has_basket = bool(item.get("hasTikTokShopProduct", False))
 
                 loc_tag = str(item.get("locationCreated") or (item.get("poi") or {}).get("name") or "").strip()
+                collect_count = int(item.get("collectCount") or 0)
                 authors_data[handle]["videos"].append(
                     VideoMetric(
                         video_id=v_id,
@@ -124,12 +144,13 @@ class ApifyTikTokService:
                         likes=likes,
                         comments=comments,
                         shares=shares,
+                        collect_count=collect_count,
                         has_yellow_basket=has_basket,
                         location_tag=loc_tag if loc_tag else None,
                     )
                 )
 
-            # Convert to verified KOLProfile objects
+            # Convert to verified KOLProfile objects with Entity Filtering & Archetype Classification
             profiles: List[KOLProfile] = []
             for handle, data in authors_data.items():
                 meta = data["meta"]
@@ -141,6 +162,7 @@ class ApifyTikTokService:
                 bio = str(meta.get("signature") or "").strip()
                 avatar_url = str(meta.get("avatar") or "").strip()
 
+                # 1. Follower Tiers (Spec 4.1)
                 if followers < 10000:
                     tier = "Nano (1K-10K)"
                     est_rate = "2,000 - 5,000 THB"
@@ -156,10 +178,38 @@ class ApifyTikTokService:
 
                 yellow_count = sum(1 for v in videos if v.has_yellow_basket)
                 yellow_ratio = (yellow_count / len(videos)) if videos else 0.0
-
-                # Spec: ยอมให้มีปักตะกร้าเหลืองได้ 100% โดยจัดเข้าหมวดหมู่ "Content Creator (เน้นรีวิว)"
-                review_keywords = ["รีวิว", "ป้ายยา", "พิกัด", "ใช้ดี", "ลองแล้ว", "ตะกร้า", "ช้อปปิ้ง", "unboxing"]
                 all_captions = [v.caption.lower() for v in videos if v.caption]
+
+                # 2. Two-Stage Entity Filtering (Spec 3)
+                # 3.1 Merchant / Official Store Check (Exclude immediately if purely store)
+                merchant_keywords = ["official", "store", "shop", "สั่งซื้อจิ้มลิงก์", "ตัวแทนจำหน่าย", "ราคาส่ง", "มีบริการเก็บเงินปลายทาง", "เปิดบิล", "ขายส่ง", "ส่งฟรีทั่วไทย"]
+                creator_indicator_words = ["รีวิว", "creator", "lifestyle", "vlog", "ติดต่องาน", "บล็อกเกอร์", "รีวิวไปเรื่อย", "รีวิวของ"]
+                has_merchant_word = any(k in bio.lower() or k in display_name.lower() or k in handle.lower() for k in merchant_keywords)
+                has_creator_word = any(k in bio.lower() or k in display_name.lower() for k in creator_indicator_words)
+                
+                if has_merchant_word and not has_creator_word:
+                    account_type = "merchant_store"
+                    # Spec 3.1: Merchant store filtered out from creator matching
+                    continue
+                else:
+                    account_type = "real_kol"
+
+                # 3.2 Affiliate Spam Bot (Filtered out unless legitimate review creator)
+                is_spam = False
+                if followers > 50000 and total_likes < 50:
+                    is_spam = True
+                    account_type = "affiliate_spam_bot"
+                elif yellow_ratio >= 0.85 and total_likes < 200 and followers < 5000:
+                    # High basket with zero engagement & low followers
+                    is_spam = True
+                    account_type = "affiliate_spam_bot"
+
+                # 3.3 Work-Ready Signal (Spec 3.3)
+                work_keywords = ["ติดต่องาน", "for work", "รับงานรีวิว", "dm for work", "line @", "line:", "line@", "งาน:", "contact:", "work:", "tel:", "@gmail"]
+                is_work_ready = any(w in bio.lower() for w in work_keywords)
+
+                # Spec: Category classification
+                review_keywords = ["รีวิว", "ป้ายยา", "พิกัด", "ใช้ดี", "ลองแล้ว", "ตะกร้า", "ช้อปปิ้ง", "unboxing", "คุ้มไหม", "ใช้จริง"]
                 has_review_signal = (
                     yellow_ratio >= 0.50
                     or any(any(kw in c for kw in review_keywords) for c in all_captions)
@@ -171,10 +221,88 @@ class ApifyTikTokService:
                 else:
                     creator_category = f"Content Creator ({vertical})"
 
-                # ตะกร้าเหลือง 100% ไม่ใช่ spam แต่คือครีเอเตอร์สายรีวิว; เฉพาะ bot ชัดเจนจึงเป็น spam
-                is_spam = False
-                if followers > 50000 and total_likes < 50:
-                    is_spam = True
+                # 4. Engineering Edge-Case Calculations (Spec 6)
+                import numpy as np
+                views_list = [v.views for v in videos]
+                median_views = float(np.median(views_list)) if views_list else 0.0
+                mean_views = float(np.mean(views_list)) if views_list else 1.0
+                view_consistency_ratio = round(median_views / max(mean_views, 1.0), 3) if views_list else 0.0
+                save_to_view_ratio = round(float(np.median([((v.collect_count + 0.7 * v.shares) / max(v.views, 500)) for v in videos])), 4) if videos else 0.0
+
+                # 5. Grounded Thai Competitor Detection: Layer 2 & Layer 3 (Spec 7)
+                competitor_warning = None
+                known_comps = []
+                if grounded_competitors:
+                    for gc in grounded_competitors:
+                        b_en = gc.get("brand_en")
+                        if b_en:
+                            known_comps.append(b_en.lower())
+                        for a in gc.get("aliases", []):
+                            if a:
+                                known_comps.append(str(a).lower())
+                if manual_competitors:
+                    for mc in manual_competitors:
+                        if mc:
+                            known_comps.append(str(mc).lower())
+
+                detected_comps = set()
+                if known_comps:
+                    for cap in all_captions:
+                        for comp in known_comps:
+                            if comp in cap:
+                                detected_comps.add(comp)
+
+                if len(detected_comps) >= 2:
+                    competitor_warning = "🎯 Niche Enthusiast Opportunity: Multi-brand category comparison"
+                elif len(detected_comps) == 1:
+                    c_name = list(detected_comps)[0].capitalize()
+                    competitor_warning = f"⚠️ Competitor Conflict: Content features competitor '{c_name}'"
+
+                # 6. Creator Archetype Classification (Spec 4.2)
+                guru_keywords = ["วิธี", "กู้", "สอน", "ข้อสังเกต", "ทำไม", "สารอาหาร", "ส่วนผสม", "รีเสิร์ช", "หมอ", "แพทย์", "เภสัช", "วิทยาศาสตร์", "เทคนิค", "คู่มือ", "ขั้นตอน", "รู้หรือไม่", "แชร์ทริค"]
+                vlog_keywords = ["#vlog", "#grwm", "#ootd", "routine", "ชีวิตประจำวัน", "vlog", "พากย์เสียง", "วันหนึ่ง", "my day", "ไปเที่ยว", "แต่งตัว"]
+                avg_caption_len = (sum(len(v.caption) for v in videos) / len(videos)) if videos else 0
+
+                query_origin = "niche_hashtags"
+                if search_taxonomy:
+                    if any(any(q.lower() in c for q in search_taxonomy.get("pain_point_queries", [])) for c in all_captions):
+                        query_origin = "pain_point_queries"
+                    elif any(any(q.lower() in c for q in search_taxonomy.get("review_hook_queries", [])) for c in all_captions):
+                        query_origin = "review_hook_queries"
+                    elif any(any(q.lower() in c for q in search_taxonomy.get("lifestyle_persona_queries", [])) for c in all_captions):
+                        query_origin = "lifestyle_persona_queries"
+                    elif any(any(q.lower() in c for q in search_taxonomy.get("competitor_seed_queries", [])) for c in all_captions):
+                        query_origin = "competitor_seed_queries"
+
+                if len(detected_comps) >= 2 or query_origin == "competitor_seed_queries":
+                    creator_archetype = "Niche Enthusiast"
+                    recommended_role = "Hyper-Targeted Reach"
+                elif (
+                    query_origin == "pain_point_queries"
+                    or avg_caption_len >= 75
+                    or save_to_view_ratio >= 0.035
+                    or any(any(kw in c for kw in guru_keywords) for c in all_captions)
+                    or any(kw in bio.lower() for kw in guru_keywords)
+                ):
+                    creator_archetype = "Educated Guru"
+                    recommended_role = "Trust & Credibility"
+                elif (
+                    creator_category == "Content Creator (เน้นรีวิว)"
+                    or query_origin == "review_hook_queries"
+                    or yellow_ratio >= 0.20
+                    or any(any(kw in c for kw in review_keywords) for c in all_captions)
+                ):
+                    creator_archetype = "Top Reviewer"
+                    recommended_role = "Conversion & Sales"
+                elif (
+                    query_origin == "lifestyle_persona_queries"
+                    or (yellow_ratio < 0.20 and any(any(kw in c for kw in vlog_keywords) for c in all_captions))
+                ):
+                    creator_archetype = "Lifestyle & Vlog"
+                    recommended_role = "Brand Awareness"
+                else:
+                    creator_archetype = "Top Reviewer" if yellow_count > 0 else "Lifestyle & Vlog"
+                    recommended_role = "Conversion & Sales" if yellow_count > 0 else "Brand Awareness"
 
                 # Dynamic audience inquiries synthesized from real video captions by Gemini
                 captions = [v.caption for v in videos if v.caption]
@@ -252,6 +380,14 @@ class ApifyTikTokService:
                         sample_comments=sample_comments,
                         recent_videos=videos,
                         creator_category=creator_category,
+                        creator_archetype=creator_archetype,
+                        recommended_role=recommended_role,
+                        account_type=account_type,
+                        is_work_ready=is_work_ready,
+                        competitor_warning=competitor_warning,
+                        query_origin=query_origin,
+                        save_to_view_ratio=save_to_view_ratio,
+                        view_consistency_ratio=view_consistency_ratio,
                         is_affiliate_spam_trap=is_spam,
                         estimated_rate_thb=est_rate,
                     )

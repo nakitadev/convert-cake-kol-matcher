@@ -1,6 +1,7 @@
 import os
 import json
 import math
+import re
 from typing import List, Optional, Tuple, Dict, Any
 import numpy as np
 
@@ -16,7 +17,7 @@ class GeminiService:
     """
     Gemini Service integrating:
     1. Gemini Embedding 2 (`gemini-embedding-2`) for unified dense semantic vector embeddings
-    2. Gemini Main LLM (`gemini-3.5-flash-lite` or configurable) for Brand DNA synthesis, matching rationale, and Thai campaign hooks.
+    2. Gemini Main LLM (`gemini-3.5-flash-lite` or configurable) for Brand DNA synthesis, 5-angle search taxonomy, grounded competitor extraction, matching rationale, and archetype-tailored hooks.
     """
 
     def __init__(self):
@@ -53,7 +54,6 @@ class GeminiService:
             return None
 
         try:
-            # Google GenAI SDK embedContent API call for gemini-embedding-2
             response = self.client.models.embed_content(
                 model=self.embedding_model,
                 contents=text.strip()[:4000],
@@ -82,26 +82,32 @@ class GeminiService:
         if norm_a == 0 or norm_b == 0:
             return 0.0
         cos = float(np.dot(a, b) / (norm_a * norm_b))
-        # Map from [-1, 1] to [0, 1]
         return max(0.0, min(1.0, (cos + 1.0) / 2.0))
 
     async def generate_brand_dna(
-        self, scraped_text: str, brand_name: str, website_url: str, fb_url: str
+        self,
+        scraped_text: str,
+        brand_name: str,
+        website_url: str,
+        fb_url: str,
+        manual_competitors: Optional[List[str]] = None,
     ) -> Optional[Dict[str, Any]]:
         """
-        Uses Gemini Main LLM to extract structured Brand DNA from scraped web & FB text.
+        Uses Gemini Main LLM to extract structured Brand DNA, 5-Angle Search Taxonomy, and Grounded Competitor Dictionary.
         """
         if not self.is_configured:
             return None
 
+        manual_comp_str = f"Manual Competitors Provided by Agency: {', '.join(manual_competitors)}\n" if manual_competitors else ""
+
         prompt = f"""You are an expert Chief Strategy Officer at a premier Thai digital marketing agency (Convert Cake).
-Analyze this brand's website content and Facebook information to synthesize structured Brand DNA.
+Analyze this brand's website content and Facebook information to synthesize structured Brand DNA, a 5-Angle Search Taxonomy for Thai TikTok, and a Grounded Thai Competitor Dictionary.
 
 Brand Name: {brand_name}
 Website: {website_url}
 Facebook: {fb_url}
-Scraped Context:
-{scraped_text[:3500]}
+{manual_comp_str}Scraped Context:
+{scraped_text[:4000]}
 
 Respond ONLY with a valid JSON object matching this schema:
 {{
@@ -116,7 +122,20 @@ Respond ONLY with a valid JSON object matching this schema:
   "content_style_preferences": ["Review", "Short-Form"],
   "price_positioning": "One of: 'Budget / Mass' | 'Mid-Range / Accessible' | 'Premium / Masstige' | 'Luxury / High-End'",
   "average_price_thb": 0,
-  "thai_keywords": ["5-8 direct organic search terms that real everyday Thai consumers actually type into search bars to find these products or solve this specific need (e.g. 'ไดร์เป่าผม', 'ครีมแต้มสิว', 'มอยส์เจอร์ไรเซอร์', 'เก้าอี้เพื่อสุขภาพ', 'กาแฟคั่วบด'). STRICT RULES: NO marketing buzzwords or slang like 'ป้ายยา', 'ใช้ดีบอกต่อ', 'ตัวดัง', 'ของมันต้องมี', 'ไอเทมเด็ด', 'ตัวแม่'. Focus purely on clear, plain product names, direct item categories, and real search queries without #."]
+  "thai_keywords": ["5-8 direct organic consumer search terms and specific hashtags without slang (e.g. 'ไดร์เป่าผม', 'ครีมแต้มสิว', 'มอยส์เจอร์ไรเซอร์', 'เก้าอี้เพื่อสุขภาพ')"],
+  "search_taxonomy": {{
+    "niche_hashtags": ["2-4 specific niche Thai hashtags with #, e.g. '#สกินแคร์คนเป็นสิว', '#จัดโต๊ะทำงาน'"],
+    "pain_point_queries": ["2-3 solution-oriented search phrases real Thai consumers search, e.g. 'กู้หน้าพัง', 'วิธีลดสิวอุดตันด้วยตัวเอง', 'ปวดหลังเลือกเก้าอี้ยังไง'"],
+    "review_hook_queries": ["2-3 review phrases, e.g. 'รีวิวพลีชีพ', 'ซื้อซ้ำไม่ซ้ำ', 'คุ้มไหม', 'ใช้จริง'"],
+    "lifestyle_persona_queries": ["2-3 lifestyle routine queries, e.g. 'รูทีนคนนอนดึก', 'แต่งหน้าไปเรียน', '1 วันกินอะไรบ้าง'"],
+    "competitor_seed_queries": ["2-3 competitor query phrases, e.g. 'รีวิว [คู่แข่ง]'"]
+  }},
+  "grounded_competitors": [
+    {{
+      "brand_en": "Competitor English Name",
+      "aliases": ["English Name", "ชื่อภาษาไทยทับศัพท์", "ชื่อย่อโซเชียล"]
+    }}
+  ]
 }}
 """
         try:
@@ -135,37 +154,50 @@ Respond ONLY with a valid JSON object matching this schema:
         return None
 
     async def generate_hooks_and_rationale(
-        self, brand_name: str, brand_vertical: str, brand_price: int,
-        kol_name: str, kol_persona: str, kol_styles: List[str],
-        median_er: float, is_spam: bool, spam_reason: str
+        self,
+        brand_name: str,
+        brand_vertical: str,
+        brand_price: int,
+        kol_name: str,
+        kol_persona: str,
+        kol_styles: List[str],
+        median_er: float,
+        is_spam: bool,
+        spam_reason: str,
+        creator_archetype: str = "General Creator",
+        is_review_creator: bool = False,
     ) -> Tuple[Optional[str], Optional[List[str]]]:
         """
         Uses Gemini Main LLM to produce creative agency-grade Thai TikTok campaign hooks
+        tailored to the creator's archetype (Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast)
         and customized strategic matching rationale.
         """
         if not self.is_configured or is_spam:
             return None, None
 
         prompt = f"""You are an award-winning Creative Director at Convert Cake, specializing in Thai TikTok performance campaigns.
-Draft 3 distinct, high-converting Thai TikTok video opening hooks and a 2-sentence agency rationale for pairing this KOL with the client brand.
+Draft 3 distinct, high-converting Thai TikTok video opening hooks (3-second pitch hooks) and a 2-sentence agency rationale for pairing this KOL with the client brand.
 
 Client Brand: {brand_name} (Vertical: {brand_vertical}, Price: {brand_price:,} THB)
 Creator: {kol_name}
+Creator Archetype: {creator_archetype} {('(Specializes in Product Reviews / TikTok Shop Yellow Basket)' if is_review_creator else '')}
 Persona & Aesthetic: {kol_persona}
 Content Styles: {', '.join(kol_styles)}
 Median Engagement Rate: {median_er:.1f}%
 
-STRICT GUIDELINES FOR HOOKS (NO EXAGGERATED SLANG):
-- Do NOT use exaggerated influencer slang or buzzwords like 'ป้ายยา', 'ตัวแม่', 'จึ้งมาก', 'ของมันต้องมี', 'ตัวตึง', 'ฉ่ำๆ'.
-- Focus on natural, authentic consumer intent: real product use cases, practical problem-solving (e.g. treating acne, ergonomic setup, hair styling), price-to-value evaluation, and genuine user experience.
+STRICT GUIDELINES FOR ARCHETYPE-TAILORED 3-SECOND PITCH HOOKS:
+- If Archetype is 'Educated Guru': Focus on clinical evidence, deep testing, ingredient analysis, or problem-solving mechanisms.
+- If Archetype is 'Top Reviewer': Focus on value-for-money, real unboxing, pros & cons, and clear yellow basket (ปักตะกร้าเหลือง) call-to-action.
+- If Archetype is 'Lifestyle & Vlog': Focus on daily routines, GRWM, aesthetic lifestyle moments where the product is naturally embedded.
+- If Archetype is 'Niche Enthusiast': Focus on category comparisons (vs other brands), enthusiast rankings, and honest verdict.
 
 Return ONLY JSON:
 {{
-  "rationale": "2-sentence strategic justification for why this creator is an exceptional match for the brand",
+  "rationale": "2-sentence strategic justification for why this creator fits this campaign role",
   "hooks": [
-    "Hook 1: First 3 seconds spoken line or on-screen text in natural everyday Thai language focused on product problem/benefit",
-    "Hook 2: Practical, authentic test or comparison hook in Thai",
-    "Hook 3: Realistic daily routine or use-case hook in Thai"
+    "Hook 1 in natural Thai suited to {creator_archetype}",
+    "Hook 2 in natural Thai suited to {creator_archetype}",
+    "Hook 3 in natural Thai suited to {creator_archetype}"
   ]
 }}
 """
@@ -190,7 +222,7 @@ Return ONLY JSON:
     ) -> List[str]:
         """
         Uses Gemini to generate 4 realistic, context-specific Thai audience comments/inquiries
-        based on the creator's real video captions and content topics (eliminating static mocks).
+        based on the creator's real video captions and content topics.
         """
         if not self.is_configured:
             return []
@@ -202,16 +234,10 @@ Vertical: {vertical}
 Bio: {bio}
 Recent Video Captions/Topics: {json.dumps(captions_sample, ensure_ascii=False) if captions_sample else 'General ' + vertical + ' content'}
 
-Based on this creator's actual content niche and brand vertical, generate 4 distinct, authentic, natural Thai audience comments or buyer inquiries that real followers would post under these videos (e.g. asking for price/where to buy, asking if suitable for their use case, sharing feedback, or asking for usage tips).
-IMPORTANT: Strictly match the vertical '{vertical}'! Do NOT use skincare comments for food or tech brands. Make them authentic and conversational.
-
+Generate 4 distinct, authentic, natural Thai audience comments or buyer inquiries that real followers would post (e.g. asking for price/where to buy/พิกัด, asking if suitable for their use case, or sharing real feedback).
 Return ONLY a valid JSON list of 4 strings:
-[
-  "comment 1 in natural Thai",
-  "comment 2 in natural Thai",
-  "comment 3 in natural Thai",
-  "comment 4 in natural Thai"
-]"""
+["comment 1", "comment 2", "comment 3", "comment 4"]
+"""
         try:
             response = self.client.models.generate_content(
                 model=self.llm_model,

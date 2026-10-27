@@ -7,6 +7,7 @@ class BrandAnalyzeRequest(BaseModel):
     website_url: Optional[str] = Field(default=None, description="Client website URL")
     facebook_url: Optional[str] = Field(default=None, description="Client Facebook Page URL")
     custom_notes: Optional[str] = Field(default=None, description="Optional agency brief notes")
+    manual_competitors: Optional[List[str]] = Field(default_factory=list, description="Optional manual competitor names provided by agency")
 
 
 class BrandDNA(BaseModel):
@@ -28,6 +29,20 @@ class BrandDNA(BaseModel):
     average_price_thb: int = Field(default=0, description="Representative product price in THB")
     thai_keywords: List[str] = Field(default_factory=list, description="Thai search keywords & hashtags for TikTok discovery")
     scraped_sources: List[str] = Field(default_factory=list, description="Sources used to construct Brand DNA")
+    manual_competitors: List[str] = Field(default_factory=list, description="Manual competitor brand names")
+    search_taxonomy: Dict[str, List[str]] = Field(
+        default_factory=lambda: {
+            "niche_hashtags": [],
+            "pain_point_queries": [],
+            "review_hook_queries": [],
+            "lifestyle_persona_queries": [],
+            "competitor_seed_queries": [],
+        },
+        description="5-angle search taxonomy for TikTok discovery",
+    )
+    grounded_competitors: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Search-grounded Thai competitor dictionary with bilingual aliases"
+    )
 
 
 class VideoMetric(BaseModel):
@@ -38,6 +53,7 @@ class VideoMetric(BaseModel):
     likes: int = Field(..., ge=0)
     comments: int = Field(..., ge=0)
     shares: int = Field(..., ge=0)
+    collect_count: int = Field(default=0, ge=0, description="Number of saves/bookmarks")
     has_yellow_basket: bool = Field(default=False, description="Whether video has TikTok Shop affiliate link")
     reviewed_item_price_thb: Optional[int] = Field(default=None, description="Estimated price in THB of product featured")
     location_tag: Optional[str] = Field(default=None, description="Thai check-in or location tag")
@@ -65,34 +81,56 @@ class KOLProfile(BaseModel):
     sample_comments: List[str] = Field(default_factory=list, description="Live Thai comments / inquiries from recent videos")
     recent_videos: List[VideoMetric] = Field(default_factory=list, description="Recent video metrics from TikTok")
     creator_category: str = Field(default="Content Creator (ทั่วไป)", description="หมวดหมู่ครีเอเตอร์ เช่น Content Creator (เน้นรีวิว), Lifestyle, ฯลฯ")
+    creator_archetype: Literal["Educated Guru", "Top Reviewer", "Lifestyle & Vlog", "Niche Enthusiast", "General Creator"] = Field(
+        default="General Creator", description="4 Main Creator Archetypes from spec"
+    )
+    recommended_role: str = Field(default="Brand Awareness", description="Recommended campaign role (Trust, Sales, Awareness, Reach)")
+    account_type: Literal["merchant_store", "affiliate_spam_bot", "real_kol"] = Field(
+        default="real_kol", description="Entity classification stage: merchant, spam bot, or real KOL"
+    )
+    is_work_ready: bool = Field(default=False, description="Work-Ready KOL signal: has Line @, for work, email in bio")
+    competitor_warning: Optional[str] = Field(default=None, description="⚠️ Competitor Conflict or 🎯 Niche Enthusiast Opportunity")
+    query_origin: Optional[str] = Field(default=None, description="Taxonomy query angle that discovered this creator")
+    save_to_view_ratio: float = Field(default=0.0, description="Save-to-view utility ratio")
+    view_consistency_ratio: float = Field(default=0.0, description="Median views / mean views ratio")
     is_affiliate_spam_trap: bool = Field(default=False, description="Whether creator is classified as fake affiliate bot/spam trap")
     estimated_rate_thb: str = Field(default="", description="Estimated campaign rate per video in THB")
 
 
 class SignalBreakdown(BaseModel):
     relevance_score_raw: float = Field(..., description="0-100 raw relevance score")
-    relevance_weighted: float = Field(..., description="0-45 weighted relevance points")
+    relevance_weighted: float = Field(..., description="0-40 weighted relevance points (Spec: 40 pts)")
     semantic_similarity: float = Field(..., description="0-1 dense vector similarity")
+    semantic_points: float = Field(default=0.0, description="0-28 semantic relevance points")
+    niche_keyword_points: float = Field(default=0.0, description="0-12 keyword & work-ready points")
     matched_keywords: List[str] = Field(default_factory=list, description="Matched Thai/English keywords & hashtags")
     embedding_model: str = Field(default="gemini-embedding-2", description="Model used for dense vector semantic matching")
 
     engagement_score_raw: float = Field(..., description="0-100 raw engagement score after penalty")
-    engagement_weighted: float = Field(..., description="0-35 weighted engagement points")
-    median_engagement_rate_pct: float = Field(..., description="Median((Likes + Comments*2 + Shares*3) / Views) * 100")
-    views_to_followers_ratio: float = Field(..., description="Median views divided by follower count")
+    engagement_weighted: float = Field(..., description="0-35 weighted engagement points (Spec: 35 pts)")
+    median_engagement_rate_pct: float = Field(..., description="Median((Likes + Comments + Shares + Saves) / Views) * 100")
+    median_er_points: float = Field(default=0.0, description="0-15 median ER points")
+    save_to_view_points: float = Field(default=0.0, description="0-10 save-to-view utility points")
+    view_consistency_points: float = Field(default=0.0, description="0-10 view consistency points")
+    views_to_followers_ratio: float = Field(default=0.0, description="Median views divided by follower count")
     yellow_basket_ratio: float = Field(default=0.0, description="Fraction of recent videos with TikTok Shop affiliate links")
     affiliate_spam_penalty_applied: bool = Field(default=False, description="True if penalized by the Affiliate Spam / Yellow-Basket filter")
     affiliate_spam_penalty_points: float = Field(default=0.0, description="Raw engagement points deducted for affiliate spam")
     affiliate_spam_reason: Optional[str] = Field(default=None, description="Explanation if affiliate spam penalty was triggered")
 
     audience_score_raw: float = Field(..., description="0-100 raw multi-signal audience score")
-    audience_weighted: float = Field(..., description="0-20 weighted audience points")
-    persona_signal_score: float = Field(..., description="0-25 score from Signal 1: Creator persona & visual style")
-    price_proxy_signal_score: float = Field(..., description="0-25 score from Signal 2: Product price-point proxy")
-    geo_language_signal_score: float = Field(..., description="0-25 score from Signal 3: Thai geo/language & check-ins")
-    comment_sentiment_signal_score: float = Field(..., description="0-25 score from Signal 4: Commenters sample")
-    confidence_level: Literal["High", "Medium", "Low"] = Field(..., description="Confidence level in public audience inference")
-    evidence_list: List[str] = Field(default_factory=list, description="Concrete evidence statements across the 4 audience signals")
+    audience_weighted: float = Field(..., description="0-25 weighted audience points (Spec: 25 pts)")
+    thai_authenticity_points: float = Field(default=0.0, description="0-10 Thai audience authenticity points")
+    buyer_intent_points: float = Field(default=0.0, description="0-10 Buyer intent proxy points")
+    affiliate_saturation_points: float = Field(default=0.0, description="0-5 Affiliate saturation health points")
+
+    # Compatibility signals for 4-signal breakdown display
+    persona_signal_score: float = Field(default=20.0, description="Creator persona & visual style")
+    price_proxy_signal_score: float = Field(default=20.0, description="Product price-point proxy")
+    geo_language_signal_score: float = Field(default=20.0, description="Thai geo/language & check-ins")
+    comment_sentiment_signal_score: float = Field(default=20.0, description="Commenters sample")
+    confidence_level: Literal["High", "Medium", "Low"] = Field(default="High", description="Confidence level in public audience inference")
+    evidence_list: List[str] = Field(default_factory=list, description="Concrete evidence statements")
 
 
 class RankedKOL(BaseModel):
@@ -101,7 +139,7 @@ class RankedKOL(BaseModel):
     total_match_score: float = Field(..., description="Final 0-100 composite match score")
     score_breakdown: SignalBreakdown
     why_this_kol: str = Field(..., description="Agency-grade strategic rationale explaining fit or penalty")
-    thai_campaign_hooks: List[str] = Field(default_factory=list, description="Custom Thai TikTok campaign hook ideas")
+    thai_campaign_hooks: List[str] = Field(default_factory=list, description="Custom Thai TikTok campaign hook ideas tailored to archetype")
     enrichment_source: str = Field(default="Live Apify TikTok Scraper", description="Data telemetry source")
     llm_generator_model: str = Field(default="gemini-3.5-flash-lite", description="Gemini LLM model used for synthesis")
 
@@ -119,6 +157,7 @@ class AutoMatchRequest(BaseModel):
     website_url: Optional[str] = None
     facebook_url: Optional[str] = None
     custom_notes: Optional[str] = None
+    manual_competitors: Optional[List[str]] = Field(default_factory=list)
     top_k: int = Field(default=8, ge=1, le=36)
 
 

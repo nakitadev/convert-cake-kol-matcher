@@ -71,18 +71,24 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
     apify = get_apify_service()
     candidates = []
 
-    # Live TikTok Discovery via Apify Scraper (Zero-Mock)
+    # Live TikTok Discovery via Apify Scraper (Zero-Mock with 5-Angle Taxonomy)
     if apify.is_configured:
-        trace.append(f"Querying live TikTok creators via Apify for hashtag: #{keywords[0]}")
+        trace.append(f"Querying live TikTok creators via Apify (5-Angle Taxonomy & Hashtags: #{keywords[0]})")
         try:
             live_candidates = await apify.search_live_kols_by_hashtags(
                 hashtags=keywords,
                 vertical=vertical,
-                limit_creators=12,
+                limit_creators=16,
+                search_taxonomy=brand_dna.search_taxonomy,
+                grounded_competitors=brand_dna.grounded_competitors,
+                manual_competitors=brand_dna.manual_competitors,
             )
             if live_candidates:
                 candidates = live_candidates
-                trace.append(f"Discovered {len(candidates)} real live Thai TikTok creators via Apify Clockworks Actor")
+                trace.append(
+                    f"Discovered {len(candidates)} real live Thai TikTok creators via Apify Clockworks Actor "
+                    f"(2-Stage Entity Filter applied, Work-Ready signals checked)"
+                )
         except Exception as e:
             trace.append(f"Apify live search error: {e}")
             raise RuntimeError(f"Live Apify TikTok Discovery failed: {e}. Zero-Mock Policy enforces 100% live data.")
@@ -159,6 +165,8 @@ async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
                     median_er=item.score_breakdown.median_engagement_rate_pct,
                     is_spam=item.score_breakdown.affiliate_spam_penalty_applied,
                     spam_reason=item.score_breakdown.affiliate_spam_reason or "",
+                    creator_archetype=item.kol.creator_archetype,
+                    is_review_creator=(item.kol.creator_category == "Content Creator (เน้นรีวิว)"),
                 )
                 if llm_rationale:
                     item.why_this_kol = llm_rationale
