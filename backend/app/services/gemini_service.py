@@ -222,7 +222,7 @@ Respond ONLY with a valid JSON object matching this schema:
         kol_handle: str,
         kol_persona: str,
         kol_styles: List[str],
-        creator_archetype: str = "General Creator",
+        creator_archetype: str = "Lifestyle & Vlog",
         is_review_creator: bool = False,
         sample_comments: Optional[List[str]] = None,
         recent_captions: Optional[List[str]] = None,
@@ -311,7 +311,7 @@ Return ONLY a valid JSON object:
         median_er: float,
         is_spam: bool,
         spam_reason: str,
-        creator_archetype: str = "General Creator",
+        creator_archetype: str = "Lifestyle & Vlog",
         is_review_creator: bool = False,
     ) -> Tuple[Optional[str], Optional[List[str]]]:
         """
@@ -382,7 +382,7 @@ Do NOT simply match keywords or words in bio. Understand the semantics, tone, in
 2. 'Top Reviewer' (Recommended Role: 'Conversion & Sales')
    - Core Value: Product evaluation, buying decision assistance, and commercial shoppertainment.
    - Content Focus: Hands-on testing, unboxings, comparative testing (A vs B), honest pros/cons, shopping haul reviews, price-to-value assessment, TikTok Shop yellow basket showcases.
-   - Distinction: Content explicitly tests items to tell followers whether to buy or where to get them (พิกัด).
+   - Note on Yellow Basket: Yellow basket presence is strictly an evaluation signal that indicates affiliate review content to help classify into this 'Top Reviewer' archetype.
 
 3. 'Lifestyle & Vlog' (Recommended Role: 'Brand Awareness & Discovery')
    - Core Value: Entertainment, aesthetic relatability, and personal lifestyle inspiration.
@@ -394,8 +394,7 @@ Do NOT simply match keywords or words in bio. Understand the semantics, tone, in
    - Content Focus: Deep immersion in a specific subculture, extreme sport, dedicated hobby, or passionate community (e.g., ski/snowboard riders, mechanical keyboards, custom car tuning, pet breeding, retro gaming).
    - Distinction: Content is deeply embedded in the specific enthusiast community and subculture rather than general mass lifestyle.
 
-5. 'General Creator' (Recommended Role: 'Brand Awareness')
-   - Broad entertainment, comedy, or mixed casual content that doesn't strongly lean into one of the 4 defined archetypes.
+Every single creator MUST be classified into exactly one of these 4 archetypes (Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast).
 
 Creators to Classify:
 {json.dumps(clean_items, ensure_ascii=False, indent=2)}
@@ -403,8 +402,8 @@ Creators to Classify:
 Return ONLY a valid JSON object mapping each creator's 'id' to their classification:
 {{
   "<creator_id>": {{
-    "creator_archetype": "Educated Guru" | "Top Reviewer" | "Lifestyle & Vlog" | "Niche Enthusiast" | "General Creator",
-    "recommended_role": "Trust & Credibility" | "Conversion & Sales" | "Brand Awareness & Discovery" | "Hyper-Targeted Reach" | "Brand Awareness",
+    "creator_archetype": "Educated Guru" | "Top Reviewer" | "Lifestyle & Vlog" | "Niche Enthusiast",
+    "recommended_role": "Trust & Credibility" | "Conversion & Sales" | "Brand Awareness & Discovery" | "Hyper-Targeted Reach",
     "reasoning": "A concise 1-sentence explanation in Thai explaining why their content fits this archetype based on the instructions"
   }}
 }}

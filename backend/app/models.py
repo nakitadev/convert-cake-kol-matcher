@@ -80,9 +80,9 @@ class KOLProfile(BaseModel):
     audience_language: str = Field(default="Thai", description="Primary language of creator & commenters")
     sample_comments: List[str] = Field(default_factory=list, description="Live Thai comments / inquiries from recent videos")
     recent_videos: List[VideoMetric] = Field(default_factory=list, description="Recent video metrics from TikTok")
-    creator_category: str = Field(default="Content Creator (ทั่วไป)", description="หมวดหมู่ครีเอเตอร์ เช่น Content Creator (เน้นรีวิว), Lifestyle, ฯลฯ")
-    creator_archetype: Literal["Educated Guru", "Top Reviewer", "Lifestyle & Vlog", "Niche Enthusiast", "General Creator"] = Field(
-        default="General Creator", description="4 Main Creator Archetypes from spec"
+    creator_category: str = Field(default="Content Creator", description="หมวดหมู่ครีเอเตอร์ เช่น Content Creator (เน้นรีวิว), Lifestyle, ฯลฯ")
+    creator_archetype: Literal["Educated Guru", "Top Reviewer", "Lifestyle & Vlog", "Niche Enthusiast"] = Field(
+        default="Lifestyle & Vlog", description="4 Main Creator Archetypes: Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast"
     )
     recommended_role: str = Field(default="Brand Awareness", description="Recommended campaign role (Trust, Sales, Awareness, Reach)")
     account_type: Literal["merchant_store", "affiliate_spam_bot", "real_kol"] = Field(

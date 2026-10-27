@@ -299,10 +299,14 @@ class ApifyTikTokService:
                         query_origin = "competitor_seed_queries"
 
                 # 7. Creator Archetype Classification (Zero-Hardcode Policy)
-                # Archetype & Recommended Role are determined dynamically via Gemini LLM Instructions
-                # evaluating true content intent, knowledge depth, and style (Guru vs Lifestyle vs Reviewer vs Niche)
-                creator_archetype = "General Creator"
-                recommended_role = "Brand Awareness"
+                # 4 Main Archetypes: Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast
+                # Yellow basket is strictly an evaluation signal that categorizes into 'Top Reviewer'
+                if yellow_ratio > 0 or yellow_count > 0 or has_review_signal:
+                    creator_archetype = "Top Reviewer"
+                    recommended_role = "Conversion & Sales"
+                else:
+                    creator_archetype = "Lifestyle & Vlog"
+                    recommended_role = "Brand Awareness & Discovery"
 
                 # Dynamic audience inquiries synthesized from real video captions by Gemini
                 captions = [v.caption for v in videos if v.caption]
