@@ -18,7 +18,8 @@ class ApifyTikTokService:
 
     def __init__(self, api_token: Optional[str] = None):
         self.api_token = api_token or os.environ.get("APIFY_API_TOKEN")
-        self.actor_id = "clockworks~tiktok-scraper"
+        # Default to clockworks~free-tiktok-scraper which has NO minimalMaxTotalChargeUsd ($0.50 threshold)
+        self.actor_id = os.environ.get("APIFY_TIKTOK_ACTOR", "clockworks~free-tiktok-scraper")
         self.facebook_actor_id = "apify~facebook-pages-scraper"
         self._cache: Dict[str, Tuple[float, List[KOLProfile]]] = {}
 
@@ -85,8 +86,21 @@ class ApifyTikTokService:
         try:
             async with httpx.AsyncClient(timeout=130.0) as client:
                 resp = await client.post(url, json=payload)
+                resp_text = getattr(resp, "text", "")
+                if resp.status_code == 402 or ("not-enough-usage" in resp_text and self.actor_id != "clockworks~free-tiktok-scraper"):
+                    logger.warning(f"Apify actor {self.actor_id} returned HTTP 402 ({resp_text[:120]}). Automatically retrying with clockworks~free-tiktok-scraper...")
+                    self.actor_id = "clockworks~free-tiktok-scraper"
+                    fallback_url = f"https://api.apify.com/v2/acts/{self.actor_id}/run-sync-get-dataset-items?token={self.api_token}&timeout=120"
+                    resp = await client.post(fallback_url, json=payload)
+                    resp_text = getattr(resp, "text", "")
+
                 if resp.status_code not in [200, 201]:
-                    logger.warning(f"Apify live search returned HTTP {resp.status_code}: {resp.text[:200]}")
+                    logger.warning(f"Apify live search returned HTTP {resp.status_code}: {resp_text[:200]}")
+                    if resp.status_code == 402 or "not-enough-usage" in resp_text:
+                        raise RuntimeError(
+                            "Apify Usage Quota Exhausted (HTTP 402): Your Apify usage credits are insufficient for this run. "
+                            "Please top up your Apify account or update APIFY_API_TOKEN in backend/.env."
+                        )
                     # Fallback to check if dataset has items despite timeout status
                     try:
                         err_data = resp.json()

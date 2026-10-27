@@ -92,6 +92,8 @@ async def match_kols(req: MatchRequest):
         )
         return response
     except Exception as e:
+        if "HTTP 402" in str(e) or "Quota Exhausted" in str(e):
+            raise HTTPException(status_code=402, detail=str(e))
         raise HTTPException(status_code=500, detail=f"KOL matching failed: {str(e)}")
 
 
@@ -114,6 +116,8 @@ async def auto_match(req: AutoMatchRequest):
         )
         return response
     except Exception as e:
+        if "HTTP 402" in str(e) or "Quota Exhausted" in str(e):
+            raise HTTPException(status_code=402, detail=str(e))
         raise HTTPException(status_code=500, detail=f"Auto matching failed: {str(e)}")
 
 
