@@ -1,5 +1,6 @@
 import math
 import re
+import asyncio
 from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
 
@@ -21,9 +22,32 @@ class ScoringEngine:
     Zero-Hardcode: Dynamically synthesizes insights and hooks from live creator data.
     """
 
-    def evaluate_kol(self, kol: KOLProfile, brand: BrandDNA) -> Tuple[float, SignalBreakdown, str, List[str]]:
+    def get_kol_text_corpus(self, kol: KOLProfile) -> str:
+        return (
+            f"{kol.display_name} {kol.vertical} {' '.join(kol.secondary_verticals)} "
+            f"{kol.bio} {kol.creator_persona} {' '.join(kol.content_styles)} "
+            f"{' '.join([v.caption for v in kol.recent_videos])} "
+            f"{' '.join([tag for v in kol.recent_videos for tag in v.hashtags])}"
+        ).lower()
+
+    def get_brand_text_corpus(self, brand: BrandDNA) -> str:
+        return (
+            f"{brand.brand_name} {brand.vertical} {brand.sub_category} "
+            f"{brand.brand_summary} {brand.target_audience} "
+            f"{' '.join(brand.brand_tone)} {' '.join(brand.thai_keywords)}"
+        ).lower()
+
+    def evaluate_kol(
+        self,
+        kol: KOLProfile,
+        brand: BrandDNA,
+        kol_embedding: Optional[List[float]] = None,
+        brand_embedding: Optional[List[float]] = None,
+    ) -> Tuple[float, SignalBreakdown, str, List[str]]:
         # 1. Relevance (Spec 5.1: 40 pts max - Semantic 28 pts + Niche Keyword & Work-Ready 12 pts)
-        rel_raw, sem_sim, matched_kw, emb_model, sem_pts, kw_pts = self._calculate_relevance(kol, brand)
+        rel_raw, sem_sim, matched_kw, emb_model, sem_pts, kw_pts = self._calculate_relevance(
+            kol, brand, kol_embedding=kol_embedding, brand_embedding=brand_embedding
+        )
         rel_weighted = round(sem_pts + kw_pts, 2)
 
         # 2. Engagement Quality (Spec 5.2: 35 pts max - Median ER 15 pts + Save-to-View 10 pts + Consistency 10 pts)
@@ -75,19 +99,15 @@ class ScoringEngine:
 
         return total_score, breakdown, why_text, hooks
 
-    def _calculate_relevance(self, kol: KOLProfile, brand: BrandDNA) -> Tuple[float, float, List[str], str, float, float]:
-        brand_text_corpus = (
-            f"{brand.brand_name} {brand.vertical} {brand.sub_category} "
-            f"{brand.brand_summary} {brand.target_audience} "
-            f"{' '.join(brand.brand_tone)} {' '.join(brand.thai_keywords)}"
-        ).lower()
-
-        kol_text_corpus = (
-            f"{kol.display_name} {kol.vertical} {' '.join(kol.secondary_verticals)} "
-            f"{kol.bio} {kol.creator_persona} {' '.join(kol.content_styles)} "
-            f"{' '.join([v.caption for v in kol.recent_videos])} "
-            f"{' '.join([tag for v in kol.recent_videos for tag in v.hashtags])}"
-        ).lower()
+    def _calculate_relevance(
+        self,
+        kol: KOLProfile,
+        brand: BrandDNA,
+        kol_embedding: Optional[List[float]] = None,
+        brand_embedding: Optional[List[float]] = None,
+    ) -> Tuple[float, float, List[str], str, float, float]:
+        brand_text_corpus = self.get_brand_text_corpus(brand)
+        kol_text_corpus = self.get_kol_text_corpus(kol)
 
         vertical_match = 1.0 if brand.vertical.lower() in kol.vertical.lower() or kol.vertical.lower() in brand.vertical.lower() else 0.35
         for sec in kol.secondary_verticals:
@@ -106,9 +126,11 @@ class ScoringEngine:
         emb_model = "gemini-embedding-2 (dense)"
         sem_sim = 0.0
 
-        if gemini.is_configured:
-            b_emb = gemini.get_embedding(brand_text_corpus)
-            k_emb = gemini.get_embedding(kol_text_corpus)
+        if kol_embedding and brand_embedding:
+            sem_sim = round(gemini.cosine_similarity(brand_embedding, kol_embedding), 3)
+        elif gemini.is_configured:
+            b_emb = brand_embedding or gemini.get_embedding(brand_text_corpus)
+            k_emb = kol_embedding or gemini.get_embedding(kol_text_corpus)
             if b_emb and k_emb:
                 sem_sim = round(gemini.cosine_similarity(b_emb, k_emb), 3)
 
@@ -125,6 +147,46 @@ class ScoringEngine:
         kw_pts = round(min(8.0, (len(matched_kw) / max(len(brand.thai_keywords), 1)) * 8.0) + work_ready_bonus, 2)
         raw_score = round(((sem_pts + kw_pts) / 40.0) * 100.0, 1)
         return raw_score, sem_sim, matched_kw, emb_model, sem_pts, kw_pts
+
+    async def evaluate_kols_batch(
+        self,
+        kols: List[KOLProfile],
+        brand: BrandDNA,
+    ) -> List[Tuple[float, SignalBreakdown, str, List[str]]]:
+        """
+        Batch-evaluate all candidates (e.g. 50 KOLs) asynchronously.
+        Embeds the brand corpus and all 50 candidate corpora in parallel using Gemini Embedding 2.
+        """
+        if not kols:
+            return []
+
+        gemini = get_gemini_service()
+        brand_embedding: Optional[List[float]] = None
+        kol_embeddings: List[Optional[List[float]]] = [None] * len(kols)
+
+        if gemini.is_configured:
+            brand_corpus = self.get_brand_text_corpus(brand)
+            kol_corpora = [self.get_kol_text_corpus(k) for k in kols]
+
+            # Concurrently compute brand embedding and 50 KOL embeddings
+            brand_task = gemini.get_embedding_async(brand_corpus)
+            kols_task = gemini.get_embeddings_batch(kol_corpora, max_concurrency=15)
+
+            brand_res, kols_res = await asyncio.gather(brand_task, kols_task)
+            brand_embedding = brand_res
+            kol_embeddings = kols_res
+
+        results = []
+        for kol, k_emb in zip(kols, kol_embeddings):
+            res = self.evaluate_kol(
+                kol,
+                brand,
+                kol_embedding=k_emb,
+                brand_embedding=brand_embedding,
+            )
+            results.append(res)
+
+        return results
 
     def _calculate_engagement(self, kol: KOLProfile) -> Tuple[float, float, float, float, bool, float, str, float, float, float]:
         if not kol.recent_videos:

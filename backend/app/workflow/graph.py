@@ -157,8 +157,9 @@ async def score_and_rank_node(state: MatcherState) -> Dict[str, Any]:
     ranked_results: List[RankedKOL] = []
     spam_traps: List[RankedKOL] = []
 
-    for kol in candidates:
-        total_score, breakdown, why_text, _ = scoring.evaluate_kol(kol, brand_dna)
+    # Batch Embeddings & Scoring for all candidates (50 KOLs) asynchronously
+    eval_results = await scoring.evaluate_kols_batch(candidates, brand_dna)
+    for kol, (total_score, breakdown, why_text, _) in zip(candidates, eval_results):
         ranked_item = RankedKOL(
             rank=1,
             kol=kol,

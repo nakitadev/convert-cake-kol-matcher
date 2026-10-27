@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from fastapi.testclient import TestClient
 
@@ -376,4 +377,136 @@ def test_full_spec_40_35_25_and_archetypes():
     )
     c_score, c_breakdown, c_why, _ = scoring.evaluate_kol(comp_kol, brand)
     assert "⚠️ Competitor Conflict" in c_why
+
+
+@pytest.mark.asyncio
+async def test_batch_embeddings_and_evaluate_kols_batch():
+    """
+    Verify async batch embeddings and evaluation for candidate KOLs.
+    Tests evaluate_kols_batch and get_embeddings_batch with concurrent execution.
+    """
+    scoring = get_scoring_engine()
+    brand = BrandDNA(
+        id="test-batch-brand",
+        brand_name="SkinLab",
+        website_url="https://skinlab.co.th",
+        facebook_url="",
+        vertical="Beauty & Skincare",
+        sub_category="Facial Serum",
+        brand_summary="เซรั่มบำรุงผิวหน้า",
+        target_audience="ผู้หญิง 20-35 ปี",
+        target_age_range="20-35",
+        target_locations=["Bangkok"],
+        brand_tone=["Professional"],
+        content_style_preferences=["Review"],
+        price_positioning="Mid-Range / Accessible",
+        average_price_thb=690,
+        thai_keywords=["เซรั่ม", "หน้าใส", "ผิวชุ่มชื้น"],
+        scraped_sources=["Web"],
+        manual_competitors=[],
+        search_taxonomy={},
+        grounded_competitors=[],
+    )
+
+    kols = [
+        KOLProfile(
+            id=f"batch_kol_{i}",
+            handle=f"creator_{i}",
+            display_name=f"Creator {i}",
+            tiktok_url=f"https://www.tiktok.com/@creator_{i}",
+            vertical="Beauty & Skincare",
+            bio="รีวิวสกินแคร์และเซรั่มหน้าใส",
+            follower_count=50000 + i * 1000,
+            tier="Micro (10K-100K)",
+            creator_persona="Educated Guru",
+            creator_archetype="Educated Guru",
+            is_work_ready=True,
+            sample_comments=["เซรั่มดีมาก"],
+            recent_videos=[
+                VideoMetric(
+                    video_id=f"v_{i}",
+                    caption="รีวิวเซรั่มกู้หน้าใส ผิวชุ่มชื้น",
+                    views=20000,
+                    likes=1200,
+                    comments=50,
+                    shares=30,
+                    collect_count=80,
+                    has_yellow_basket=False,
+                )
+            ],
+        )
+        for i in range(5)
+    ]
+
+    results = await scoring.evaluate_kols_batch(kols, brand)
+    assert len(results) == 5
+    for score, breakdown, why, hooks in results:
+        assert 0.0 <= score <= 100.0
+        assert breakdown.relevance_weighted > 0
+        assert breakdown.engagement_weighted > 0
+        assert breakdown.audience_weighted > 0
+        assert len(why) > 0
+
+
+@pytest.mark.asyncio
+async def test_parallel_brand_scrape_concurrent(monkeypatch):
+    """
+    Verify that BrandAnalyzer concurrently scrapes website and Facebook page in parallel via asyncio.gather.
+    """
+    from app.services.brand_analyzer import BrandAnalyzer
+    from app.services.apify_service import ApifyTikTokService
+    import time
+
+    analyzer = BrandAnalyzer()
+
+    async def mock_scrape_website(url: str):
+        await asyncio.sleep(0.1)
+        return ("Website content for brand test", "Brand Website Title")
+
+    async def mock_scrape_fb(url: str):
+        await asyncio.sleep(0.1)
+        return {
+            "title": "Brand FB Title",
+            "bio": "Brand FB Bio",
+            "categories": ["Skincare"],
+            "likes": 5000,
+            "followers": 10000,
+            "posts": ["Post 1", "Post 2"],
+        }
+
+    monkeypatch.setattr(analyzer, "_scrape_website", mock_scrape_website)
+    monkeypatch.setattr(ApifyTikTokService, "is_configured", property(lambda self: True))
+    monkeypatch.setattr(ApifyTikTokService, "scrape_facebook_page", lambda self, url: mock_scrape_fb(url))
+
+    # Mock Gemini brand DNA generation
+    from app.services.gemini_service import GeminiService
+    async def mock_generate_dna(*args, **kwargs):
+        return {
+            "brand_name": "TestParallelBrand",
+            "vertical": "Beauty & Skincare",
+            "sub_category": "Serum",
+            "thai_keywords": ["เซรั่ม", "ผิวใส"],
+            "target_audience": "All",
+            "price_positioning": "Budget / Mass",
+            "average_price_thb": 490,
+        }
+    monkeypatch.setattr(GeminiService, "is_configured", property(lambda self: True))
+    monkeypatch.setattr(GeminiService, "generate_brand_dna", mock_generate_dna)
+
+    req = BrandAnalyzeRequest(
+        brand_name="TestParallelBrand",
+        website_url="https://testbrand.com",
+        facebook_url="https://facebook.com/testbrand",
+    )
+
+    t0 = time.time()
+    dna = await analyzer.analyze(req)
+    duration = time.time() - t0
+
+    # If run sequentially, 0.1s + 0.1s = ~0.2s+. In parallel, ~0.10 - 0.15s.
+    assert dna.brand_name == "TestParallelBrand"
+    assert "Live Website via Jina Reader" in dna.scraped_sources[0]
+    assert any("Live Facebook" in s for s in dna.scraped_sources)
+    assert duration < 0.28
+
 

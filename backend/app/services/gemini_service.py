@@ -2,6 +2,7 @@ import os
 import json
 import math
 import re
+import asyncio
 from typing import List, Optional, Tuple, Dict, Any
 import numpy as np
 
@@ -70,6 +71,63 @@ class GeminiService:
         except Exception as e:
             print(f"[GeminiService] Error calling {self.embedding_model}: {e}")
             return None
+
+    async def get_embedding_async(self, text: str) -> Optional[List[float]]:
+        """
+        Asynchronously generate dense embedding vector using Gemini Embedding 2 via client.aio.
+        Caches results in memory for fast subsequent comparisons.
+        """
+        if not text or not text.strip():
+            return None
+
+        cache_key = f"{self.embedding_model}:{text.strip()[:300]}"
+        if cache_key in self._embedding_cache:
+            return self._embedding_cache[cache_key]
+
+        if not self.is_configured:
+            return None
+
+        try:
+            response = await self.client.aio.models.embed_content(
+                model=self.embedding_model,
+                contents=text.strip()[:4000],
+            )
+            if hasattr(response, "embeddings") and response.embeddings:
+                emb = response.embeddings[0]
+                values = emb.values if hasattr(emb, "values") else list(emb)
+                self._embedding_cache[cache_key] = values
+                return values
+            elif hasattr(response, "embedding") and response.embedding:
+                values = response.embedding.values if hasattr(response.embedding, "values") else list(response.embedding)
+                self._embedding_cache[cache_key] = values
+                return values
+        except Exception as e:
+            print(f"[GeminiService] Async error calling {self.embedding_model}: {e}")
+            return None
+
+    async def get_embeddings_batch(
+        self,
+        texts: List[str],
+        max_concurrency: int = 15,
+    ) -> List[Optional[List[float]]]:
+        """
+        Concurrently batch-embed a list of texts (e.g. 50 candidate KOLs) using asyncio.gather
+        and an async semaphore to maximize throughput and avoid rate limits.
+        """
+        if not texts:
+            return []
+
+        if not self.is_configured:
+            return [None] * len(texts)
+
+        sem = asyncio.Semaphore(max_concurrency)
+
+        async def _embed_with_sem(txt: str) -> Optional[List[float]]:
+            async with sem:
+                return await self.get_embedding_async(txt)
+
+        tasks = [_embed_with_sem(t) for t in texts]
+        return await asyncio.gather(*tasks, return_exceptions=False)
 
     @staticmethod
     def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:

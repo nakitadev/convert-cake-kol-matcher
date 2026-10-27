@@ -1,4 +1,5 @@
 import re
+import asyncio
 from typing import Optional, List, Tuple
 import httpx
 from bs4 import BeautifulSoup
@@ -20,48 +21,65 @@ class BrandAnalyzer:
         scraped_sources: List[str] = []
         brand_name = (req.brand_name or "").strip()
 
-        # 1. Scrape client website if provided
-        if req.website_url:
-            web_text, title = await self._scrape_website(req.website_url)
+        # 1 & 2. Concurrently scrape client website (Jina Reader) and Facebook Page (Apify) in parallel
+        web_coro = self._scrape_website(req.website_url) if req.website_url else None
+        fb_coro = None
+        if req.facebook_url:
+            apify = get_apify_service()
+            if apify.is_configured:
+                fb_coro = apify.scrape_facebook_page(req.facebook_url)
+
+        async def _run_web() -> Tuple[str, str]:
+            if web_coro:
+                return await web_coro
+            return ("", "")
+
+        async def _run_fb() -> dict:
+            if fb_coro:
+                return await fb_coro
+            return {}
+
+        web_res, fb_res = await asyncio.gather(_run_web(), _run_fb(), return_exceptions=True)
+
+        # Process Website Scrape Result
+        if isinstance(web_res, tuple):
+            web_text, title = web_res
             if web_text:
                 scraped_text += f" Website Content: {web_text}"
                 scraped_sources.append(f"Live Website via Jina Reader ({req.website_url})")
                 if not brand_name and title:
                     brand_name = title.split("|")[0].split("-")[0].strip()
+        elif isinstance(web_res, Exception):
+            print(f"[BrandAnalyzer] Parallel website scrape warning: {web_res}")
 
-        # 2. Scrape live Facebook Page using Apify Facebook Pages Scraper (Zero-Mock)
-        if req.facebook_url:
-            apify = get_apify_service()
-            fb_data = {}
-            if apify.is_configured:
-                fb_data = await apify.scrape_facebook_page(req.facebook_url)
+        # Process Facebook Scrape Result
+        if isinstance(fb_res, dict) and fb_res:
+            fb_data = fb_res
+            fb_title = fb_data.get("title") or ""
+            fb_bio = fb_data.get("bio") or ""
+            fb_cats = ", ".join(fb_data.get("categories", [])) if isinstance(fb_data.get("categories"), list) else ""
+            fb_posts = " | ".join(fb_data.get("posts", [])) if fb_data.get("posts") else ""
+            likes = fb_data.get("likes") or 0
+            followers = fb_data.get("followers") or 0
+            source_label = fb_data.get("source", "Apify Facebook Pages Scraper")
 
-            if fb_data:
-                fb_title = fb_data.get("title") or ""
-                fb_bio = fb_data.get("bio") or ""
-                fb_cats = ", ".join(fb_data.get("categories", [])) if isinstance(fb_data.get("categories"), list) else ""
-                fb_posts = " | ".join(fb_data.get("posts", [])) if fb_data.get("posts") else ""
-                likes = fb_data.get("likes") or 0
-                followers = fb_data.get("followers") or 0
-                source_label = fb_data.get("source", "Apify Facebook Pages Scraper")
+            fb_summary = f"Facebook Page: {fb_title}. Bio: {fb_bio}."
+            if fb_cats:
+                fb_summary += f" Categories: {fb_cats}."
+            if followers or likes:
+                fb_summary += f" Community: {followers:,} followers, {likes:,} likes."
+            if fb_posts:
+                fb_summary += f" Recent Posts (up to 10): {fb_posts[:2500]}."
 
-                fb_summary = f"Facebook Page: {fb_title}. Bio: {fb_bio}."
-                if fb_cats:
-                    fb_summary += f" Categories: {fb_cats}."
-                if followers or likes:
-                    fb_summary += f" Community: {followers:,} followers, {likes:,} likes."
-                if fb_posts:
-                    fb_summary += f" Recent Posts (up to 10): {fb_posts[:2500]}."
-
-                scraped_text += f"\n\nFacebook Insights ({source_label}): {fb_summary}"
-                scraped_sources.append(f"Live Facebook via {source_label} ({req.facebook_url})")
-                if not brand_name and fb_title:
-                    brand_name = fb_title.split("-")[0].split("|")[0].strip()
-            else:
-                fb_handle = req.facebook_url.rstrip("/").split("/")[-1]
-                scraped_sources.append(f"Facebook Page @{fb_handle}")
-                if not brand_name:
-                    brand_name = fb_handle.replace(".", " ").replace("-", " ").title()
+            scraped_text += f"\n\nFacebook Insights ({source_label}): {fb_summary}"
+            scraped_sources.append(f"Live Facebook via {source_label} ({req.facebook_url})")
+            if not brand_name and fb_title:
+                brand_name = fb_title.split("-")[0].split("|")[0].strip()
+        elif req.facebook_url:
+            fb_handle = req.facebook_url.rstrip("/").split("/")[-1]
+            scraped_sources.append(f"Facebook Page @{fb_handle}")
+            if not brand_name:
+                brand_name = fb_handle.replace(".", " ").replace("-", " ").title()
 
         if req.custom_notes:
             scraped_sources.append("Agency Brief Notes")
