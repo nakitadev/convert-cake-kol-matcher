@@ -248,22 +248,45 @@ class ApifyTikTokService:
                     logger.info(f"Two-Stage Filter: Excluded competitor official account/venue @{handle} ({display_name})")
                     continue
 
-                # 3.2 Merchant / Commercial Business & Venue Store Check (Exclude immediately if purely store/venue)
-                merchant_keywords = [
-                    "official", "store", "shop", "studio", "academy", "school", "clinic", "salon",
-                    "hotel", "resort", "center", "centre", "venue", "club", "co.,ltd", "บริษัท",
-                    "สั่งซื้อจิ้มลิงก์", "ตัวแทนจำหน่าย", "ราคาส่ง", "มีบริการเก็บเงินปลายทาง",
-                    "เปิดบิล", "ขายส่ง", "ส่งฟรีทั่วไทย", "จำหน่าย", "สั่งซื้อได้ที่", "พิกัดร้าน",
+                # 3.2 Merchant / Commercial Business & Factory Store Check (Two-Stage Entity Filter)
+                # Strict merchant keywords that unmistakably indicate a factory, wholesale shop, or commercial service
+                strict_merchant_keywords = [
+                    # Manufacturing, Printing & Workshop
+                    "โรงงาน", "รับผลิต", "ผลิตเสื้อ", "รับสกรีน", "งานสกรีน", "รับทำเสื้อ", "รับทำ",
+                    "ไม่มีขั้นต่ำ", "สั่งผลิต", "งานด่วน", "ช่างสกรีน", "บล็อกสกรีน", "การ์เม้นท์", "garment",
+                    "dtfสกรีน", "สกรีนdtf", "สั่งทำเสื้อ", "เสื้อทีม", "เสื้อรุ่น", "เสื้อพนักงาน", "เสื้อยูนิฟอร์ม",
+                    "เสื้อแจก", "รับปัก", "งานปัก", "ช่างพิมพ์", "เครื่องสกรีน", "หมึกสกรีน", "สกรีนเสื้อ", "ร้านสกรีน",
+                    "สกรีนด่วน", "รับพิมพ์ผ้า", "รับพิมพ์เสื้อ",
+                    # Wholesale & Commercial Distribution
+                    "ขายส่ง", "ราคาส่ง", "ส่งทั่วประเทศ", "จัดส่งทั่วประเทศ", "ออเดอร์", "รับออเดอร์",
+                    "หน้าร้าน", "พิกัดหน้าร้าน", "สั่งซื้อจิ้มลิงก์", "ตัวแทนจำหน่าย", "เปิดบิล",
+                    "สั่งซื้อได้ที่", "พิกัดร้าน", "จำหน่าย", "มีบริการเก็บเงินปลายทาง", "ส่งฟรีทั่วไทย", "มีเรทส่ง",
+                    # Corporate & Venues
+                    "co.,ltd", "co., ltd", "บริษัท", "ห้างหุ้นส่วน", "หจก.", "บจก.",
                     "จองคิว", "สอบถาม/จอง", "booking", "เปิดบริการ", "เปิดทุกวัน", "เปิดให้บริการ",
-                    "เวลาเปิด", "เวลาทำการ", "สาขา", "หน้าร้าน", "ชั่วโมงละ", "ชม.ละ"
+                    "เวลาเปิด", "เวลาทำการ", "สาขา", "ชั่วโมงละ", "ชม.ละ"
                 ]
-                creator_indicator_words = ["รีวิว", "creator", "lifestyle", "vlog", "ติดต่องาน", "บล็อกเกอร์", "รีวิวไปเรื่อย", "รีวิวของ"]
-                has_merchant_word = any(k in bio.lower() or k in display_name.lower() or k in handle.lower() for k in merchant_keywords)
-                has_creator_word = any(k in bio.lower() or k in display_name.lower() for k in creator_indicator_words)
-                
-                if has_merchant_word and not has_creator_word:
+                general_merchant_keywords = [
+                    "official", "store", "shop", "studio", "academy", "school", "clinic", "salon",
+                    "hotel", "resort", "center", "centre", "venue", "club"
+                ]
+                store_handle_tokens = ["factory", "garment", "screen", "print", "sublimation", "uniform", "store", "official"]
+
+                bio_lower = bio.lower()
+                disp_lower = display_name.lower()
+                handle_lower = handle.lower()
+
+                is_strict_merchant = any(k in bio_lower or k in disp_lower or k in handle_lower for k in strict_merchant_keywords)
+                has_store_handle = any(t in handle_lower for t in store_handle_tokens) and any(k in disp_lower or k in bio_lower for k in ["สกรีน", "เสื้อ", "shop", "store", "ผลิต", "โรงงาน"])
+
+                # Only genuine personal creator markers (avoid bare 'รีวิว' or 'ติดต่องาน' which commercial shops misuse)
+                genuine_creator_words = ["content creator", "video creator", "lifestyle creator", "บล็อกเกอร์", "blogger", "vlogger", "รีวิวไปเรื่อย"]
+                has_general_merchant = any(k in bio_lower or k in disp_lower or k in handle_lower for k in general_merchant_keywords)
+                has_genuine_creator = any(k in bio_lower or k in disp_lower for k in genuine_creator_words)
+
+                if is_strict_merchant or has_store_handle or (has_general_merchant and not has_genuine_creator):
                     account_type = "merchant_store"
-                    # Spec 3.1: Merchant store filtered out from creator matching
+                    logger.info(f"Two-Stage Filter: Excluded merchant/factory account @{handle} ({display_name})")
                     continue
                 else:
                     account_type = "real_kol"

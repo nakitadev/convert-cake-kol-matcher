@@ -167,6 +167,14 @@ Facebook: {fb_url}
 {manual_comp_str}Scraped Context:
 {scraped_text[:4000]}
 
+CRITICAL DIRECTIVE FOR SERVICES, CUSTOM PRODUCTION & B2B (e.g. Screen Printing, Garment Factories, Custom Merch, Clinics, Venues):
+- NEVER generate supplier/factory-side hashtags or keywords (e.g. NEVER output '#สกรีนเสื้อ', '#รับสกรีน', '#โรงงานเสื้อ', '#เสื้อยืดราคาส่ง', '#ร้านสกรีน', '#รับผลิต') for TikTok sourcing! On TikTok, supplier-side hashtags are flooded 100% by rival factories and printing workshops advertising their machinery, resulting in zero real influencers found.
+- INSTEAD, generate Consumer & Creator Demand-Side Keywords and Hashtags:
+  1. Fashion / Streetwear / OOTD: What finished products or style aesthetic do creators showcase? (e.g. '#เสื้อยืดoversize', '#แต่งตัวสตรีท', '#ootdไทย', '#พิกัดเสื้อผ้า', '#เสื้อยืดวินเทจ')
+  2. Indie Creators & Merch Builders: Creators who design custom merch or start clothing brands (e.g. 'สร้างแบรนด์เสื้อตัวเอง', 'ทำเสื้อแบรนด์ตัวเอง', 'ออกแบบเสื้อเอง', '#สร้างแบรนด์ตัวเอง')
+  3. Student & Campus Community: Event organizers and student vloggers who order group shirts (e.g. '#เด็กมหาลัย', '#เสื้อรุ่น', '#เสื้อคณะ')
+This guarantees TikTok sourcing discovers real influential content creators, fashion stylists, and indie designers instead of rival printing shops and factories!
+
 Respond ONLY with a valid JSON object matching this schema:
 {{
   "brand_name": "{brand_name}",
@@ -207,7 +215,17 @@ Respond ONLY with a valid JSON object matching this schema:
                 ),
             )
             if response and response.text:
-                return json.loads(response.text)
+                raw_text = response.text.strip()
+                if raw_text.startswith("```json"):
+                    raw_text = raw_text[7:]
+                if raw_text.startswith("```"):
+                    raw_text = raw_text[3:]
+                if raw_text.endswith("```"):
+                    raw_text = raw_text[:-3]
+                raw_text = raw_text.strip()
+                # Tolerate trailing commas before closing brackets/braces
+                raw_text = re.sub(r',\s*([\]}])', r'\1', raw_text)
+                return json.loads(raw_text)
         except Exception as e:
             print(f"[GeminiService] LLM BrandDNA generation error: {e}")
         return None

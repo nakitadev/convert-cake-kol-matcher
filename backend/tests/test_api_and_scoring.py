@@ -880,3 +880,128 @@ async def test_balanced_archetype_portfolio_selection():
     assert archetype_counts["Lifestyle & Vlog"] >= 2, f"Expected >= 2 Lifestyle Vloggers, got {archetype_counts}"
 
 
+@pytest.mark.asyncio
+async def test_screen_printing_and_garment_factories_filtered_by_two_stage_filter(monkeypatch):
+    """
+    Verify that Two-Stage Entity Filtering cleanly excludes pure screen printing factories,
+    wholesale garment workshops, and custom print shops even if they include 'รีวิว' or 'ติดต่องาน',
+    while keeping genuine fashion creators and campus lifestyle vloggers.
+    """
+    from app.services.apify_service import ApifyTikTokService
+
+    service = ApifyTikTokService(api_token="test_token")
+
+    mock_items = [
+        # 1. Screen printing factory with 'ติดต่องาน' and 'รีวิว'
+        {
+            "id": "v_factory1",
+            "text": "รีวิวงานสกรีนเสื้อยืด 500 ตัว ส่งด่วนวันนี้ #สกรีนเสื้อ #dtf",
+            "playCount": 12000,
+            "diggCount": 300,
+            "authorMeta": {
+                "name": "dtf_screen_bkk",
+                "nickName": "รับสกรีนเสื้อยืด ไม่มีขั้นต่ำ",
+                "signature": "โรงงานรับสกรีนเสื้อ DTF บล็อกสกรีน งานด่วน ไม่มีขั้นต่ำ ติดต่องาน Line: @dtf99",
+                "fans": 15000,
+                "heart": 8000,
+            },
+        },
+        # 2. Wholesale garment producer
+        {
+            "id": "v_factory2",
+            "text": "เสื้อยืดราคาส่ง ตัวละ 45 บาท #ราคาส่ง #เสื้อยืด",
+            "playCount": 25000,
+            "diggCount": 800,
+            "authorMeta": {
+                "name": "korat_garment_factory",
+                "nickName": "โคราชการ์เม้นท์ ผลิตเสื้อยืด",
+                "signature": "รับผลิตเสื้อยืด เสื้อโปโล ราคาส่ง สั่งผลิตเสื้อทีม เสื้อพนักงาน ทั่วประเทศ",
+                "fans": 30000,
+                "heart": 45000,
+            },
+        },
+        # 3. Print workshop with store handle
+        {
+            "id": "v_factory3",
+            "text": "เครื่องสกรีนเสื้อรุ่นใหม่ คมชัดมาก #เครื่องสกรีน #สกรีนเสื้อ",
+            "playCount": 18000,
+            "diggCount": 450,
+            "authorMeta": {
+                "name": "best_screen_print",
+                "nickName": "Best Screen Thailand",
+                "signature": "ร้านสกรีนเสื้อ สั่งทำเสื้อยืด สั่งซื้อจิ้มลิงก์ หน้าร้านเปิดทุกวัน",
+                "fans": 8000,
+                "heart": 12000,
+            },
+        },
+        # 4. Genuine Fashion Creator (Kept)
+        {
+            "id": "v_creator1",
+            "text": "แชร์ไอเดียแต่งตัวเสื้อยืด oversize สไตล์สตรีทบอย #เสื้อยืดoversize #แต่งตัวสตรีท #ootd",
+            "playCount": 95000,
+            "diggCount": 6500,
+            "commentCount": 210,
+            "shareCount": 430,
+            "collectCount": 580,
+            "authorMeta": {
+                "name": "streetwear_boy_th",
+                "nickName": "Mark Streetwear",
+                "signature": "Fashion & Lifestyle Creator | ชอบแต่งตัวเสื้อยืดวินเทจ & สตรีท ติดต่องาน dm",
+                "fans": 58000,
+                "heart": 320000,
+            },
+        },
+        # 5. Genuine Campus / Merch Creator (Kept)
+        {
+            "id": "v_creator2",
+            "text": "1 วันกับชีวิตเด็กมหาลัย ออกแบบเสื้อคณะใส่ไปงานเชียร์ #เด็กมหาลัย #เสื้อรุ่น #vlog",
+            "playCount": 72000,
+            "diggCount": 5100,
+            "commentCount": 180,
+            "shareCount": 310,
+            "collectCount": 420,
+            "authorMeta": {
+                "name": "campus_life_ploy",
+                "nickName": "Ploy Daily",
+                "signature": "CU Student Vlog & Daily Outfit | บล็อกเกอร์รีวิวไปเรื่อย ติดต่องาน email",
+                "fans": 38000,
+                "heart": 195000,
+            },
+        },
+    ]
+
+    class MockResponse:
+        status_code = 200
+        def json(self):
+            return mock_items
+
+    class MockClient:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+        async def post(self, url, json=None):
+            return MockResponse()
+
+    monkeypatch.setattr("httpx.AsyncClient", lambda *args, **kwargs: MockClient())
+
+    profiles = await service.search_live_kols_by_hashtags(
+        hashtags=["เสื้อยืดoversize"],
+        vertical="Fashion & Apparel",
+        limit_creators=10,
+        brand_name="Piggy Monster",
+        manual_competitors=["Korat Screen"],
+    )
+
+    handles = [p.handle for p in profiles]
+    # All 3 factory / merchant print shops must be excluded
+    assert "dtf_screen_bkk" not in handles
+    assert "korat_garment_factory" not in handles
+    assert "best_screen_print" not in handles
+
+    # Genuine creators must be kept
+    assert "streetwear_boy_th" in handles
+    assert "campus_life_ploy" in handles
+    assert len(profiles) == 2
+
+
