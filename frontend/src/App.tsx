@@ -394,8 +394,11 @@ export default function HomePage() {
   };
 
   const handleAutoMatch = async () => {
+    if (brandDNA && isEditingDNA) {
+      return handleMatchKOLs();
+    }
     if (!brandName && !websiteUrl && !facebookUrl && !customNotes) {
-      alert('Please enter a Brand Name, Website URL, or select a quick test example.');
+      alert('Please enter at least a Brand Name, Website URL, or Campaign Notes.');
       return;
     }
     setIsMatching(true);
@@ -712,8 +715,8 @@ export default function HomePage() {
           <div className="absolute -top-24 -left-24 w-72 h-72 bg-blue-50/60 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-slate-100/60 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-2.5 max-w-3xl">
+          <div className="relative z-10 flex flex-col justify-between gap-6">
+            <div className="space-y-2.5 max-w-4xl">
               <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#0536d2] bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full">
                 <Sparkles className="w-3.5 h-3.5 text-[#03e78b]" />
                 <span>Built for Brands That Need Results, Not Reports</span>
@@ -741,26 +744,6 @@ export default function HomePage() {
                   <span>Two-Stage Entity & Anti-Spam Filtering</span>
                 </span>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
-              <button
-                onClick={handleAutoMatch}
-                disabled={isMatching || isAnalyzing}
-                className="px-6 py-3.5 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] active:bg-[#031f7a] text-white font-bold text-sm shadow-md shadow-blue-600/20 hover:shadow-lg transition-all flex items-center justify-center space-x-2.5 disabled:opacity-50 cursor-pointer border border-blue-700"
-              >
-                {isMatching ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                    <span>Running Live Search...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 text-[#03e78b]" />
-                    <span>1-Click Live Auto Match</span>
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
@@ -855,19 +838,19 @@ export default function HomePage() {
               </div>
 
               <button
-                onClick={handleAnalyzeBrand}
-                disabled={isAnalyzing || isMatching}
-                className="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-900 text-white font-semibold text-xs transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 shadow-md"
+                onClick={handleAutoMatch}
+                disabled={isMatching || isAnalyzing}
+                className="w-full py-3.5 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] active:bg-[#031f7a] text-white font-bold text-sm shadow-md shadow-blue-600/20 hover:shadow-lg transition-all flex items-center justify-center space-x-2.5 disabled:opacity-50 cursor-pointer border border-blue-700"
               >
-                {isAnalyzing ? (
+                {isMatching ? (
                   <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-[#597ef3]" />
-                    <span>Crawling Live Web & Analyzing with Gemini...</span>
+                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                    <span>Matching Live TikTok Creators...</span>
                   </>
                 ) : (
                   <>
-                    <Search className="w-4 h-4 text-[#597ef3]" />
-                    <span>Extract Brand DNA (Live Web & Gemini)</span>
+                    <Zap className="w-4 h-4 text-[#03e78b]" />
+                    <span>Match TikTok</span>
                   </>
                 )}
               </button>
@@ -965,24 +948,6 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-
-                <button
-                  onClick={handleMatchKOLs}
-                  disabled={isMatching}
-                  className="w-full mt-3 py-3.5 rounded-2xl bg-gradient-to-r from-[#0536d2] via-[#0436d1] to-[#597ef3] hover:from-[#042cae] hover:to-[#456ce4] text-white font-bold text-xs sm:text-sm shadow-[0_0_20px_rgba(5,54,210,0.35)] transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 border border-[#597ef3]/30"
-                >
-                  {isMatching ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Querying Live TikTok via Apify...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Target className="w-4 h-4 text-[#03e78b]" />
-                      <span>Discover & Match Live TikTok Creators</span>
-                    </>
-                  )}
-                </button>
               </div>
             )}
           </div>
