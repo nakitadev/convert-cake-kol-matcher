@@ -43,7 +43,7 @@
   2. `discover_candidates_node`: ค้นหาครีเอเตอร์และคลิปสดจาก TikTok ผ่าน Apify
   3. `score_and_filter_node`: คำนวณ Hybrid Score 45/35/20 พร้อมกรอง Anti-Spam
   4. `rank_and_hook_node`: จัดอันดับ และสร้าง Thai Campaign Pitch Hooks
-- **LLM Model:** `gemini-3.5-flash-lite` (วิเคราะห์ Brand DNA, สังเคราะห์คอมเมนต์ผู้ชมสด, สร้าง Campaign Hooks ภาษาไทย)
+- **LLM Model:** `gemini-3.5-flash-lite` (วิเคราะห์ Brand DNA & Conversion Models, Google Search Grounding สกัดคู่แข่งในไทย, Batch Relevance Gate, สร้าง Role-Adaptive 3-Sec Campaign Hooks)
 - **Embedding Model:** `gemini-embedding-2` (เวกเตอร์ขนาด 3,072 มิติ ใช้คำนวณ Cosine Similarity)
 - **Assistant Development Engine:** `agy` CLI v1.4.7 (`gemini-3.8-flash-high`)
 
@@ -54,55 +54,53 @@
   - **Tier 1 (Primary): Jina Reader API (`r.jina.ai`)** — แปลงเว็บ SPA/React/Next.js/Shopify ให้เป็น Clean Markdown ตัดขยะ Navbar/Footer ออกถึง 85% ประหยัด Token ให้ Gemini และลดขนาด Docker Container ไม่ต้องแบก Chromium (+800MB)
   - **Tier 2 (Fallback): HTTPX + BeautifulSoup4** — รองรับกรณี Jina เกิด Timeout หรือ Rate Limit เพื่อให้ระบบทำงานต่อได้อย่างลื่นไหล
 - **Facebook Page Ingestion (สำหรับ SME ไทยที่ไม่มีเว็บไซต์):**
-  - ใช้ Apify Actor `apify~facebook-pages-scraper` ดึงข้อมูลเพจสด (Title, Bio, Categories, Followers, Likes, Recent Posts) พร้อม Fallback สู่ Jina Reader
+  - ใช้ Apify Actor `apify~facebook-pages-scraper` ดึงข้อมูลเพจสด (Title, Bio, Categories, Followers, Likes, Recent Posts) และดึงความคิดเห็นจริงของลูกค้า (Facebook Comments) สู่ Brand DNA
 - **TikTok Scraper Engine:**
-  - Apify Actor `clockworks~tiktok-scraper` ค้นหาคลิปและโปรไฟล์สดจากแฮชแท็กภาษาไทย
-  - **Thai Hashtag Preservation:** จัดการแฮชแท็กภาษาไทยด้วย `t.lstrip('#').strip()` ป้องกัน Regex เดิมที่ลบสระ/พยัญชนะไทยออก
-  - **Latency & Reliability:** ตั้ง Timeout ไว้ที่ 90 วินาที พร้อมระบบ Auto-Recovery ตรวจสอบ Dataset ID เมื่อ Sync Call ใช้เวลานาน เพื่อป้องกัน Network Drop
+  - Apify Actor `clockworks~tiktok-scraper` ค้นหาคลิปและโปรไฟล์สดจากคำค้นหา Scene Translation โดยล็อก `proxyCountryCode: "TH"`
+  - **Origin Tagging:** ทุกคลิปที่ดึงมาระบุที่มาอย่างแม่นยำว่าเป็น `KOL_QUERY` หรือ `KOC_QUERY`
 
 ---
 
-### 6. Scoring Engine & Multi-Signal Algorithms (Dynamic 40 / 35 / 25 Pts)
-คะแนนรวม 100 คะแนน แบ่งออกเป็น 3 มิติเชิงกลยุทธ์ตาม Full System Specification:
-1. **Relevance Score (40 คะแนน):**
-   - **Semantic Similarity (28 คะแนน):** Cosine Similarity ระหว่าง Brand DNA กับ Creator Content (Gemini Embeddings 3,072 มิติ)
-   - **Niche Keyword & Work-Ready Match (12 คะแนน):** จับคู่คีย์เวิร์ดแบรนด์ตรงตัว (8 คะแนน) + โบนัส Work-Ready Status พร้อมรับสปอนเซอร์ (4 คะแนน)
-2. **Engagement Quality (35 คะแนน):**
-   - **Median Engagement Rate (15 คะแนน):** วัดจาก `(Likes + 2*Comments + 3*Shares + Saves) / Views` ใช้ค่ามัธยฐานของคลิปย้อนหลัง
-   - **Save-to-View Utility Ratio (10 คะแนน):** คำนวณ `(Collects + 0.7*Shares) / Views` พร้อมโบนัส +2 คะแนนสำหรับครีเอเตอร์สาย Educated Guru
-   - **View Consistency Ratio (10 คะแนน):** คำนวณ `Median Views / Mean Views` ตรวจสอบความสม่ำเสมอของยอดวิว ไม่พึ่งพาไวรัลฟลุ๊ค
-   - **Updated Spec — รองรับการปักตะกร้าเหลือง 100% สำหรับ "Content Creator (เน้นรีวิว)" / Top Reviewer:**
-     - ยอมรับการปักตะกร้าเหลืองได้ถึง 100% โดยจัดเข้าหมวดหมู่ **"Content Creator (เน้นรีวิว)"** และ Archetype **"Top Reviewer"** ไม่หักคะแนนหรือตีเป็น Spam Trap เพราะในตลาด TikTok ประเทศไทย ครีเอเตอร์สายรีวิว/Shoppertainment จำเป็นต้องปักตะกร้าทุกคลิปเพื่อสร้าง Direct Conversion ให้แบรนด์
-     - ระบบมีแท็บและป้ายกำกับแยกเฉพาะ **"Content Creator เน้นรีวิว (ตะกร้าเหลือง 100%)"** เพื่อให้ทีม Performance Marketing เลือกใช้งานตามวัตถุประสงค์
-     - จะ Flag และหักคะแนนเฉพาะบัญชีที่เป็น Bot/Spam Farm ชัดเจนเท่านั้น
+### 6. 4 Brand Conversion Models & Media Mix (Spec 2.2)
+1. `ECOMMERCE_PRODUCT`: ซื้อทันทีผ่านตะกร้า/Shopee (สกินแคร์, เครื่องสำอาง, ของใช้) -> สัดส่วน **KOL 30% : KOC 70%**
+2. `APP_DIGITAL_SERVICE`: โหลดแอป/สมัครเว็บ/SaaS (FinTech, AI, ซอฟต์แวร์, เกม) -> สัดส่วน **KOL 50% : KOC 50%**
+3. `HIGH_TICKET_LEADGEN`: ทักแชท/กรอกฟอร์ม/จองคอร์ส (คลินิก, คอร์สเรียน, อสังหาฯ) -> สัดส่วน **KOL 60% : KOC 40%**
+4. `LIFESTYLE_EXPERIENCE`: ไปหน้าร้าน/ภาพลักษณ์หรู (โรงแรม, คาเฟ่, ห้าง, Luxury) -> สัดส่วน **KOL 70% : KOC 30%**
+
+---
+
+### 7. 2x2 KOL/KOC Matrix & 4 Sub-Styles (Spec 4.2)
+- **กิ่งที่ 1: 🧠 KOL (Key Opinion Leader) — Top & Middle Funnel (สร้างการรับรู้ ภาพลักษณ์ และความน่าเชื่อถือ)**
+  - `KOL - Expert / Guru`: สายผู้เชี่ยวชาญ/กูรู แคปชันอธิบายเชิงลึก Save Rate เด่นชัด
+  - `KOL - Lifestyle / Aesthetic`: สายไลฟ์สไตล์/ภาพลักษณ์ดูแพง ยอดวิวสูง แคปชันสั้น เน้น Mood & Tone (Basket Ratio < 15%)
+- **กิ่งที่ 2: 🛍️ KOC (Key Opinion Consumer) — Bottom Funnel (เร่งการตัดสินใจซื้อ และปิดการขาย)**
+  - `KOC - Hard-Sell Reviewer`: สายป้ายยา/รีวิวเน้นปิดการขาย ปักตะกร้าสม่ำเสมอ คนคอมเมนต์ถามซื้อจริง
+  - `KOC - Everyday User / Vlog`: สายผู้ใช้จริงในชีวิตประจำวัน เล่าเรื่องแบบเพื่อนบอกเพื่อน ปักตะกร้าประปราย (15%-40%)
+
+---
+
+### 8. Scoring Engine & Multi-Signal Algorithms (Dynamic 40 / 35 / 25 Pts - Spec 4.3)
+1. **Brand & Funnel Relevance (40 คะแนน):**
+   - Semantic & LLM Fit Score (28 คะแนน): ผสมผสานค่า Cosine Similarity กับคะแนนจาก Batch LLM Relevance Gate
+   - Sub-Niche & Work-Ready Bonus (12 คะแนน): ความตรงของคีย์เวิร์ดเฉพาะทาง (8 คะแนน) + โบนัสช่องทางติดต่องานใน Bio (4 คะแนน)
+2. **Engagement Quality & Content Utility (35 คะแนน):**
+   - Median Engagement Rate (15 คะแนน): `(Likes + Comments + Shares + Saves) / Views` ใช้มัธยฐานเฉพาะคลิปวิว >= 500
+   - Save & Share Utility Score (10 คะแนน): `(collectCount + 0.7 * shareCount) / max(playCount, 500)` พร้อมโบนัสพิเศษสำหรับ `KOL - Expert / Guru`
+   - View Consistency Ratio (10 คะแนน): `Median Views / Mean Views` ป้องกันการเลือกคลิปไวรัลฟลุ๊ค
 3. **Audience Proxy & Commercial Viability (25 คะแนน):**
-   - **Thai Audience Authenticity (10 คะแนน):** ตรวจจับสัดส่วนพยัญชนะ/สระภาษาไทยในแคปชันและคอมเมนต์ (Verified Thai Audience)
-   - **Buyer Intent Proxy (10 คะแนน):** คำนวณสัดส่วน Inquiry Ratio และคีย์เวิร์ดบอกความสนใจซื้อจริง (เช่น `พิกัด`, `ซื้อที่ไหน`, `ราคา`, `ใช้ดี`, `ป้ายยา`)
-   - **Affiliate Saturation Health (5 คะแนน):** ให้คะแนนสุขภาพความหนาแน่นของการขาย (เต็ม 5 คะแนนสำหรับสายรีวิวที่ปักตะกร้า 100%)
+   - Thai Audience Authenticity (10 คะแนน): สัดส่วนภาษาไทยในแคปชันและคอมเมนต์
+   - Buyer Intent Proxy (10 คะแนน): Tier-1 Fast Proxy (`comment/like` + `share/like`) vs Tier-2 Targeted Comment Analysis สกัดคีย์เวิร์ดซื้อจริง (`ราคา`, `พิกัด`, `ซื้อที่ไหน`, `ใช้ดีไหม`)
+   - Brand-Adaptive Affiliate Health (5 คะแนน): เต็ม 5/5 สำหรับ KOC สายรีวิวใน E-Commerce แต่หักคะแนนหากตะกร้า > 70% ในแบรนด์หรู/High-Ticket เพื่อรักษาภาพลักษณ์
 
 ---
 
-### 7. Creator Archetypes & Grounded Competitor Detection
-- **4 Creator Archetypes:**
-  1. **Educated Guru:** ครีเอเตอร์สายให้ความรู้ เจาะลึกส่วนผสม/กลไกการทำงาน (บทบาท: Trust & Credibility)
-  2. **Top Reviewer:** ครีเอเตอร์สายป้ายยา สาธิตการใช้งานจริง ยอมรับตะกร้าเหลือง 100% (บทบาท: Conversion & Sales)
-  3. **Lifestyle & Vlog:** ครีเอเตอร์สาย GRWM, Daily Vlog สอดแทรกสินค้าอย่างแนบเนียน (บทบาท: Brand Awareness)
-  4. **Niche Enthusiast:** ครีเอเตอร์สายเปรียบเทียบหลายแบรนด์ หรือเจาะลึกเฉพาะทาง (บทบาท: Hyper-Targeted Reach)
-- **Grounded Thai Competitor Detection (3 ระดับ):**
-  - *Layer 1:* Manual Competitor Input จากผู้ใช้
-  - *Layer 2:* Discovery Competitors จาก Gemini สกัดชื่อแบรนด์และชื่อเรียกภาษาไทย
-  - *Layer 3:* Live Caption Cross-Check ตรวจจับการพูดถึงคู่แข่ง หากพบ 1 แบรนด์จะติดป้ายเตือน `⚠️ Competitor Conflict` หากพบ >=2 แบรนด์จะระบุเป็น `🎯 Niche Enthusiast Opportunity`
-- **Two-Stage Entity Filtering:**
-  - กรองบัญชีร้านค้า Official/ตัวแทนจำหน่าย (`Official`, `Store`, `Shop`, `ราคาส่ง`, `เปิดบิล`) ออกตั้งแต่ต้นทาง เพื่อป้องกันผลลัพธ์ปนเปื้อน
-
----
-
-### 7. Tailored Thai Campaign Pitch Hooks
-- ระบบสร้าง TikTok Pitch Hooks ภาษาไทย 3 สไตล์ต่อครีเอเตอร์ โดยเชื่อมโยงบริบทของแคปชันคลิปสดจริง (Audited Captions) และราคา/จุดเด่นของแบรนด์:
-  - **Beauty & Skincare:** Hook เน้นปัญหาสิว/ผิวแพ้ง่าย, ป้ายยารูทีน GRWM, ท้าพิสูจน์ผลลัพธ์ 7 วัน
-  - **Food & Cafe (F&B):** Hook สไตล์ 1 Day Food Vlog, พิกัดเมนูลับตามรอย TikTok, รีวิวรสชาติตรงไปตรงมา
-  - **Tech, Gadgets & Ergonomics:** Hook ชาวออฟฟิศปวดหลัง, โต๊ะคอมสไตล์ Minimal, คุ้มค่าตัวไหมกับการใช้งานจริง 1 เดือน
-  - **General & Lifestyle:** Hook ป้ายยา Unboxing เรียลๆ แบบโนสปอน, Life Hack เปลี่ยนชีวิต
+### 9. 3-Layer Grounded Thai Competitor Detection & Role-Adaptive Hooks (Spec 5)
+- **Layer 1:** Google Search Grounding ร่วมกับ Gemini สกัดแบรนด์คู่แข่งในไทย ณ ปัจจุบัน พร้อมชื่อเรียกทับศัพท์ภาษาไทย
+- **Layer 2:** Bottom-Up TikTok Co-occurrence Discovery สกัดชื่อแบรนด์คู่แข่งที่ปรากฏซ้ำบ่อยในแฮชแท็กของคลิปที่ค้นพบ
+- **Layer 3:**
+  - คลิปรีวิวเดี่ยว -> ติดป้ายเตือน `⚠️ Competitor Conflict: [ชื่อแบรนด์]`
+  - คลิปเปรียบเทียบหลายแบรนด์ -> ติดป้ายโอกาสทอง `🎯 Comparison Opportunity`
+- **Role-Adaptive Pitch Hooks (3 วินาทีแรก):** ปรับตาม 4 สไตล์ย่อย (Expert Myth-Busting Hook, Aesthetic Prestige Hook, Value Proof Conversion Hook, Relatable Daily Routine Hook)
 
 ---
 
