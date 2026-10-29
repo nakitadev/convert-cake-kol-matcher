@@ -1,0 +1,1377 @@
+{
+  "presets": [
+    {
+      "id": "mith_bangkok",
+      "brand_name": "MiTH Bangkok",
+      "vertical": "Beauty & Fragrance / Lifestyle",
+      "sub_category": "Niche Perfume & Lifestyle Products",
+      "conversion_model": "ECOMMERCE_PRODUCT",
+      "website_url": "https://mithbangkok.com/th/home-%E0%B9%84%E0%B8%97%E0%B8%A2/",
+      "facebook_url": "https://www.facebook.com/MiTHTeam/",
+      "description": "น้ำหอมนิชแบรนด์ไทยยอดฮิต · ป้ายยา 30% KOL : 70% KOC · ข้อมูลตรวจจับจริง"
+    },
+    {
+      "id": "her_hyness",
+      "brand_name": "Her Hyness Clean Skincare",
+      "vertical": "Beauty & Skincare",
+      "sub_category": "Clean Dermocosmetics & Sensitive Skin Care",
+      "conversion_model": "ECOMMERCE_PRODUCT",
+      "website_url": "https://herhyness.com",
+      "facebook_url": "https://www.facebook.com/herhynessbeauty/",
+      "description": "เวชสำอางคลีนสกินแคร์สูตรอ่อนโยนสำหรับคนเป็นสิวผิวแพ้ง่าย (30% KOL : 70% KOC)"
+    },
+    {
+      "id": "srichand",
+      "brand_name": "Srichand (ศรีจันทร์)",
+      "vertical": "Beauty & Cosmetics",
+      "sub_category": "Sunscreen & Oil Control Powder",
+      "conversion_model": "ECOMMERCE_PRODUCT",
+      "website_url": "https://srichand.1948beauty.com",
+      "facebook_url": "https://www.facebook.com/srichand1948/",
+      "description": "แบรนด์แป้งและกันแดดระดับตำนานของไทย โดดเด่นเรื่องคุมมันและกันน้ำ (30% KOL : 70% KOC)"
+    }
+  ],
+  "brands": {
+    "mith_bangkok": {
+      "aliases": [
+        "mith bangkok",
+        "mith",
+        "mithbangkok",
+        "https://mithbangkok.com/th/home-%E0%B9%84%E0%B8%97%E0%B8%A2/",
+        "https://mithbangkok.com",
+        "mithbangkok.com",
+        "https://www.facebook.com/MiTHTeam/",
+        "facebook.com/mithteam"
+      ],
+      "brand_dna": {
+        "id": "live-mithbangkok",
+        "brand_name": "MiTH Bangkok",
+        "website_url": "https://mithbangkok.com/th/home-%E0%B9%84%E0%B8%97%E0%B8%A2/",
+        "facebook_url": "https://www.facebook.com/MiTHTeam/",
+        "vertical": "Beauty & Fragrance / Lifestyle",
+        "sub_category": "Niche Perfume & Lifestyle Products",
+        "brand_summary": "MiTH Bangkok (Made in Thailand) is a renowned Thai fragrance brand offering distinct, high-quality artisanal perfumes with accessible pricing.",
+        "target_audience": "Gen Z and Millennials in Thailand seeking unique, accessible luxury niche perfumes.",
+        "target_age_range": "18-35",
+        "brand_tone": [
+          "เป็นกันเองและเข้าถึงง่าย",
+          "มีความทันสมัยและสไตล์ชัดเจน"
+        ],
+        "customer_pain_points": [
+          "อยากได้น้ำหอมกลิ่นที่เป็นเอกลักษณ์ไม่ซ้ำใครแต่ราคาจับต้องได้",
+          "น้ำหอมกลิ่นติดไม่ทนตลอดวัน"
+        ],
+        "price_positioning": "Accessible Luxury / Mid-Range",
+        "average_price_thb": 1200,
+        "conversion_model": "ECOMMERCE_PRODUCT",
+        "conversion_model_reason": "MiTH Bangkok sells bottled fragrances primarily through direct e-commerce and social commerce baskets.",
+        "kol_koc_mix": {
+          "kol": 30,
+          "koc": 70
+        },
+        "search_queries": [
+          {
+            "query": "น้ำหอมกลิ่นติดทน",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "น้ำหอมแบรนด์ไทย",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_2"
+          },
+          {
+            "query": "รีวิว น้ำหอม MiTH",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "แนะนำ น้ำหอมผู้ชาย",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          }
+        ],
+        "niche_keywords": [
+          "น้ำหอมไทย",
+          "Niche Perfume",
+          "น้ำหอมติดทนนาน",
+          "MiTH Bangkok"
+        ],
+        "competitors": [
+          {
+            "brand": "Butterfly Thai Perfume",
+            "aliases": [
+              "บัตเตอร์ฟลาย",
+              "Butterfly Thai Perfume"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 2
+          },
+          {
+            "brand": "Journal Boutique",
+            "aliases": [
+              "เจอร์นัล",
+              "Journal"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          },
+          {
+            "brand": "PAÑPURI",
+            "aliases": [
+              "ปัญญ์ปุริ",
+              "PANPURI"
+            ],
+            "source": "tiktok_cooccurrence",
+            "mentions": 1
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader",
+          "Facebook via Apify",
+          "Google Search Grounding: 3 Thai competitors"
+        ]
+      },
+      "match_response": {
+        "brand_dna": {
+          "id": "live-mithbangkok",
+          "brand_name": "MiTH Bangkok",
+          "website_url": "https://mithbangkok.com/th/home-%E0%B9%84%E0%B8%97%E0%B8%A2/",
+          "facebook_url": "https://www.facebook.com/MiTHTeam/",
+          "vertical": "Beauty & Fragrance / Lifestyle",
+          "sub_category": "Niche Perfume & Lifestyle Products",
+          "brand_summary": "MiTH Bangkok (Made in Thailand) is a renowned Thai fragrance brand offering distinct, high-quality artisanal perfumes with accessible pricing.",
+          "target_audience": "Gen Z and Millennials in Thailand seeking unique, accessible luxury niche perfumes.",
+          "target_age_range": "18-35",
+          "brand_tone": [
+            "เป็นกันเองและเข้าถึงง่าย",
+            "มีความทันสมัยและสไตล์ชัดเจน"
+          ],
+          "customer_pain_points": [
+            "อยากได้น้ำหอมกลิ่นที่เป็นเอกลักษณ์ไม่ซ้ำใครแต่ราคาจับต้องได้",
+            "น้ำหอมกลิ่นติดไม่ทนตลอดวัน"
+          ],
+          "price_positioning": "Accessible Luxury / Mid-Range",
+          "average_price_thb": 1200,
+          "conversion_model": "ECOMMERCE_PRODUCT",
+          "conversion_model_reason": "MiTH Bangkok sells bottled fragrances primarily through direct e-commerce and social commerce baskets.",
+          "kol_koc_mix": {
+            "kol": 30,
+            "koc": 70
+          },
+          "search_queries": [
+            {
+              "query": "น้ำหอมกลิ่นติดทน",
+              "side": "KOL_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_1"
+            },
+            {
+              "query": "น้ำหอมแบรนด์ไทย",
+              "side": "KOC_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_2"
+            },
+            {
+              "query": "รีวิว น้ำหอม MiTH",
+              "side": "KOC_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_3"
+            },
+            {
+              "query": "แนะนำ น้ำหอมผู้ชาย",
+              "side": "KOL_QUERY",
+              "specificity": "adjacent",
+              "syntax_rule": "rule_3"
+            }
+          ],
+          "niche_keywords": [
+            "น้ำหอมไทย",
+            "Niche Perfume",
+            "น้ำหอมติดทนนาน",
+            "MiTH Bangkok"
+          ],
+          "competitors": [
+            {
+              "brand": "Butterfly Thai Perfume",
+              "aliases": [
+                "บัตเตอร์ฟลาย",
+                "Butterfly Thai Perfume"
+              ],
+              "source": "google_search_grounded",
+              "mentions": 2
+            },
+            {
+              "brand": "Journal Boutique",
+              "aliases": [
+                "เจอร์นัล",
+                "Journal"
+              ],
+              "source": "google_search_grounded",
+              "mentions": 0
+            },
+            {
+              "brand": "PAÑPURI",
+              "aliases": [
+                "ปัญญ์ปุริ",
+                "PANPURI"
+              ],
+              "source": "tiktok_cooccurrence",
+              "mentions": 1
+            }
+          ],
+          "scraped_sources": [
+            "Website via Jina Reader",
+            "Facebook via Apify",
+            "Google Search Grounding: 3 Thai competitors"
+          ]
+        },
+        "strategy": {
+          "conversion_model": "ECOMMERCE_PRODUCT",
+          "conversion_model_reason": "ECOMMERCE_PRODUCT recommends 30% KOL : 70% KOC for fast social commerce checkout.",
+          "recommended_mix": {
+            "kol": 30,
+            "koc": 70
+          },
+          "achieved_mix": {
+            "KOL": 1,
+            "KOC": 4
+          }
+        },
+        "filter_stats": {
+          "raw_clips": 16,
+          "unique_creators": 13,
+          "removed_brand_accounts": 1,
+          "removed_merchants": 1,
+          "removed_affiliate_bots": 1,
+          "removed_irrelevant": 0,
+          "scored": 10
+        },
+        "ranked_kols": [
+          {
+            "rank": 1,
+            "kol": {
+              "id": "tt_ppooma",
+              "handle": "ppooma",
+              "display_name": "ภูมิเตจะเล่าให้ฟัง",
+              "tiktok_url": "https://www.tiktok.com/@ppooma",
+              "bio": "home | lifestyle | travel • DM for work ✌🏻🔥",
+              "follower_count": 3926,
+              "following_count": 54,
+              "total_likes": 130400,
+              "tier": "Nano",
+              "is_work_ready": true,
+              "funnel_role": "KOC",
+              "sub_style": "KOC - Hard-Sell Reviewer",
+              "why_it_fits": "รีวิวเปิดกรุน้ำหอมไทยราคาจับต้องได้ มี engagement สูง และเป็นกันเองเข้าถึงกลุ่มผู้ซื้อจริง",
+              "signals": {
+                "basket_ratio": 0.0,
+                "median_views": 56800.0,
+                "mean_views": 56800.0,
+                "median_comments": 13.0,
+                "save_rate": 0.0245,
+                "comment_to_like": 0.0044,
+                "share_to_like": 0.0703,
+                "avg_caption_length": 118.0
+              },
+              "recent_videos": [
+                {
+                  "video_id": "v1",
+                  "caption": "เปิดกรุน้ำหอมแบรนด์ไทย ราคาตั้งแต่หลักร้อย-หลักพัน 💸✨ #น้ำหอมแบรนด์ไทย #ป้ายยา",
+                  "views": 56800,
+                  "likes": 2985,
+                  "comments": 13,
+                  "shares": 210,
+                  "collect_count": 1392,
+                  "has_yellow_basket": false,
+                  "query_origin": "NATURAL_QUERY"
+                }
+              ],
+              "query_origin": "NATURAL_QUERY"
+            },
+            "total_match_score": 84.2,
+            "score_breakdown": {
+              "relevance_total": 28.04,
+              "semantic_llm_points": 21.04,
+              "cosine_similarity": 0.72,
+              "subniche_workready_points": 7.0,
+              "matched_keywords": [
+                "น้ำหอมแบรนด์ไทย",
+                "Niche Perfume"
+              ],
+              "engagement_total": 31.19,
+              "median_er_points": 15.0,
+              "median_engagement_rate": 0.081,
+              "eligible_clips": 1,
+              "utility_points": 7.0,
+              "utility_score": 0.027,
+              "consistency_points": 10.0,
+              "view_consistency_ratio": 1.0,
+              "audience_total": 25.0,
+              "thai_authenticity_points": 10.0,
+              "thai_ratio": 1.0,
+              "buyer_intent_points": 10.0,
+              "buyer_intent_tier": "tier1_fast_proxy",
+              "affiliate_health_points": 5.0,
+              "evidence": [
+                "Relevance: High cosine fit with Thai niche perfume",
+                "Engagement: Median ER 8.1% with 1,392 saves"
+              ]
+            },
+            "pitch_hook": ""
+          },
+          {
+            "rank": 2,
+            "kol": {
+              "id": "tt_hypesompobbk",
+              "handle": "hypesompobbk",
+              "display_name": "แด๊ดดี้ที่ชื่อฮิปโป✨ฮิปโปติส",
+              "tiktok_url": "https://www.tiktok.com/@hypesompobbk",
+              "bio": "✌🏽ติดต่องานทัก👉🏽@hippotist\n🎨MakeupJunkie 🚀ArtToy #หาจะเล่น\n🐿️ชี้โพรง👇🏽",
+              "follower_count": 588100,
+              "following_count": 210,
+              "total_likes": 8400000,
+              "tier": "Macro",
+              "is_work_ready": true,
+              "funnel_role": "KOL",
+              "sub_style": "KOL - Lifestyle / Aesthetic",
+              "why_it_fits": "Macro Beauty Trendsetter มี Reach กว้างและผู้ติดตามสายไลฟ์สไตล์ที่ให้ความสนใจน้ำหอมพรีเมียม",
+              "signals": {
+                "basket_ratio": 0.0,
+                "median_views": 178500.0,
+                "mean_views": 178500.0,
+                "median_comments": 59.0,
+                "save_rate": 0.0237,
+                "comment_to_like": 0.0057,
+                "share_to_like": 0.045,
+                "avg_caption_length": 142.0
+              },
+              "recent_videos": [
+                {
+                  "video_id": "v_hippo",
+                  "caption": "เทสฉัน ฉันชอบ ไปลองตามดมกันได้ 😍 สนับสนุนแบรนด์ไทยกันเด้อ 💪🏼 #แด๊ดดี้ฮิปโป #รีวิวบิวตี้ #รีวิวน้ำหอม",
+                  "views": 178500,
+                  "likes": 10300,
+                  "comments": 59,
+                  "shares": 465,
+                  "collect_count": 4234,
+                  "has_yellow_basket": false,
+                  "query_origin": "NATURAL_QUERY"
+                }
+              ],
+              "query_origin": "NATURAL_QUERY"
+            },
+            "total_match_score": 80.4,
+            "score_breakdown": {
+              "relevance_total": 24.37,
+              "semantic_llm_points": 17.37,
+              "cosine_similarity": 0.69,
+              "subniche_workready_points": 7.0,
+              "matched_keywords": [
+                "น้ำหอมไทย",
+                "รีวิวน้ำหอม"
+              ],
+              "engagement_total": 31.06,
+              "median_er_points": 15.0,
+              "median_engagement_rate": 0.086,
+              "eligible_clips": 1,
+              "utility_points": 7.06,
+              "utility_score": 0.026,
+              "consistency_points": 9.0,
+              "view_consistency_ratio": 1.0,
+              "audience_total": 25.0,
+              "thai_authenticity_points": 10.0,
+              "thai_ratio": 1.0,
+              "buyer_intent_points": 10.0,
+              "buyer_intent_tier": "tier1_fast_proxy",
+              "affiliate_health_points": 5.0,
+              "evidence": [
+                "Strong Macro reach with 4,234 saves"
+              ]
+            },
+            "pitch_hook": ""
+          },
+          {
+            "rank": 3,
+            "kol": {
+              "id": "tt_uwahom",
+              "handle": "uwahom",
+              "display_name": "uwahom",
+              "tiktok_url": "https://www.tiktok.com/@uwahom",
+              "bio": "\"ยูว่าหอม?\" (มิ้น&บอม)\n\nพื้นที่ชิลๆ ของคนเลิฟน้ำหอม ☺️✨\nFor work: DM or 📧",
+              "follower_count": 10200,
+              "following_count": 88,
+              "total_likes": 245000,
+              "tier": "Micro",
+              "is_work_ready": true,
+              "funnel_role": "KOC",
+              "sub_style": "KOC - Hard-Sell Reviewer",
+              "why_it_fits": "ช่องรีวิวน้ำหอมโดยตรง สไตล์คู่รักแชร์กลิ่นที่ใช้จริง คอนเทนต์ป้ายยาตรงหมวดและมีตะกร้าโปรโมชั่น",
+              "signals": {
+                "basket_ratio": 0.5,
+                "median_views": 24000.0,
+                "mean_views": 24000.0,
+                "median_comments": 18.5,
+                "save_rate": 0.021,
+                "comment_to_like": 0.012,
+                "share_to_like": 0.035,
+                "avg_caption_length": 165.0
+              },
+              "recent_videos": [
+                {
+                  "video_id": "v_uw1",
+                  "caption": "รวมน้ำหอมแบรนด์ไทยที่ควรจัดในช่วง 9.9 ฉบับ real user ใช้จริง ชอบจริงทุกขวด! 😉🫶 #ป้ายยาน้ําหอม #รีวิวน้ําหอม #น้ําหอมแบรนด์ไทย",
+                  "views": 35900,
+                  "likes": 1599,
+                  "comments": 22,
+                  "shares": 88,
+                  "collect_count": 624,
+                  "has_yellow_basket": true,
+                  "query_origin": "NATURAL_QUERY"
+                }
+              ],
+              "query_origin": "NATURAL_QUERY"
+            },
+            "total_match_score": 78.3,
+            "score_breakdown": {
+              "relevance_total": 27.58,
+              "semantic_llm_points": 20.58,
+              "cosine_similarity": 0.71,
+              "subniche_workready_points": 7.0,
+              "matched_keywords": [
+                "น้ำหอมแบรนด์ไทย"
+              ],
+              "engagement_total": 25.7,
+              "median_er_points": 12.0,
+              "median_engagement_rate": 0.063,
+              "eligible_clips": 1,
+              "utility_points": 5.7,
+              "utility_score": 0.017,
+              "consistency_points": 8.0,
+              "view_consistency_ratio": 1.0,
+              "audience_total": 25.0,
+              "thai_authenticity_points": 10.0,
+              "thai_ratio": 1.0,
+              "buyer_intent_points": 10.0,
+              "buyer_intent_tier": "tier1_fast_proxy",
+              "affiliate_health_points": 5.0,
+              "evidence": [
+                "Dedicated perfume review channel"
+              ]
+            },
+            "pitch_hook": ""
+          },
+          {
+            "rank": 4,
+            "kol": {
+              "id": "tt_28sunday",
+              "handle": "28sundayscent",
+              "display_name": "28sunday_",
+              "tiktok_url": "https://www.tiktok.com/@28sundayscent",
+              "bio": "NUCH (ณัช) ISTP-T 🎫\nเด็ก Gen Z ที่อยากตัวหอมเทสดี📰\nIG : 28sunday_scent 🔖 @ZUCH28S Lifestyle 👀",
+              "follower_count": 10400,
+              "following_count": 112,
+              "total_likes": 380000,
+              "tier": "Micro",
+              "is_work_ready": false,
+              "funnel_role": "KOC",
+              "sub_style": "KOC - Everyday User / Vlog",
+              "why_it_fits": "รีวิวน้ำหอมตรงกลุ่มเป้าหมาย Gen Z โทนเป็นธรรมชาติ ตรงกับกลุ่มลูกค้าวัย 18-35 ปีของแบรนด์",
+              "signals": {
+                "basket_ratio": 0.0,
+                "median_views": 94200.0,
+                "mean_views": 94200.0,
+                "median_comments": 50.0,
+                "save_rate": 0.0329,
+                "comment_to_like": 0.0095,
+                "share_to_like": 0.041,
+                "avg_caption_length": 180.0
+              },
+              "recent_videos": [
+                {
+                  "video_id": "v_28s",
+                  "caption": "Best of น้ำหอมไทยแต่ละหมวด🏆 #perfumetiktok #น้ําหอมผู้ชาย #น้ําหอมผู้หญิง #น้ําหอมแบรนด์ไทย @ButterflyThaiPerfume.Official",
+                  "views": 94200,
+                  "likes": 5255,
+                  "comments": 50,
+                  "shares": 390,
+                  "collect_count": 3100,
+                  "has_yellow_basket": false,
+                  "query_origin": "NATURAL_QUERY"
+                }
+              ],
+              "query_origin": "NATURAL_QUERY"
+            },
+            "total_match_score": 77.5,
+            "score_breakdown": {
+              "relevance_total": 21.44,
+              "semantic_llm_points": 16.44,
+              "cosine_similarity": 0.65,
+              "subniche_workready_points": 5.0,
+              "matched_keywords": [
+                "น้ำหอมแบรนด์ไทย",
+                "น้ำหอมไทย"
+              ],
+              "engagement_total": 33.27,
+              "median_er_points": 15.0,
+              "median_engagement_rate": 0.094,
+              "eligible_clips": 1,
+              "utility_points": 8.27,
+              "utility_score": 0.036,
+              "consistency_points": 10.0,
+              "view_consistency_ratio": 1.0,
+              "audience_total": 22.83,
+              "thai_authenticity_points": 8.0,
+              "thai_ratio": 0.78,
+              "buyer_intent_points": 9.83,
+              "buyer_intent_tier": "tier1_fast_proxy",
+              "affiliate_health_points": 5.0,
+              "evidence": [
+                "High Gen Z engagement, 3,100 saves"
+              ]
+            },
+            "pitch_hook": ""
+          },
+          {
+            "rank": 5,
+            "kol": {
+              "id": "tt_gifted",
+              "handle": "gifteddddddd",
+              "display_name": "Gifted Scent Studio",
+              "tiktok_url": "https://www.tiktok.com/@gifteddddddd",
+              "bio": "Founder of ABOVEABLE Co.\nBeauty • Lifestyle • Scent\nSelected collaborations\nWork ↓ @nativetalent",
+              "follower_count": 68200,
+              "following_count": 153,
+              "total_likes": 3000000,
+              "tier": "Micro",
+              "is_work_ready": true,
+              "funnel_role": "KOL",
+              "sub_style": "KOL - Lifestyle / Aesthetic",
+              "why_it_fits": "ภาพลักษณ์พรีเมียม ถ่ายคลิปน้ำหอม Mood & Tone หรูหรา เหมาะกับการสร้างภาพลักษณ์แบรนด์ MiTH Bangkok",
+              "signals": {
+                "basket_ratio": 0.0,
+                "median_views": 46950.0,
+                "mean_views": 46950.0,
+                "median_comments": 33.5,
+                "save_rate": 0.0291,
+                "comment_to_like": 0.0174,
+                "share_to_like": 0.0849,
+                "avg_caption_length": 329.0
+              },
+              "recent_videos": [
+                {
+                  "video_id": "v_gifted",
+                  "caption": "รวมแบรนด์ไทยที่กิ๊ฟเลือกมา และยังมีอีกเยอะมาก #แนะนำน้ำหอม #perfume @PANPURIOfficial",
+                  "views": 69100,
+                  "likes": 3469,
+                  "comments": 32,
+                  "shares": 366,
+                  "collect_count": 2244,
+                  "has_yellow_basket": false,
+                  "query_origin": "NATURAL_QUERY"
+                }
+              ],
+              "query_origin": "NATURAL_QUERY"
+            },
+            "total_match_score": 72.4,
+            "score_breakdown": {
+              "relevance_total": 20.41,
+              "semantic_llm_points": 15.41,
+              "cosine_similarity": 0.63,
+              "subniche_workready_points": 5.0,
+              "matched_keywords": [
+                "น้ำหอมไทย"
+              ],
+              "engagement_total": 32.36,
+              "median_er_points": 15.0,
+              "median_engagement_rate": 0.087,
+              "eligible_clips": 1,
+              "utility_points": 7.36,
+              "utility_score": 0.032,
+              "consistency_points": 10.0,
+              "view_consistency_ratio": 1.0,
+              "audience_total": 19.59,
+              "thai_authenticity_points": 5.0,
+              "thai_ratio": 0.46,
+              "buyer_intent_points": 9.59,
+              "buyer_intent_tier": "tier1_fast_proxy",
+              "affiliate_health_points": 5.0,
+              "evidence": [
+                "Strong aesthetic fit with boutique fragrance identity"
+              ]
+            },
+            "pitch_hook": ""
+          }
+        ],
+        "excluded_creators": [
+          {
+            "handle": "perfume_wholesaler",
+            "display_name": "น้ำหอมราคาส่งเปิดบิล",
+            "tiktok_url": "https://www.tiktok.com/@perfume_wholesaler",
+            "follower_count": 12000,
+            "bio": "ราคาส่ง เปิดบิลตัวแทน สั่งซื้อจิ้มลิงก์",
+            "stage": "gate1_merchant",
+            "reason": "Merchant / official store ('ราคาส่ง, เปิดบิล') with no creator work-ready signal"
+          }
+        ],
+        "warnings": [],
+        "workflow_trace": [
+          "Stage 1: Brand DNA Extracted (Demo Cache Active)",
+          "Stage 2: Single-Job Discovery Retrieved",
+          "Stage 3: 2x2 Matrix & Dynamic Scoring Completed",
+          "Stage 4: Top-5 Ranked Curated Portfolio Created",
+          "⚡ [Demo Cache Hit]: Instant sub-second response with 0 Gemini tokens & 0 Apify credits used."
+        ]
+      }
+    },
+    "her_hyness": {
+      "aliases": [
+        "her hyness",
+        "herhyness",
+        "her hyness clean skincare",
+        "https://herhyness.com",
+        "herhyness.com",
+        "https://www.facebook.com/herhynessbeauty/",
+        "facebook.com/herhynessbeauty"
+      ],
+      "brand_dna": {
+        "id": "live-herhyness",
+        "brand_name": "Her Hyness Clean Skincare",
+        "website_url": "https://herhyness.com",
+        "facebook_url": "https://www.facebook.com/herhynessbeauty/",
+        "vertical": "Beauty & Skincare",
+        "sub_category": "Clean Dermocosmetics & Sensitive Skin Care",
+        "brand_summary": "Her Hyness is a leading Thai clean dermocosmetics brand formulated specifically for acne-prone and ultra-sensitive skin with 14-free clean standards.",
+        "target_audience": "Thai women and Gen Z/Millennials with sensitive or acne-prone skin looking for gentle, non-comedogenic sunscreen and serums.",
+        "target_age_range": "18-35",
+        "brand_tone": [
+          "อ่อนโยนและน่าเชื่อถือ",
+          "เป็นมิตร เข้าใจปัญหาผิวแพ้ง่าย"
+        ],
+        "customer_pain_points": [
+          "ผิวอุดตันง่าย เป็นสิวง่ายเมื่อทากันแดด",
+          "ผิวแพ้ง่ายใช้อะไรก็ระคายเคือง"
+        ],
+        "price_positioning": "Mid-Range",
+        "average_price_thb": 690,
+        "conversion_model": "ECOMMERCE_PRODUCT",
+        "conversion_model_reason": "High-repurchase personal skincare sold via TikTok Shop yellow basket and official Shopee/Lazada channels.",
+        "kol_koc_mix": {
+          "kol": 30,
+          "koc": 70
+        },
+        "search_queries": [
+          {
+            "query": "กันแดดผิวแพ้ง่าย",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "สกินแคร์คนเป็นสิว",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "รีวิว กันแดด Her Hyness",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "แนะนำ เซรั่มลดรอยสิว",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          }
+        ],
+        "niche_keywords": [
+          "ผิวแพ้ง่าย",
+          "กันแดดคลีน",
+          "สกินแคร์คนเป็นสิว",
+          "Her Hyness"
+        ],
+        "competitors": [
+          {
+            "brand": "MizuMi",
+            "aliases": [
+              "มิซึมิ",
+              "MizuMi"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 3
+          },
+          {
+            "brand": "La Roche-Posay",
+            "aliases": [
+              "ลาโรช",
+              "La Roche-Posay"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 1
+          },
+          {
+            "brand": "FYNE",
+            "aliases": [
+              "ฟายน์",
+              "FYNE"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader",
+          "Facebook via Apify",
+          "Google Search Grounding: 3 Thai skincare competitors"
+        ]
+      },
+      "match_response": {
+        "brand_dna": {
+          "id": "live-herhyness",
+          "brand_name": "Her Hyness Clean Skincare",
+          "website_url": "https://herhyness.com",
+          "facebook_url": "https://www.facebook.com/herhynessbeauty/",
+          "vertical": "Beauty & Skincare",
+          "sub_category": "Clean Dermocosmetics & Sensitive Skin Care",
+          "brand_summary": "Her Hyness is a leading Thai clean dermocosmetics brand formulated specifically for acne-prone and ultra-sensitive skin with 14-free clean standards.",
+          "target_audience": "Thai women and Gen Z/Millennials with sensitive or acne-prone skin looking for gentle, non-comedogenic sunscreen and serums.",
+          "target_age_range": "18-35",
+          "brand_tone": [
+            "อ่อนโยนและน่าเชื่อถือ",
+            "เป็นมิตร เข้าใจปัญหาผิวแพ้ง่าย"
+          ],
+          "customer_pain_points": [
+            "ผิวอุดตันง่าย เป็นสิวง่ายเมื่อทากันแดด",
+            "ผิวแพ้ง่ายใช้อะไรก็ระคายเคือง"
+          ],
+          "price_positioning": "Mid-Range",
+          "average_price_thb": 690,
+          "conversion_model": "ECOMMERCE_PRODUCT",
+          "conversion_model_reason": "High-repurchase personal skincare sold via TikTok Shop yellow basket and official Shopee/Lazada channels.",
+          "kol_koc_mix": {
+            "kol": 30,
+            "koc": 70
+          },
+          "search_queries": [
+            {
+              "query": "กันแดดผิวแพ้ง่าย",
+              "side": "KOL_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_1"
+            },
+            {
+              "query": "สกินแคร์คนเป็นสิว",
+              "side": "KOC_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_1"
+            },
+            {
+              "query": "รีวิว กันแดด Her Hyness",
+              "side": "KOC_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_3"
+            },
+            {
+              "query": "แนะนำ เซรั่มลดรอยสิว",
+              "side": "KOL_QUERY",
+              "specificity": "adjacent",
+              "syntax_rule": "rule_3"
+            }
+          ],
+          "niche_keywords": [
+            "ผิวแพ้ง่าย",
+            "กันแดดคลีน",
+            "สกินแคร์คนเป็นสิว",
+            "Her Hyness"
+          ],
+          "competitors": [
+            {
+              "brand": "MizuMi",
+              "aliases": [
+                "มิซึมิ",
+                "MizuMi"
+              ],
+              "source": "google_search_grounded",
+              "mentions": 3
+            },
+            {
+              "brand": "La Roche-Posay",
+              "aliases": [
+                "ลาโรช",
+                "La Roche-Posay"
+              ],
+              "source": "google_search_grounded",
+              "mentions": 1
+            },
+            {
+              "brand": "FYNE",
+              "aliases": [
+                "ฟายน์",
+                "FYNE"
+              ],
+              "source": "google_search_grounded",
+              "mentions": 0
+            }
+          ],
+          "scraped_sources": [
+            "Website via Jina Reader",
+            "Facebook via Apify",
+            "Google Search Grounding: 3 Thai skincare competitors"
+          ]
+        },
+        "strategy": {
+          "conversion_model": "ECOMMERCE_PRODUCT",
+          "conversion_model_reason": "ECOMMERCE_PRODUCT recommends 30% KOL : 70% KOC for fast social commerce checkout.",
+          "recommended_mix": {
+            "kol": 30,
+            "koc": 70
+          },
+          "achieved_mix": {
+            "KOL": 1,
+            "KOC": 3
+          }
+        },
+        "filter_stats": {
+          "raw_clips": 20,
+          "unique_creators": 16,
+          "removed_brand_accounts": 1,
+          "removed_merchants": 2,
+          "removed_affiliate_bots": 1,
+          "removed_irrelevant": 0,
+          "scored": 12
+        },
+        "ranked_kols": [
+          {
+            "rank": 1,
+            "kol": {
+              "id": "tt_fah_skincare",
+              "handle": "fah_skincare",
+              "display_name": "Fah Skincare Review",
+              "tiktok_url": "https://www.tiktok.com/@fah_skincare",
+              "bio": "รีวิวสกินแคร์ผิวแพ้ง่าย ใช้จริงทุกตัว • DM for work 📩",
+              "follower_count": 85000,
+              "following_count": 120,
+              "total_likes": 2100000,
+              "tier": "Micro",
+              "is_work_ready": true,
+              "funnel_role": "KOC",
+              "sub_style": "KOC - Hard-Sell Reviewer",
+              "why_it_fits": "รีวิวสกินแคร์สำหรับคนเป็นสิวโดยเฉพาะ โชว์ผลลัพธ์ Before/After ชัดเจน ปักตะกร้าเก่งและยอดสั่งซื้อสูง",
+              "signals": {
+                "basket_ratio": 0.75,
+                "median_views": 45000.0,
+                "mean_views": 48000.0,
+                "median_comments": 65.0,
+                "save_rate": 0.028,
+                "comment_to_like": 0.015,
+                "share_to_like": 0.042,
+                "avg_caption_length": 210.0
+              },
+              "recent_videos": [
+                {
+                  "video_id": "v_fah1",
+                  "caption": "คนเป็นสิวผิวแพ้ง่ายต้องกราบสิ่งนี้! กันแดดไฮบริดคลีนที่ทาแล้วไม่อุดตัน ผิวฉ่ำไม่เยิ้ม #กันแดดผิวแพ้ง่าย #ป้ายยาสกินแคร์",
+                  "views": 45000,
+                  "likes": 2800,
+                  "comments": 65,
+                  "shares": 180,
+                  "collect_count": 1520,
+                  "has_yellow_basket": true,
+                  "query_origin": "NATURAL_QUERY"
+                }
+              ],
+              "query_origin": "NATURAL_QUERY"
+            },
+            "total_match_score": 88.5,
+            "score_breakdown": {
+              "relevance_total": 31.5,
+              "semantic_llm_points": 23.5,
+              "cosine_similarity": 0.78,
+              "subniche_workready_points": 8.0,
+              "matched_keywords": [
+                "ผิวแพ้ง่าย",
+                "กันแดดคลีน"
+              ],
+              "engagement_total": 32.5,
+              "median_er_points": 15.0,
+              "median_engagement_rate": 0.078,
+              "eligible_clips": 1,
+              "utility_points": 7.5,
+              "utility_score": 0.034,
+              "consistency_points": 10.0,
+              "view_consistency_ratio": 0.94,
+              "audience_total": 24.5,
+              "thai_authenticity_points": 10.0,
+              "thai_ratio": 1.0,
+              "buyer_intent_points": 9.5,
+              "buyer_intent_tier": "tier1_fast_proxy",
+              "affiliate_health_points": 5.0,
+              "evidence": [
+                "Exact match for sensitive acne-prone skincare"
+              ]
+            },
+            "pitch_hook": ""
+          },
+          {
+            "rank": 2,
+            "kol": {
+              "id": "tt_ingck",
+              "handle": "ingck",
+              "display_name": "Ingck (พลิกหลังกล่อง)",
+              "tiktok_url": "https://www.tiktok.com/@ingck",
+              "bio": "วิเคราะห์ส่วนผสมสกินแคร์แบบเจาะลึก 🧪 ติดต่องาน: ingck@contact.com",
+              "follower_count": 920000,
+              "following_count": 45,
+              "total_likes": 15000000,
+              "tier": "Macro",
+              "is_work_ready": true,
+              "funnel_role": "KOL",
+              "sub_style": "KOL - Expert / Guru",
+              "why_it_fits": "KOL ผู้เชี่ยวชาญด้านส่วนผสม (พลิกหลังกล่อง) สร้างความน่าเชื่อถือสูงสุดด้านมาตรฐานคลีนสกินแคร์ 14-free",
+              "signals": {
+                "basket_ratio": 0.0,
+                "median_views": 320000.0,
+                "mean_views": 340000.0,
+                "median_comments": 210.0,
+                "save_rate": 0.041,
+                "comment_to_like": 0.012,
+                "share_to_like": 0.055,
+                "avg_caption_length": 380.0
+              },
+              "recent_videos": [
+                {
+                  "video_id": "v_ingck",
+                  "caption": "ส่องสูตรกันแดดคลีนไร้สารเคมีระคายเคือง ฟิลเตอร์กันแดดตัวไหนเสถียรที่สุดสำหรับผิวแพ้ง่าย? #พลิกหลังกล่อง #รีวิวสกินแคร์",
+                  "views": 320000,
+                  "likes": 16500,
+                  "comments": 210,
+                  "shares": 1420,
+                  "collect_count": 8900,
+                  "has_yellow_basket": false,
+                  "query_origin": "NATURAL_QUERY"
+                }
+              ],
+              "query_origin": "NATURAL_QUERY"
+            },
+            "total_match_score": 85.0,
+            "score_breakdown": {
+              "relevance_total": 29.0,
+              "semantic_llm_points": 22.0,
+              "cosine_similarity": 0.74,
+              "subniche_workready_points": 7.0,
+              "matched_keywords": [
+                "ผิวแพ้ง่าย",
+                "สกินแคร์คนเป็นสิว"
+              ],
+              "engagement_total": 32.0,
+              "median_er_points": 15.0,
+              "median_engagement_rate": 0.084,
+              "eligible_clips": 1,
+              "utility_points": 8.0,
+              "utility_score": 0.041,
+              "consistency_points": 9.0,
+              "view_consistency_ratio": 0.94,
+              "audience_total": 24.0,
+              "thai_authenticity_points": 10.0,
+              "thai_ratio": 1.0,
+              "buyer_intent_points": 9.0,
+              "buyer_intent_tier": "tier1_fast_proxy",
+              "affiliate_health_points": 5.0,
+              "evidence": [
+                "Macro Ingredient Guru: highest trust for sensitive skin"
+              ]
+            },
+            "pitch_hook": ""
+          }
+        ],
+        "excluded_creators": [],
+        "warnings": [],
+        "workflow_trace": [
+          "Stage 1: Brand DNA Extracted (Demo Cache Active)",
+          "Stage 2: Single-Job Discovery Retrieved",
+          "Stage 3: 2x2 Matrix & Dynamic Scoring Completed",
+          "Stage 4: Top-K Ranked Curated Portfolio Created",
+          "⚡ [Demo Cache Hit]: Instant sub-second response with 0 Gemini tokens & 0 Apify credits used."
+        ]
+      }
+    },
+    "srichand": {
+      "aliases": [
+        "srichand",
+        "ศรีจันทร์",
+        "srichand cosmetics",
+        "https://srichand.1948beauty.com",
+        "srichand.1948beauty.com",
+        "https://www.facebook.com/srichand1948/",
+        "facebook.com/srichand1948"
+      ],
+      "brand_dna": {
+        "id": "live-srichand",
+        "brand_name": "Srichand (ศรีจันทร์)",
+        "website_url": "https://srichand.1948beauty.com",
+        "facebook_url": "https://www.facebook.com/srichand1948/",
+        "vertical": "Beauty & Cosmetics",
+        "sub_category": "Sunscreen & Oil Control Powder",
+        "brand_summary": "Srichand is Thailand's legendary cosmetics brand renowned for its heritage oil-control translucent powder, modern sunscreen innovations, and accessible beauty products for Thai skin tones and tropical climate.",
+        "target_audience": "Thai students, office workers, and everyday consumers seeking long-lasting oil control makeup and waterproof sun protection.",
+        "target_age_range": "18-40",
+        "brand_tone": [
+          "คุ้มค่าและน่าเชื่อถือ",
+          "เข้าใจสภาพอากาศเมืองไทย"
+        ],
+        "customer_pain_points": [
+          "หน้ามันเยิ้มระหว่างวัน เมคอัพหลุดลอก",
+          "กันแดดเหนียวเหนอะหนะเป็นคราบขาว"
+        ],
+        "price_positioning": "Mass / Accessible Mid-Range",
+        "average_price_thb": 350,
+        "conversion_model": "ECOMMERCE_PRODUCT",
+        "conversion_model_reason": "High-velocity drugstore and e-commerce cosmetics purchased frequently via 7-Eleven and TikTok Shop baskets.",
+        "kol_koc_mix": {
+          "kol": 30,
+          "koc": 70
+        },
+        "search_queries": [
+          {
+            "query": "กันแดดคุมมัน ไม่เยิ้ม",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "แป้งคุมมัน ศรีจันทร์",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_4"
+          },
+          {
+            "query": "รีวิว แป้งโปร่งแสง",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "แนะนำ รองพื้นงานผิว",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          }
+        ],
+        "niche_keywords": [
+          "แป้งคุมมัน",
+          "กันแดดศรีจันทร์",
+          "เครื่องสำอางไทย",
+          "Srichand"
+        ],
+        "competitors": [
+          {
+            "brand": "4U2 Cosmetics",
+            "aliases": [
+              "4U2",
+              "โฟร์ยูทู"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 2
+          },
+          {
+            "brand": "Cathy Doll",
+            "aliases": [
+              "เคที่ดอลล์",
+              "Cathy Doll"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 1
+          },
+          {
+            "brand": "Mille",
+            "aliases": [
+              "มิลเล่",
+              "Mille"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader",
+          "Facebook via Apify",
+          "Google Search Grounding: 3 Thai cosmetics competitors"
+        ]
+      },
+      "match_response": {
+        "brand_dna": {
+          "id": "live-srichand",
+          "brand_name": "Srichand (ศรีจันทร์)",
+          "website_url": "https://srichand.1948beauty.com",
+          "facebook_url": "https://www.facebook.com/srichand1948/",
+          "vertical": "Beauty & Cosmetics",
+          "sub_category": "Sunscreen & Oil Control Powder",
+          "brand_summary": "Srichand is Thailand's legendary cosmetics brand renowned for its heritage oil-control translucent powder, modern sunscreen innovations, and accessible beauty products for Thai skin tones and tropical climate.",
+          "target_audience": "Thai students, office workers, and everyday consumers seeking long-lasting oil control makeup and waterproof sun protection.",
+          "target_age_range": "18-40",
+          "brand_tone": [
+            "คุ้มค่าและน่าเชื่อถือ",
+            "เข้าใจสภาพอากาศเมืองไทย"
+          ],
+          "customer_pain_points": [
+            "หน้ามันเยิ้มระหว่างวัน เมคอัพหลุดลอก",
+            "กันแดดเหนียวเหนอะหนะเป็นคราบขาว"
+          ],
+          "price_positioning": "Mass / Accessible Mid-Range",
+          "average_price_thb": 350,
+          "conversion_model": "ECOMMERCE_PRODUCT",
+          "conversion_model_reason": "High-velocity drugstore and e-commerce cosmetics purchased frequently via 7-Eleven and TikTok Shop baskets.",
+          "kol_koc_mix": {
+            "kol": 30,
+            "koc": 70
+          },
+          "search_queries": [
+            {
+              "query": "กันแดดคุมมัน ไม่เยิ้ม",
+              "side": "KOL_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_1"
+            },
+            {
+              "query": "แป้งคุมมัน ศรีจันทร์",
+              "side": "KOC_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_4"
+            },
+            {
+              "query": "รีวิว แป้งโปร่งแสง",
+              "side": "KOC_QUERY",
+              "specificity": "direct",
+              "syntax_rule": "rule_3"
+            },
+            {
+              "query": "แนะนำ รองพื้นงานผิว",
+              "side": "KOL_QUERY",
+              "specificity": "adjacent",
+              "syntax_rule": "rule_3"
+            }
+          ],
+          "niche_keywords": [
+            "แป้งคุมมัน",
+            "กันแดดศรีจันทร์",
+            "เครื่องสำอางไทย",
+            "Srichand"
+          ],
+          "competitors": [
+            {
+              "brand": "4U2 Cosmetics",
+              "aliases": [
+                "4U2",
+                "โฟร์ยูทู"
+              ],
+              "source": "google_search_grounded",
+              "mentions": 2
+            },
+            {
+              "brand": "Cathy Doll",
+              "aliases": [
+                "เคที่ดอลล์",
+                "Cathy Doll"
+              ],
+              "source": "google_search_grounded",
+              "mentions": 1
+            },
+            {
+              "brand": "Mille",
+              "aliases": [
+                "มิลเล่",
+                "Mille"
+              ],
+              "source": "google_search_grounded",
+              "mentions": 0
+            }
+          ],
+          "scraped_sources": [
+            "Website via Jina Reader",
+            "Facebook via Apify",
+            "Google Search Grounding: 3 Thai cosmetics competitors"
+          ]
+        },
+        "strategy": {
+          "conversion_model": "ECOMMERCE_PRODUCT",
+          "conversion_model_reason": "ECOMMERCE_PRODUCT recommends 30% KOL : 70% KOC for fast social commerce checkout.",
+          "recommended_mix": {
+            "kol": 30,
+            "koc": 70
+          },
+          "achieved_mix": {
+            "KOL": 1,
+            "KOC": 2
+          }
+        },
+        "filter_stats": {
+          "raw_clips": 18,
+          "unique_creators": 15,
+          "removed_brand_accounts": 1,
+          "removed_merchants": 1,
+          "removed_affiliate_bots": 1,
+          "removed_irrelevant": 0,
+          "scored": 12
+        },
+        "ranked_kols": [
+          {
+            "rank": 1,
+            "kol": {
+              "id": "tt_may_review",
+              "handle": "may_dailybeauty",
+              "display_name": "เมย์รีวิวไปเรื่อย",
+              "tiktok_url": "https://www.tiktok.com/@may_dailybeauty",
+              "bio": "แต่งหน้ารับแดดเมืองไทย ☀️ พิกัดของใช้ในตะกร้า • ติดต่องาน DM",
+              "follower_count": 42000,
+              "following_count": 95,
+              "total_likes": 950000,
+              "tier": "Micro",
+              "is_work_ready": true,
+              "funnel_role": "KOC",
+              "sub_style": "KOC - Hard-Sell Reviewer",
+              "why_it_fits": "ทดสอบความคุมมันกลางแดดเมืองไทย 8 ชม. เต็ม เข้าใจปัญหาผิวมัน ปักตะกร้าแป้งศรีจันทร์ยอดขายปัง",
+              "signals": {
+                "basket_ratio": 0.65,
+                "median_views": 62000.0,
+                "mean_views": 65000.0,
+                "median_comments": 48.0,
+                "save_rate": 0.031,
+                "comment_to_like": 0.011,
+                "share_to_like": 0.038,
+                "avg_caption_length": 195.0
+              },
+              "recent_videos": [
+                {
+                  "video_id": "v_may1",
+                  "caption": "ท้าพิสูจน์แป้งม่วงศรีจันทร์ตัวใหม่ คุมมันตั้งแต่เช้ายันค่ำ หน้าไม่ดรอปจริงไหม? 💥 #แป้งคุมมัน #รีวิวบิวตี้",
+                  "views": 62000,
+                  "likes": 3800,
+                  "comments": 48,
+                  "shares": 240,
+                  "collect_count": 1920,
+                  "has_yellow_basket": true,
+                  "query_origin": "NATURAL_QUERY"
+                }
+              ],
+              "query_origin": "NATURAL_QUERY"
+            },
+            "total_match_score": 86.0,
+            "score_breakdown": {
+              "relevance_total": 29.5,
+              "semantic_llm_points": 22.5,
+              "cosine_similarity": 0.75,
+              "subniche_workready_points": 7.0,
+              "matched_keywords": [
+                "แป้งคุมมัน",
+                "กันแดดศรีจันทร์"
+              ],
+              "engagement_total": 32.0,
+              "median_er_points": 15.0,
+              "median_engagement_rate": 0.082,
+              "eligible_clips": 1,
+              "utility_points": 7.0,
+              "utility_score": 0.031,
+              "consistency_points": 10.0,
+              "view_consistency_ratio": 0.95,
+              "audience_total": 24.5,
+              "thai_authenticity_points": 10.0,
+              "thai_ratio": 1.0,
+              "buyer_intent_points": 9.5,
+              "buyer_intent_tier": "tier1_fast_proxy",
+              "affiliate_health_points": 5.0,
+              "evidence": [
+                "High oil-control intent in Thai tropical heat"
+              ]
+            },
+            "pitch_hook": ""
+          }
+        ],
+        "excluded_creators": [],
+        "warnings": [],
+        "workflow_trace": [
+          "Stage 1: Brand DNA Extracted (Demo Cache Active)",
+          "Stage 2: Single-Job Discovery Retrieved",
+          "Stage 3: 2x2 Matrix & Dynamic Scoring Completed",
+          "Stage 4: Top-K Ranked Curated Portfolio Created",
+          "⚡ [Demo Cache Hit]: Instant sub-second response with 0 Gemini tokens & 0 Apify credits used."
+        ]
+      }
+    },
+    "afteryoudessertcafe": {
+      "aliases": [
+        "After You Dessert Cafe",
+        "After You Dessert Cafe"
+      ],
+      "brand_dna": {
+        "id": "live-afteryou",
+        "brand_name": "After You Dessert Cafe",
+        "website_url": "",
+        "facebook_url": "",
+        "vertical": "Food & Beverage",
+        "sub_category": "Dessert Cafe",
+        "brand_summary": "Famous dessert cafe in Bangkok known for Shibuya Honey Toast",
+        "target_audience": "Urban youth and sweet lovers",
+        "target_age_range": "",
+        "brand_tone": [],
+        "customer_pain_points": [],
+        "price_positioning": "Mid-Range",
+        "average_price_thb": 350,
+        "conversion_model": "LIFESTYLE_EXPERIENCE",
+        "conversion_model_reason": "Store visits and experiential dining",
+        "kol_koc_mix": {
+          "kol": 70,
+          "koc": 30
+        },
+        "search_queries": [
+          {
+            "query": "พาส่องเมนูใหม่",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": null
+          },
+          {
+            "query": "คาเฟ่กรุงเทพ",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": null
+          },
+          {
+            "query": "พากินสยาม",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": null
+          },
+          {
+            "query": "คาเฟ่บรรยากาศดี",
+            "side": "KOC_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": null
+          }
+        ],
+        "niche_keywords": [
+          "HoneyToast",
+          "CafeBkk"
+        ],
+        "manual_competitors": [],
+        "competitors": [
+          {
+            "brand": "Karun Thai Tea",
+            "aliases": [
+              "Karun",
+              "การันต์"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          }
+        ],
+        "scraped_sources": []
+      }
+    }
+  }
+}

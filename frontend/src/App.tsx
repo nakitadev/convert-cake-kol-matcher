@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Sparkles,
@@ -6,48 +5,66 @@ import {
   AlertTriangle,
   ExternalLink,
   Search,
-  Filter,
-  TrendingUp,
   Users,
   ShieldCheck,
   ShieldAlert,
   Target,
   RefreshCw,
   Download,
-  ChevronRight,
   ChevronDown,
   ChevronUp,
   Sliders,
   Info,
-  Flame,
   Check,
   Copy,
   Eye,
-  Heart,
   MessageSquare,
-  Share2,
   ShoppingBag,
-  Plus,
-  Trash2,
-  Briefcase,
-  Layers,
   Globe,
-  DollarSign,
   BarChart3,
-  ArrowUpDown,
-  FileText,
-  SlidersHorizontal,
   Radio,
   Zap,
   Award,
-  CheckCircle,
-  Play,
-  PieChart,
   Clock,
-  Terminal
+  Terminal,
+  Layers,
+  FileSpreadsheet,
+  Compass,
 } from 'lucide-react';
 
 const API_BASE = '';
+
+// ============================================================================
+// TypeScript Interfaces aligned with Spec Models
+// ============================================================================
+interface KolKocMix {
+  kol: number;
+  koc: number;
+}
+
+interface SearchQuery {
+  query: string;
+  side: 'KOL_QUERY' | 'KOC_QUERY';
+  specificity: 'direct' | 'adjacent';
+}
+
+interface Competitor {
+  brand: string;
+  aliases: string[];
+  source: string;
+  mentions?: number;
+}
+
+interface DemoPreset {
+  id: string;
+  brand_name: string;
+  vertical: string;
+  sub_category: string;
+  conversion_model: string;
+  website_url: string;
+  facebook_url: string;
+  description: string;
+}
 
 interface BrandDNA {
   id?: string;
@@ -59,20 +76,22 @@ interface BrandDNA {
   brand_summary: string;
   target_audience: string;
   target_age_range: string;
-  target_locations: string[];
   brand_tone: string[];
-  content_style_preferences: string[];
+  customer_pain_points?: string[];
   price_positioning: string;
   average_price_thb: number;
-  thai_keywords: string[];
+  conversion_model: 'ECOMMERCE_PRODUCT' | 'APP_DIGITAL_SERVICE' | 'HIGH_TICKET_LEADGEN' | 'LIFESTYLE_EXPERIENCE';
+  conversion_model_reason?: string;
+  kol_koc_mix: KolKocMix;
+  search_queries: SearchQuery[];
+  niche_keywords: string[];
+  competitors: Competitor[];
   scraped_sources: string[];
-  manual_competitors?: string[];
-  search_taxonomy?: Record<string, string[]>;
-  grounded_competitors?: any[];
 }
 
 interface VideoMetric {
   video_id: string;
+  url: string;
   caption: string;
   hashtags: string[];
   views: number;
@@ -81,8 +100,28 @@ interface VideoMetric {
   shares: number;
   collect_count?: number;
   has_yellow_basket: boolean;
-  reviewed_item_price_thb?: number;
-  location_tag?: string;
+  query_origin?: 'KOL_QUERY' | 'KOC_QUERY';
+  search_query?: string;
+}
+
+interface CompetitorFlag {
+  type: 'conflict' | 'comparison';
+  label: string;
+  brands: string[];
+  video_id?: string;
+}
+
+interface CreatorSignals {
+  basket_ratio: number;
+  median_views: number;
+  mean_views: number;
+  median_comments: number;
+  save_rate: number;
+  comment_to_like: number;
+  share_to_like: number;
+  avg_caption_length: number;
+  kol_query_hits: number;
+  koc_query_hits: number;
 }
 
 interface KOLProfile {
@@ -91,67 +130,45 @@ interface KOLProfile {
   display_name: string;
   tiktok_url: string;
   avatar_url?: string;
-  vertical: string;
-  secondary_verticals: string[];
   bio: string;
   follower_count: number;
   following_count: number;
   total_likes: number;
-  tier: string;
-  creator_persona: string;
-  content_styles: string[];
-  typical_price_tier: string;
-  avg_reviewed_price_thb: number;
-  primary_locations: string[];
-  audience_language: string;
-  sample_comments: string[];
+  tier: 'Nano' | 'Micro' | 'Mid-Tier' | 'Macro';
   recent_videos: VideoMetric[];
-  creator_category?: string;
-  creator_archetype?: string;
-  recommended_role?: string;
-  account_type?: string;
-  is_work_ready?: boolean;
-  competitor_warning?: string;
-  query_origin?: string;
-  save_to_view_ratio?: number;
-  view_consistency_ratio?: number;
-  niche_consistency_ratio?: number;
-  is_casual_niche_fit?: boolean;
-  is_affiliate_spam_trap: boolean;
-  estimated_rate_thb: string;
+  query_origin: 'KOL_QUERY' | 'KOC_QUERY';
+  is_work_ready: boolean;
+  signals: CreatorSignals;
+  funnel_role?: 'KOL' | 'KOC';
+  sub_style?: 'KOL - Expert / Guru' | 'KOL - Lifestyle / Aesthetic' | 'KOC - Hard-Sell Reviewer' | 'KOC - Everyday User / Vlog';
+  llm_relevance_score?: number;
+  why_it_fits?: string;
+  real_comments?: string[];
+  comment_intent_ratio?: number;
+  competitor_flags?: CompetitorFlag[];
 }
 
 interface SignalBreakdown {
-  relevance_score_raw: number;
-  relevance_weighted: number;
-  semantic_similarity: number;
-  semantic_points?: number;
-  niche_keyword_points?: number;
-  niche_consistency_ratio?: number;
-  is_casual_niche_fit?: boolean;
+  relevance_total: number;
+  semantic_llm_points: number;
+  cosine_similarity: number;
+  subniche_workready_points: number;
   matched_keywords: string[];
-  engagement_score_raw: number;
-  engagement_weighted: number;
-  median_engagement_rate_pct: number;
-  median_er_points?: number;
-  save_to_view_points?: number;
-  view_consistency_points?: number;
-  views_to_followers_ratio: number;
-  yellow_basket_ratio: number;
-  affiliate_spam_penalty_applied: boolean;
-  affiliate_spam_penalty_points: number;
-  affiliate_spam_reason?: string;
-  audience_score_raw: number;
-  audience_weighted: number;
-  thai_authenticity_points?: number;
-  buyer_intent_points?: number;
-  affiliate_saturation_points?: number;
-  persona_signal_score: number;
-  price_proxy_signal_score: number;
-  geo_language_signal_score: number;
-  comment_sentiment_signal_score: number;
-  confidence_level: 'High' | 'Medium' | 'Low';
-  evidence_list: string[];
+  engagement_total: number;
+  median_er_points: number;
+  median_engagement_rate: number;
+  eligible_clips: number;
+  utility_points: number;
+  utility_score: number;
+  consistency_points: number;
+  view_consistency_ratio: number;
+  audience_total: number;
+  thai_authenticity_points: number;
+  thai_ratio: number;
+  buyer_intent_points: number;
+  buyer_intent_tier: string;
+  affiliate_health_points: number;
+  evidence: string[];
 }
 
 interface RankedKOL {
@@ -159,19 +176,77 @@ interface RankedKOL {
   kol: KOLProfile;
   total_match_score: number;
   score_breakdown: SignalBreakdown;
-  why_this_kol: string;
-  thai_campaign_hooks: string[];
-  enrichment_source: string;
+  pitch_hook: string;
+}
+
+interface StrategySummary {
+  conversion_model: string;
+  conversion_model_reason?: string;
+  recommended_mix: KolKocMix;
+  achieved_mix: Record<string, number>;
+}
+
+interface FilterStats {
+  raw_clips: number;
+  unique_creators: number;
+  removed_brand_accounts: number;
+  removed_merchants: number;
+  removed_affiliate_bots: number;
+  removed_irrelevant: number;
+  scored: number;
+}
+
+interface ExcludedCreator {
+  handle: string;
+  display_name: string;
+  tiktok_url: string;
+  follower_count: number;
+  bio: string;
+  stage: string;
+  reason: string;
 }
 
 interface MatchResponse {
   brand_dna: BrandDNA;
-  total_candidates_evaluated: number;
-  apify_enrichment_status: string;
+  strategy: StrategySummary;
+  filter_stats: FilterStats;
   ranked_kols: RankedKOL[];
-  penalized_spam_kols: RankedKOL[];
+  excluded_creators: ExcludedCreator[];
+  warnings: string[];
   workflow_trace: string[];
 }
+
+// Conversion model meta info for strategy summary banner
+const MODEL_DETAILS: Record<string, { label: string; icon: string; desc: string; mix: string; color: string }> = {
+  ECOMMERCE_PRODUCT: {
+    label: 'E-Commerce Product',
+    icon: '🛒',
+    desc: 'เน้นซื้อทันทีผ่านตะกร้า TikTok Shop / Shopee (สกินแคร์, เครื่องสำอาง, อาหารเสริม, ของใช้, แกดเจ็ต)',
+    mix: 'KOL 30% : KOC 70%',
+    color: 'from-amber-500/10 to-orange-500/5 border-amber-200 text-amber-900',
+  },
+  APP_DIGITAL_SERVICE: {
+    label: 'App & Digital Service',
+    icon: '📱',
+    desc: 'เน้นดาวน์โหลดแอป, สมัครสมาชิก, SaaS (FinTech, แพลตฟอร์ม AI, ซอฟต์แวร์, เกม)',
+    mix: 'KOL 60% : KOC 40%',
+    color: 'from-blue-500/10 to-cyan-500/5 border-blue-200 text-blue-900',
+  },
+  HIGH_TICKET_LEADGEN: {
+    label: 'High-Ticket Lead Gen',
+    icon: '💎',
+    desc: 'เน้นทักแชท / นัดหมาย / จองคอร์ส / กรอกฟอร์ม (คลินิกเสริมความงาม, ทันตกรรม, คอร์สเรียน, อสังหาฯ)',
+    mix: 'KOL 70% : KOC 30%',
+    color: 'from-purple-500/10 to-indigo-500/5 border-purple-200 text-purple-900',
+  },
+  LIFESTYLE_EXPERIENCE: {
+    label: 'Lifestyle & Experience',
+    icon: '🏨',
+    desc: 'เน้นไปหน้าร้าน / สร้างภาพลักษณ์พรีเมียม (โรงแรม, คาเฟ่/ร้านอาหาร, ห้างสรรพสินค้า, แบรนด์ Luxury)',
+    mix: 'KOL 60% : KOC 40%',
+    color: 'from-teal-500/10 to-emerald-500/5 border-teal-200 text-teal-900',
+  },
+};
 
 export default function HomePage() {
   // Brand Input State
@@ -187,18 +262,21 @@ export default function HomePage() {
 
   // Match State
   const [matchResponse, setMatchResponse] = useState<MatchResponse | null>(null);
-  const [activeTab, setActiveTab] = useState<'ranked' | 'guru' | 'reviewer' | 'lifestyle' | 'niche' | 'spam' | 'trace'>('ranked');
+  const [activeTab, setActiveTab] = useState<'all' | 'guru' | 'lifestyle' | 'hardsell' | 'everyday' | 'excluded' | 'trace'>('all');
   const [expandedKOLId, setExpandedKOLId] = useState<string | null>(null);
-
-  // Shortlist Cart
-  const [shortlist, setShortlist] = useState<RankedKOL[]>([]);
-  const [copiedBrief, setCopiedBrief] = useState(false);
+  const [copiedHookId, setCopiedHookId] = useState<string | null>(null);
 
   // Filters & Sorting for Results
+  const [roleFilter, setRoleFilter] = useState<'All' | 'KOL' | 'KOC'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [tierFilter, setTierFilter] = useState('All');
   const [sortBy, setSortBy] = useState<'score' | 'er' | 'followers'>('score');
   const [topK, setTopK] = useState(10);
+
+  // Demo Cache & Presets State
+  const [demoPresets, setDemoPresets] = useState<DemoPreset[]>([]);
+  const [forceRefresh, setForceRefresh] = useState(false);
+  const [isDemoCacheHit, setIsDemoCacheHit] = useState(false);
 
   // Loading & Diagnostics
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -223,8 +301,29 @@ export default function HomePage() {
       .then(res => res.json())
       .then(() => setApiOnline(true))
       .catch(() => setApiOnline(false));
+
+    fetch(`${API_BASE}/api/demo-presets`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setDemoPresets(data);
+      })
+      .catch(() => {});
   }, []);
 
+  const handleApplyPreset = (preset: DemoPreset) => {
+    setBrandName(preset.brand_name);
+    setWebsiteUrl(preset.website_url);
+    setFacebookUrl(preset.facebook_url);
+    setCustomNotes('');
+    setManualCompetitors('');
+    setBrandDNA(null);
+    setMatchResponse(null);
+    setIsDemoCacheHit(false);
+  };
+
+  // --------------------------------------------------------------------------
+  // Analyze Brand (Stage 1)
+  // --------------------------------------------------------------------------
   const handleAnalyzeBrand = async () => {
     if (!brandName && !websiteUrl && !facebookUrl && !customNotes) {
       alert('Please enter at least a Brand Name, Website URL, or Campaign Notes.');
@@ -232,14 +331,14 @@ export default function HomePage() {
     }
     setIsAnalyzing(true);
     setMatchResponse(null);
-    setProgressPercent(8);
+    setProgressPercent(10);
     setElapsedSeconds(0);
     setActiveStep(1);
-    setProgressStageTitle('Step 1/3: กำลังดึงข้อมูลเว็บไซต์สดผ่าน Jina Reader API');
-    setProgressStageDesc('แปลงหน้าเว็บเป็น Clean Markdown และดึง 10 โพสต์ล่าสุดจาก Facebook Page...');
+    setProgressStageTitle('Stage 1: สกัด Brand DNA & จำแนก 4 Conversion Models');
+    setProgressStageDesc('ดึงเนื้อหาผ่าน Jina Reader, โพสต์และคอมเมนต์ลูกค้าจาก Facebook Page...');
     setLiveLogs([
-      `[Jina Reader] Ingesting website URL and cleaning HTML tags...`,
-      `[Apify Scraper] Scraping latest Facebook page signals...`,
+      `[Jina Reader] Ingesting client website and cleaning HTML boilerplate...`,
+      `[Apify Facebook] Scraping recent brand posts and real Thai customer comments...`,
     ]);
 
     const compList = manualCompetitors
@@ -252,19 +351,27 @@ export default function HomePage() {
       setElapsedSeconds(elapsed);
       if (elapsed < 4) {
         setActiveStep(1);
-        setProgressPercent(Math.min(32, Math.round(8 + elapsed * 6)));
+        setProgressPercent(Math.min(35, Math.round(10 + elapsed * 6)));
       } else if (elapsed < 9) {
-        setActiveStep(2);
-        setProgressStageTitle('Step 2/3: Gemini 3.5 Flash Lite กำลังสกัด Brand DNA');
-        setProgressStageDesc('วิเคราะห์คุณลักษณะสินค้า, Tone of Voice, หมวดหมู่ และกลุ่มเป้าหมาย...');
-        setProgressPercent(Math.min(70, Math.round(32 + (elapsed - 4) * 8)));
-        setLiveLogs(prev => !prev.some(l => l.includes('Gemini 3.5')) ? [...prev, `[Gemini 3.5] Extracting Brand DNA, positioning and target demographic...`] : prev);
+        setActiveStep(1);
+        setProgressStageTitle('Stage 1: Gemini 3.5 Flash Lite จำแนก Brand Conversion Model');
+        setProgressStageDesc('วิเคราะห์ Tone of Voice และกำหนดสัดส่วน KOL : KOC แนะนำ...');
+        setProgressPercent(Math.min(70, Math.round(35 + (elapsed - 4) * 7)));
+        setLiveLogs(prev => !prev.some(l => l.includes('Conversion Model')) ? [
+          ...prev,
+          `[Gemini 3.5] Classifying into 1 of 4 Conversion Models (E-Comm, App, High-Ticket, Lifestyle)...`,
+          `[Media Mix] Setting recommended KOL : KOC media mix ratio...`
+        ] : prev);
       } else {
-        setActiveStep(3);
-        setProgressStageTitle('Step 3/3: สังเคราะห์ 5-Angle Taxonomy & Grounded Competitors');
-        setProgressStageDesc('สร้างคีย์เวิร์ดค้นหา 5 มิติ และตรวจจับแบรนด์คู่แข่งในไทย...');
+        setActiveStep(1);
+        setProgressStageTitle('Stage 1: Scene Translation & Search-Grounded Thai Competitors');
+        setProgressStageDesc('แปลงประเภทธุรกิจเป็นคำค้นหา TikTok (KOL_QUERY & KOC_QUERY) และสกัดคู่แข่งในไทย...');
         setProgressPercent(Math.min(95, Math.round(70 + (elapsed - 9) * 3)));
-        setLiveLogs(prev => !prev.some(l => l.includes('Taxonomy')) ? [...prev, `[Taxonomy Engine] Generating 5-angle intent keywords (Direct, Slang, Pain Points)...`, `[Competitors] Identifying grounded Thai competitor brands...`] : prev);
+        setLiveLogs(prev => !prev.some(l => l.includes('Scene Translation')) ? [
+          ...prev,
+          `[Scene Translation] Generating 2-3 words native creator search queries (60% direct / 40% adjacent)...`,
+          `[Competitor Layer 1] Google Search Grounding extracting active Thai competitors...`
+        ] : prev);
       }
     }, 400);
 
@@ -278,17 +385,26 @@ export default function HomePage() {
           facebook_url: facebookUrl || undefined,
           custom_notes: customNotes || undefined,
           manual_competitors: compList,
+          force_refresh: forceRefresh,
         }),
       });
       if (!res.ok) {
         const errBody = await res.text();
         throw new Error(errBody || `HTTP ${res.status}`);
       }
-      const data = await res.json();
+      const data: BrandDNA = await res.json();
+      setIsDemoCacheHit(
+        (data.scraped_sources || []).some(s => s.toLowerCase().includes('demo cache')) ||
+        !forceRefresh
+      );
       setProgressPercent(100);
-      setProgressStageTitle('สกัด Brand DNA เสร็จสมบูรณ์ 100%!');
-      setProgressStageDesc('ได้รับ Brand DNA, 5-Angle Search Taxonomy และรายชื่อคู่แข่งเรียบร้อย');
-      setLiveLogs(prev => [...prev, `[Success] Brand DNA synthesized with ${data.thai_keywords?.length || 0} Thai keywords.`]);
+      setProgressStageTitle('สกัด Brand DNA & Scene Translation สำเร็จ 100%!');
+      setProgressStageDesc(`จำแนกแบรนด์เป็น ${data.conversion_model} (สัดส่วนแนะนำ: KOL ${data.kol_koc_mix.kol}% : KOC ${data.kol_koc_mix.koc}%)`);
+      setLiveLogs(prev => [
+        ...prev,
+        `[Success] Brand DNA complete: ${data.search_queries?.length || 0} Scene Translation queries generated.`,
+        `[Competitors] ${data.competitors?.length || 0} Thai competitors catalogued.`
+      ]);
       setBrandDNA(data);
     } catch (err: any) {
       console.error('Analyze brand error:', err);
@@ -303,58 +419,60 @@ export default function HomePage() {
     }
   };
 
+  // --------------------------------------------------------------------------
+  // Match KOLs (Stage 2, 3 & 4)
+  // --------------------------------------------------------------------------
   const handleMatchKOLs = async () => {
     if (!brandDNA) return;
     setIsMatching(true);
     setProgressPercent(5);
     setElapsedSeconds(0);
-    setActiveStep(1);
-    setProgressStageTitle('Step 1/4: เริ่มต้นวิเคราะห์ Brand DNA & 5-Angle Taxonomy');
-    setProgressStageDesc('ตรวจสอบ Brand DNA และตั้งค่าคำค้นหา 5 มิติ พร้อมรายชื่อคู่แข่ง...');
+    setActiveStep(2);
+    setProgressStageTitle('Stage 2: TikTok Discovery via Apify (KOL_QUERY & KOC_QUERY)');
+    setProgressStageDesc('กวาดคลิปสดบน TikTok ประเทศไทย (proxyCountryCode: TH) แยกฝั่งคำค้นหา KOL และ KOC...');
     setLiveLogs([
-      `[Pipeline] Initializing live TikTok matching engine for '${brandDNA.brand_name}'...`,
-      `[Taxonomy] 5-Angle Taxonomy active: Direct, Slang, Pain Points, Occasions, Modifiers`,
-      `[Competitors] Tracking ${brandDNA.grounded_competitors?.length || 0} discovered + manual competitors`,
+      `[Pipeline] Launching 4-Stage TikTok Matching Engine for '${brandDNA.brand_name}'...`,
+      `[Apify Discovery] Querying TikTok with origin tags: KOL_QUERY vs KOC_QUERY...`,
     ]);
 
     const startTime = Date.now();
     const timer = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       setElapsedSeconds(elapsed);
-      if (elapsed < 6) {
-        setActiveStep(1);
-        setProgressPercent(Math.min(23, Math.round(5 + elapsed * 3.2)));
-      } else if (elapsed < 18) {
+      if (elapsed < 8) {
         setActiveStep(2);
-        setProgressStageTitle('Step 2/4: ค้นหา TikTok ครีเอเตอร์สดผ่าน Apify Scraper');
-        setProgressStageDesc('ยิง Apify Clockworks Actor ดึงวิดีโอสด 30 รายการ และกรอง Two-Stage Entity Filter ตัดร้านค้า Official...');
-        setProgressPercent(Math.min(54, Math.round(24 + (elapsed - 6) * 2.5)));
-        setLiveLogs(prev => !prev.some(l => l.includes('Clockworks')) ? [
+        setProgressPercent(Math.min(30, Math.round(5 + elapsed * 3.2)));
+      } else if (elapsed < 20) {
+        setActiveStep(2);
+        setProgressStageTitle('Stage 2: Profile Video Enrichment & Competitor Co-occurrence');
+        setProgressStageDesc('ดึงคลิปย้อนหลังตรวจสอบ Niche และคำนวณศัพท์คู่แข่งซ้ำ (Layer 2 Co-occurrence)...');
+        setProgressPercent(Math.min(55, Math.round(30 + (elapsed - 8) * 2.1)));
+        setLiveLogs(prev => !prev.some(l => l.includes('Co-occurrence')) ? [
           ...prev,
-          `[Apify Scraper] Querying clockworks~tiktok-scraper for Thailand market...`,
-          `[Two-Stage Filter] Purging Official Shops & Merchant Accounts (Zero-Spam)...`
+          `[Apify Enrichment] Auditing profile videos for candidate creators...`,
+          `[Competitor Layer 2] Analyzing frequent hashtags for co-occurring competitor brands...`
         ] : prev);
       } else if (elapsed < 32) {
         setActiveStep(3);
-        setProgressStageTitle('Step 3/4: ประมวลผล Multi-Signal Telemetry & Work-Ready');
-        setProgressStageDesc('คำนวณ Median ER, Save-to-View Utility และสแกนสัญญาณพร้อมรับงาน...');
-        setProgressPercent(Math.min(79, Math.round(55 + (elapsed - 18) * 1.8)));
-        setLiveLogs(prev => !prev.some(l => l.includes('Telemetry')) ? [
+        setProgressStageTitle('Stage 3: Two-Stage Filtering & 2x2 Matrix Classification');
+        setProgressStageDesc('ด่าน 1: กรองร้านค้าและ Smart Bot Filter -> ด่าน 2: Batch LLM Relevance Gate...');
+        setProgressPercent(Math.min(80, Math.round(55 + (elapsed - 20) * 2.0)));
+        setLiveLogs(prev => !prev.some(l => l.includes('Relevance Gate')) ? [
           ...prev,
-          `[Telemetry] Calculating Median ER & Utility Save-to-View ((Collect+0.7*Share)/Views)...`,
-          `[Signal Analysis] Evaluating Commercial & Content Signals...`,
-          `[Work-Ready] Scanning bio signals: 'ติดต่องาน / For work' -> Sponsorship ready`
+          `[Gate 1] Purging Official Shops & Smart Affiliate Spam Bots (Basket >85% + Zero comments)...`,
+          `[Gate 2] Gemini 3.5 Batch Relevance Gate evaluating creators in 1 API call...`,
+          `[2x2 Matrix] Classifying 2 Roles (KOL/KOC) into 4 Sub-Styles...`
         ] : prev);
       } else {
         setActiveStep(4);
-        setProgressStageTitle('Step 4/4: ประเมินความเข้ากันได้และจัดอันดับครีเอเตอร์ (Creator Fit & Archetype Matching)');
-        setProgressStageDesc('ประเมินความเข้ากันได้ Brand Relevance, Engagement Quality, Audience Fit และจำแนก 4 Creator Archetypes...');
-        setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 32) * 0.7)));
-        setLiveLogs(prev => !prev.some(l => l.includes('Embeddings')) ? [
+        setProgressStageTitle('Stage 4: Dynamic Scoring (40/35/25) & Role-Adaptive Pitch Hooks');
+        setProgressStageDesc('คำนวณคะแนนตาม Conversion Model, จัดอันดับ Top-K ตาม Media Mix, และสร้าง 3-Sec Hooks...');
+        setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 32) * 0.8)));
+        setLiveLogs(prev => !prev.some(l => l.includes('Scoring')) ? [
           ...prev,
-          `[Gemini Embeddings] Calculating 3,072-dimensional cosine similarity for Brand-Creator fit...`,
-          `[Archetypes] Classifying Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast`,
-          `[Match Engine] Evaluating creator-brand fit across 4 archetypes & final ranking...`
+          `[Scoring] Relevance (40) + Engagement Quality & Utility (35) + Audience Proxy (25)...`,
+          `[Media Mix Top-K] Enforcing ${brandDNA.kol_koc_mix.kol}% KOL : ${brandDNA.kol_koc_mix.koc}% KOC portfolio...`,
+          `[Stage 4 Hooks] Generating 3-second Thai opening hooks adapted to sub-styles...`
         ] : prev);
       }
     }, 400);
@@ -366,20 +484,28 @@ export default function HomePage() {
         body: JSON.stringify({
           brand_dna: brandDNA,
           top_k: topK,
-          include_penalized_traps: true,
+          force_refresh: forceRefresh,
         }),
       });
       if (!res.ok) {
         const errBody = await res.text();
         throw new Error(errBody || `HTTP ${res.status}`);
       }
-      const data = await res.json();
+      const data: MatchResponse = await res.json();
+      setIsDemoCacheHit(
+        (data.workflow_trace || []).some(t => t.includes('Demo Cache')) ||
+        !forceRefresh
+      );
       setProgressPercent(100);
-      setProgressStageTitle('จัดอันดับและประมวลผลเสร็จสมบูรณ์ 100%!');
-      setProgressStageDesc(`พบครีเอเตอร์ ${data.ranked_kols.length} รายการ พร้อมแสดงผล Multi-Signal Performance Dashboard`);
-      setLiveLogs(prev => [...prev, `[Success] Pipeline finished with ${data.ranked_kols.length} creators ranked.`]);
+      setProgressStageTitle('ประมวลผลเสร็จสมบูรณ์ 100%!');
+      setProgressStageDesc(`จัดอันดับครีเอเตอร์ ${data.ranked_kols.length} รายการ ตรงตามกลยุทธ์ ${data.strategy?.conversion_model}`);
+      setLiveLogs(prev => [
+        ...prev,
+        `[Success] Finished: ${data.ranked_kols.length} Top-K ranked (${data.strategy?.achieved_mix?.KOL || 0} KOL, ${data.strategy?.achieved_mix?.KOC || 0} KOC).`,
+        `[Filtered] ${data.filter_stats?.removed_merchants || 0} merchants, ${data.filter_stats?.removed_affiliate_bots || 0} bots excluded.`
+      ]);
       setMatchResponse(data);
-      setActiveTab('ranked');
+      setActiveTab('all');
     } catch (err: any) {
       console.error('Match KOLs error:', err);
       alert(`Live TikTok matching failed: ${err.message || 'Please verify APIFY_API_TOKEN.'}`);
@@ -393,6 +519,7 @@ export default function HomePage() {
     }
   };
 
+  // 1-Click Auto Match End-to-End
   const handleAutoMatch = async () => {
     if (brandDNA && isEditingDNA) {
       return handleMatchKOLs();
@@ -402,15 +529,14 @@ export default function HomePage() {
       return;
     }
     setIsMatching(true);
-    setProgressPercent(4);
+    setProgressPercent(5);
     setElapsedSeconds(0);
     setActiveStep(1);
-    setProgressStageTitle('Step 1/4: ดึง Brand DNA สด & สังเคราะห์ 5-Angle Taxonomy');
-    setProgressStageDesc('สกัดข้อมูลจาก Jina Reader API, Facebook Scraper และสร้างคีย์เวิร์ดด้วย Gemini 3.5...');
+    setProgressStageTitle('1-Click Match: กำลังวิเคราะห์ Brand DNA & กวาดค้นหา TikTok...');
+    setProgressStageDesc('รันกระบวนการทั้ง 4 ขั้นตอนแบบอัตโนมัติสมบูรณ์...');
     setLiveLogs([
-      `[1-Click Auto Match] Initializing end-to-end autonomous matching pipeline...`,
-      `[Jina Reader] Ingesting website URL and extracting clean markdown...`,
-      `[Brand DNA] Analyzing brand positioning and 5-angle consumer search taxonomy...`,
+      `[1-Click Match] Launching End-to-End autonomous pipeline...`,
+      `[Stage 1] Extracting Brand DNA, Conversion Model and Scene Translation queries...`,
     ]);
 
     const compList = manualCompetitors
@@ -423,39 +549,22 @@ export default function HomePage() {
       setElapsedSeconds(elapsed);
       if (elapsed < 8) {
         setActiveStep(1);
-        setProgressPercent(Math.min(24, Math.round(4 + elapsed * 2.8)));
+        setProgressPercent(Math.min(25, Math.round(5 + elapsed * 2.5)));
       } else if (elapsed < 20) {
         setActiveStep(2);
-        setProgressStageTitle('Step 2/4: ค้นหา TikTok ครีเอเตอร์สดผ่าน Apify Scraper');
-        setProgressStageDesc('ยิง Apify Clockworks Actor ดึงวิดีโอสด 30 รายการ และกรอง Two-Stage Entity Filter...');
-        setProgressPercent(Math.min(54, Math.round(25 + (elapsed - 8) * 2.4)));
-        setLiveLogs(prev => !prev.some(l => l.includes('Clockworks')) ? [
-          ...prev,
-          `[Apify Scraper] Running live TikTok scraper for hashtags...`,
-          `[Two-Stage Filter] Purging Official Shop / Merchant accounts from pool...`
-        ] : prev);
+        setProgressStageTitle('Stage 2: TikTok Discovery via Apify Scraper');
+        setProgressStageDesc('กวาดคลิปสดบน TikTok ประเทศไทย (Country: TH)...');
+        setProgressPercent(Math.min(55, Math.round(25 + (elapsed - 8) * 2.3)));
       } else if (elapsed < 34) {
         setActiveStep(3);
-        setProgressStageTitle('Step 3/4: ประมวลผล Multi-Signal Telemetry & Work-Ready');
-        setProgressStageDesc('คำนวณ Median ER, Save-to-View Utility และสแกนสัญญาณพร้อมรับงาน...');
-        setProgressPercent(Math.min(79, Math.round(55 + (elapsed - 20) * 1.7)));
-        setLiveLogs(prev => !prev.some(l => l.includes('Telemetry')) ? [
-          ...prev,
-          `[Telemetry] Calculating Median ER & Utility Save-to-View ratio...`,
-          `[Signal Analysis] Evaluating Commercial & Content Signals...`,
-          `[Work-Ready] Scanning bio signals: 'ติดต่องาน / For work' -> Sponsorship ready`
-        ] : prev);
+        setProgressStageTitle('Stage 3: Two-Stage Filtering & 2x2 Classification');
+        setProgressStageDesc('คัดกรองร้านค้า/บอท และจัดเข้า 4 สไตล์ย่อย...');
+        setProgressPercent(Math.min(80, Math.round(55 + (elapsed - 20) * 1.8)));
       } else {
         setActiveStep(4);
-        setProgressStageTitle('Step 4/4: ประเมินความเข้ากันได้และจัดอันดับครีเอเตอร์ (Creator Fit & Archetype Matching)');
-        setProgressStageDesc('ประเมินความเข้ากันได้ Brand Relevance, Engagement Quality, Audience Fit และจำแนก 4 Creator Archetypes...');
+        setProgressStageTitle('Stage 4: Dynamic Scoring & 3-Sec Pitch Hooks');
+        setProgressStageDesc('คำนวณคะแนน 40/35/25 และสร้าง Campaign Hooks...');
         setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 34) * 0.7)));
-        setLiveLogs(prev => !prev.some(l => l.includes('Embeddings')) ? [
-          ...prev,
-          `[Gemini Embeddings] Generating 3,072-dimensional vector representations...`,
-          `[Archetypes] Classifying Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast`,
-          `[Match Engine] Evaluating creator-brand fit across 4 archetypes & final ranking...`
-        ] : prev);
       }
     }, 400);
 
@@ -470,23 +579,27 @@ export default function HomePage() {
           custom_notes: customNotes || undefined,
           manual_competitors: compList,
           top_k: topK,
+          force_refresh: forceRefresh,
         }),
       });
       if (!res.ok) {
         const errBody = await res.text();
         throw new Error(errBody || `HTTP ${res.status}`);
       }
-      const data = await res.json();
+      const data: MatchResponse = await res.json();
+      setIsDemoCacheHit(
+        (data.workflow_trace || []).some(t => t.includes('Demo Cache')) ||
+        !forceRefresh
+      );
       setProgressPercent(100);
       setProgressStageTitle('จัดอันดับและประมวลผลเสร็จสมบูรณ์ 100%!');
-      setProgressStageDesc(`สกัด Brand DNA และจัดอันดับครีเอเตอร์ ${data.ranked_kols.length} รายการเรียบร้อย`);
-      setLiveLogs(prev => [...prev, `[Success] Auto-match complete with ${data.ranked_kols.length} creators ranked.`]);
+      setProgressStageDesc(`พบครีเอเตอร์ ${data.ranked_kols.length} รายการ ตรงตามกลยุทธ์ ${data.strategy?.conversion_model}`);
       setBrandDNA(data.brand_dna);
       setMatchResponse(data);
-      setActiveTab('ranked');
+      setActiveTab('all');
     } catch (err: any) {
       console.error('Auto-match error:', err);
-      alert(`Auto-matching error: ${err.message || 'Please verify APIFY_API_TOKEN and backend.'}`);
+      alert(`Auto-matching error: ${err.message || 'Please verify APIFY_API_TOKEN.'}`);
     } finally {
       clearInterval(timer);
       setTimeout(() => {
@@ -497,18 +610,26 @@ export default function HomePage() {
     }
   };
 
-  const toggleShortlist = (item: RankedKOL) => {
-    if (shortlist.some(s => s.kol.id === item.kol.id)) {
-      setShortlist(shortlist.filter(s => s.kol.id !== item.kol.id));
-    } else {
-      setShortlist([...shortlist, item]);
-    }
+  // Copy 3-second hook
+  const handleCopyHook = (id: string, hook: string) => {
+    navigator.clipboard.writeText(hook);
+    setCopiedHookId(id);
+    setTimeout(() => setCopiedHookId(null), 2500);
   };
 
+  // --------------------------------------------------------------------------
+  // Filtered Ranked KOLs (3-Level Filter Bar: Main Role, Sub-style & Follower Tier)
+  // --------------------------------------------------------------------------
   const filteredRankedKOLs = useMemo(() => {
     if (!matchResponse) return [];
     let list = [...matchResponse.ranked_kols];
 
+    // Main Role Filter (Spec 6.2: All / 🧠 KOL / 🛍️ KOC)
+    if (roleFilter !== 'All') {
+      list = list.filter(item => item.kol.funnel_role === roleFilter);
+    }
+
+    // Search query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(
@@ -516,30 +637,30 @@ export default function HomePage() {
           item.kol.display_name.toLowerCase().includes(q) ||
           item.kol.handle.toLowerCase().includes(q) ||
           item.kol.bio.toLowerCase().includes(q) ||
+          item.kol.sub_style?.toLowerCase().includes(q) ||
           item.score_breakdown.matched_keywords.some(k => k.toLowerCase().includes(q))
       );
     }
 
+    // Follower Tier Filter
     if (tierFilter !== 'All') {
-      list = list.filter(item => item.kol.tier.toLowerCase().includes(tierFilter.toLowerCase()));
+      list = list.filter(item => item.kol.tier.toLowerCase() === tierFilter.toLowerCase());
     }
 
+    // Sub-Style Tab Filter
     if (activeTab === 'guru') {
-      list = list.filter(item => item.kol.creator_archetype === 'Educated Guru');
-    } else if (activeTab === 'reviewer') {
-      list = list.filter(item => item.kol.creator_archetype === 'Top Reviewer');
+      list = list.filter(item => item.kol.sub_style === 'KOL - Expert / Guru');
     } else if (activeTab === 'lifestyle') {
-      list = list.filter(item => item.kol.creator_archetype === 'Lifestyle & Vlog');
-    } else if (activeTab === 'niche') {
-      list = list.filter(item => item.kol.creator_archetype === 'Niche Enthusiast');
+      list = list.filter(item => item.kol.sub_style === 'KOL - Lifestyle / Aesthetic');
+    } else if (activeTab === 'hardsell') {
+      list = list.filter(item => item.kol.sub_style === 'KOC - Hard-Sell Reviewer');
+    } else if (activeTab === 'everyday') {
+      list = list.filter(item => item.kol.sub_style === 'KOC - Everyday User / Vlog');
     }
 
+    // Sort order
     if (sortBy === 'er') {
-      list.sort(
-        (a, b) =>
-          b.score_breakdown.median_engagement_rate_pct -
-          a.score_breakdown.median_engagement_rate_pct
-      );
+      list.sort((a, b) => b.score_breakdown.median_engagement_rate - a.score_breakdown.median_engagement_rate);
     } else if (sortBy === 'followers') {
       list.sort((a, b) => b.kol.follower_count - a.kol.follower_count);
     } else {
@@ -547,96 +668,69 @@ export default function HomePage() {
     }
 
     return list;
-  }, [matchResponse, searchQuery, tierFilter, sortBy, activeTab]);
+  }, [matchResponse, roleFilter, searchQuery, tierFilter, sortBy, activeTab]);
 
+  // Export to CSV (Spec 5.3)
   const exportToCSV = () => {
     if (!matchResponse) return;
     const headers = [
       'Rank',
-      'Handle',
+      'TikTok Handle',
       'Display Name',
       'TikTok URL',
-      'Tier',
       'Followers',
-      'Archetype',
-      'Recommended Role',
-      'Work-Ready',
-      'Competitor Conflict/Opportunity',
+      'Tier',
+      'Funnel Role',
+      '2x2 Sub-Style',
+      'Work-Ready Signal',
+      'Competitor Conflict / Opportunity',
       'Total Match Score',
-      'Brand Relevance Score',
-      'Engagement Quality Score',
+      'Relevance Score (40)',
+      'Engagement Score (35)',
+      'Audience Score (25)',
       'Median ER %',
-      'Save-to-View Ratio',
+      'Save/Share Utility',
       'View Consistency',
-      'Audience Signal Score',
-      'Confidence',
       'Yellow Basket Ratio %',
-      'Affiliate Penalized',
-      'Strategic Rationale',
+      'Strategic Fit Rationale',
+      '3-Second Pitch Hook',
     ];
     const rows = matchResponse.ranked_kols.map(item => [
       item.rank,
       `@${item.kol.handle}`,
       `"${item.kol.display_name.replace(/"/g, '""')}"`,
       item.kol.tiktok_url,
-      item.kol.tier,
       item.kol.follower_count,
-      item.kol.creator_archetype || 'N/A',
-      item.kol.recommended_role || 'N/A',
+      item.kol.tier,
+      item.kol.funnel_role || 'KOL',
+      `"${item.kol.sub_style || 'N/A'}"`,
       item.kol.is_work_ready ? 'YES' : 'NO',
-      `"${(item.kol.competitor_warning || 'None').replace(/"/g, '""')}"`,
+      `"${(item.kol.competitor_flags?.map(f => f.label).join(' | ') || 'None').replace(/"/g, '""')}"`,
       item.total_match_score,
-      item.score_breakdown.relevance_weighted,
-      item.score_breakdown.engagement_weighted,
-      item.score_breakdown.median_engagement_rate_pct,
-      (item.kol.save_to_view_ratio || 0).toFixed(4),
-      (item.kol.view_consistency_ratio || 0).toFixed(3),
-      item.score_breakdown.audience_weighted,
-      item.score_breakdown.confidence_level,
-      `${Math.round(item.score_breakdown.yellow_basket_ratio * 100)}%`,
-      item.score_breakdown.affiliate_spam_penalty_applied ? 'YES' : 'NO',
-      `"${item.why_this_kol.replace(/"/g, '""')}"`,
+      item.score_breakdown.relevance_total,
+      item.score_breakdown.engagement_total,
+      item.score_breakdown.audience_total,
+      `${(item.score_breakdown.median_engagement_rate * 100).toFixed(2)}%`,
+      (item.score_breakdown.utility_score || 0).toFixed(4),
+      (item.score_breakdown.view_consistency_ratio || 0).toFixed(3),
+      `${Math.round(item.kol.signals.basket_ratio * 100)}%`,
+      `"${(item.kol.why_it_fits || '').replace(/"/g, '""')}"`,
+      `"${(item.pitch_hook || '').replace(/"/g, '""')}"`,
     ]);
 
     const csvContent =
-      'data:text/csv;charset=utf-8,' +
+      'data:text/csv;charset=utf-8,\uFEFF' +
       [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `convert_cake_kol_recommendations_${brandDNA?.brand_name || 'brand'}.csv`);
+    link.setAttribute('download', `convert_cake_${brandDNA?.brand_name || 'brand'}_kols.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const copyCampaignProposal = () => {
-    if (shortlist.length === 0) return;
-    const totalFollowers = shortlist.reduce((acc, curr) => acc + curr.kol.follower_count, 0);
-    const avgER = (
-      shortlist.reduce((acc, curr) => acc + curr.score_breakdown.median_engagement_rate_pct, 0) /
-      shortlist.length
-    ).toFixed(1);
-
-    const summary = `📌 Convert Cake — Thai TikTok Influencer Campaign Proposal\n` +
-      `Client: ${brandDNA?.brand_name || 'Brand'}\n` +
-      `Vertical: ${brandDNA?.vertical || 'General'}\n` +
-      `Selected Creators: ${shortlist.length} Influencers\n` +
-      `Total Potential Reach: ${totalFollowers.toLocaleString()} Followers\n` +
-      `Avg Median ER: ${avgER}%\n\n` +
-      `--- Recommended KOLs & Match Rationale ---\n` +
-      shortlist.map((item, idx) => 
-        `${idx + 1}. ${item.kol.display_name} (@${item.kol.handle})\n` +
-        `   • TikTok URL: ${item.kol.tiktok_url}\n` +
-        `   • Match Score: ${item.total_match_score.toFixed(1)}/100 | Tier: ${item.kol.tier} | Archetype: ${item.kol.creator_archetype || 'Creator'}\n` +
-        `   • Est Commercial Rate: ${item.kol.estimated_rate_thb}\n` +
-        `   • Performance Rationale: ${item.why_this_kol}\n`
-      ).join('\n');
-
-    navigator.clipboard.writeText(summary);
-    setCopiedBrief(true);
-    setTimeout(() => setCopiedBrief(false), 2500);
-  };
+  const modelInfo = brandDNA?.conversion_model ? MODEL_DETAILS[brandDNA.conversion_model] : null;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans selection:bg-[#0536d2] selection:text-white">
@@ -654,7 +748,7 @@ export default function HomePage() {
       <header className="border-b border-slate-200/90 bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           <div className="flex items-center space-x-3.5">
-            {/* Official Convert Cake Monogram */}
+            {/* Convert Cake Monogram */}
             <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0536d2] via-[#0428a8] to-[#020027] border border-[#597ef3]/40 shadow-[0_0_20px_rgba(5,54,210,0.35)] shrink-0">
               <span className="text-base font-black tracking-tighter text-white font-mono">CC</span>
               <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#03e78b] border-2 border-white shadow-sm" />
@@ -668,21 +762,21 @@ export default function HomePage() {
                 </h1>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0536d2] border border-blue-200 flex items-center space-x-1.5">
                   <Radio className="w-2.5 h-2.5 animate-pulse text-[#0536d2]" />
-                  <span>Performance TikTok Matcher</span>
+                  <span>TikTok Matching Engine</span>
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-medium">
-                The Performance-Only Agency · Real-time Apify Scraper & Gemini 3.5 Flash Lite
+                Performance-Only Marketing Agency · 4-Stage Funnel Architecture · Zero-Mock
               </p>
             </div>
           </div>
 
-          {/* Live System Health Pill */}
+          {/* Engine Status Health Pill */}
           <div className="flex items-center space-x-3">
             <div className="hidden md:flex items-center space-x-3 text-xs text-slate-400 pr-2 border-r border-slate-200/90">
               <span className="flex items-center space-x-1">
                 <Award className="w-3.5 h-3.5 text-[#597ef3]" />
-                <span>Official TikTok Partner Standard</span>
+                <span>2x2 KOL/KOC Funnel Matrix</span>
               </span>
             </div>
 
@@ -697,77 +791,52 @@ export default function HomePage() {
                 }`}
               />
               <span className="text-slate-800 font-semibold">
-                {apiOnline === true
-                  ? 'FastAPI & Apify Ready'
-                  : apiOnline === false
-                  ? 'Engine Offline'
-                  : 'Checking Engine...'}
+                {apiOnline === true ? 'Engine Ready' : apiOnline === false ? 'Engine Offline' : 'Checking...'}
               </span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* MAIN DASHBOARD CONTAINER */}
+      {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* AGENCY HERO BANNER */}
-        <div className="relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-xs">
-          <div className="absolute -top-24 -left-24 w-72 h-72 bg-blue-50/60 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-slate-100/60 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col justify-between gap-6">
-            <div className="space-y-2.5 max-w-4xl">
+        {/* PIPELINE OVERVIEW BANNER */}
+        <div className="relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-xs">
+          <div className="relative z-10 flex flex-col justify-between gap-4">
+            <div className="space-y-2 max-w-4xl">
               <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#0536d2] bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full">
                 <Sparkles className="w-3.5 h-3.5 text-[#03e78b]" />
-                <span>Built for Brands That Need Results, Not Reports</span>
+                <span>Performance-Driven Creator Discovery</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight leading-snug">
-                Live Thai TikTok Creator Intelligence & Matchmaking
+                Convert Cake TikTok KOL/KOC Matching Engine
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                วิเคราะห์และจับคู่ครีเอเตอร์ตัวจริงสำหรับตลาดไทย สกัด <strong>Brand DNA</strong> สดผ่าน Gemini 3.5 Flash Lite และ Jina Reader, ค้นหา TikTok ครีเอเตอร์สด 100% ผ่าน Apify และจำแนกตาม <strong>4 Core Creator Archetypes</strong> เพื่อสร้างผลลัพธ์แคมเปญที่วัดผลได้จริง
+                สถาปัตยกรรม 4 ขั้นตอน: <strong>1. Brand DNA & 4 Conversion Models</strong> (กำหนดสัดส่วน KOL : KOC) → <strong>2. Scene Translation</strong> (แปลงเป็นซีนในคลิป) → <strong>3. Two-Stage Filtering & 2x2 Matrix</strong> (คัดกรองร้านค้า/บอท และแยก 4 สไตล์ย่อย) → <strong>4. Dynamic Scoring & 3-Sec Pitch Hooks</strong>
               </p>
-
-              <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-600 font-medium">
-                <span className="flex items-center space-x-1.5 text-slate-700">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                  <span>100% Live TikTok Scraper (Zero-Mock)</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center space-x-1.5 text-slate-700">
-                  <Award className="w-4 h-4 text-[#0536d2]" />
-                  <span>4 Creator Archetypes Gating</span>
-                </span>
-                <span>•</span>
-                <span className="flex items-center space-x-1.5 text-slate-700">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Two-Stage Entity & Anti-Spam Filtering</span>
-                </span>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* 2-COLUMN MAIN WORKFLOW */}
+        {/* 2-COLUMN WORKFLOW */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* LEFT COLUMN: Input & Extracted DNA (5 Cols) */}
+          {/* LEFT COLUMN: Input Brand & Extracted Brand DNA (5 Cols) */}
           <div className="lg:col-span-5 space-y-5">
-            {/* Input Form Card */}
-            <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 backdrop-blur-md">
+            {/* Input Card */}
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-200/90 pb-3.5">
                 <div className="flex items-center space-x-2.5">
                   <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-[#0536d2]/20 text-[#597ef3] text-xs font-black border border-[#0536d2]/40">
                     1
                   </span>
-                  <h3 className="font-bold text-slate-900 text-base">Input Brand Information</h3>
+                  <h3 className="font-bold text-slate-900 text-base">Brand Information</h3>
                 </div>
                 <span className="text-[11px] font-bold text-[#03e78b] bg-[#03e78b]/10 border border-[#03e78b]/25 px-2.5 py-0.5 rounded-full flex items-center space-x-1">
                   <Globe className="w-3 h-3" />
-                  <span>Live Web Crawler</span>
+                  <span>Jina + Facebook Ingestion</span>
                 </span>
               </div>
 
-              {/* Input Fields */}
               <div className="space-y-3.5 pt-1">
                 <div>
                   <label className="block text-xs font-bold text-slate-800 mb-1.5">
@@ -777,8 +846,8 @@ export default function HomePage() {
                     type="text"
                     value={brandName}
                     onChange={e => setBrandName(e.target.value)}
-                    placeholder="ระบุชื่อแบรนด์"
-                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-2 focus:ring-[#0536d2]/15 transition shadow-2xs"
+                    placeholder="ระบุชื่อแบรนด์ลูกค้า เช่น Her Hyness, Srichand"
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-2 focus:ring-[#0536d2]/15 transition"
                   />
                 </div>
 
@@ -817,50 +886,71 @@ export default function HomePage() {
                     rows={2}
                     value={customNotes}
                     onChange={e => setCustomNotes(e.target.value)}
-                    placeholder="ระบุจุดเด่นสินค้า กลุ่มเป้าหมาย หรือบรีฟแคมเปญเพิ่มเติม"
+                    placeholder="ระบุจุดเด่นสินค้า ปัญหาที่แบรนด์ช่วยแก้ หรือบรีฟการตลาดเพิ่มเติม"
                     className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-1 focus:ring-[#0536d2]/20 transition"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1 flex items-center justify-between">
-                    <span>Direct Competitor Brands (Grounded Thai Detection)</span>
-                    <span className="text-[10px] text-slate-400 font-normal">Optional, comma-separated</span>
+                    <span>Optional Competitor Override</span>
+                    <span className="text-[10px] text-slate-400 font-normal">คั่นด้วยเครื่องหมายจุลภาค</span>
                   </label>
                   <input
                     type="text"
                     value={manualCompetitors}
                     onChange={e => setManualCompetitors(e.target.value)}
-                    placeholder="ระบุชื่อแบรนด์คู่แข่ง (คั่นด้วยเครื่องหมายจุลภาค)"
+                    placeholder="รายชื่อคู่แข่งเพิ่มเติม (เว้นว่างได้ ระบบสกัดให้อัตโนมัติ)"
                     className="w-full bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] focus:ring-1 focus:ring-[#0536d2]/20 transition"
                   />
                 </div>
               </div>
 
-              <button
-                onClick={handleAutoMatch}
-                disabled={isMatching || isAnalyzing}
-                className="w-full py-3.5 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] active:bg-[#031f7a] text-white font-bold text-sm shadow-md shadow-blue-600/20 hover:shadow-lg transition-all flex items-center justify-center space-x-2.5 disabled:opacity-50 cursor-pointer border border-blue-700"
-              >
-                {isMatching ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                    <span>Matching Live TikTok Creators...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 text-[#03e78b]" />
-                    <span>Match TikTok</span>
-                  </>
-                )}
-              </button>
+              {/* Action Buttons */}
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  onClick={handleAnalyzeBrand}
+                  disabled={isMatching || isAnalyzing}
+                  className="flex-1 py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#0536d2]" />
+                      <span>Analyzing Brand DNA...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Layers className="w-3.5 h-3.5 text-[#0536d2]" />
+                      <span>Step 1: Extract Brand DNA</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleAutoMatch}
+                  disabled={isMatching || isAnalyzing}
+                  className="flex-1 py-3 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] text-white font-bold text-xs shadow-md shadow-blue-600/20 transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isMatching ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+                      <span>Matching TikTok...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-3.5 h-3.5 text-[#03e78b]" />
+                      <span>1-Click Auto Match</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Extracted Brand DNA Card */}
             {brandDNA && (
-              <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 backdrop-blur-md animate-in fade-in duration-300">
+              <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between border-b border-slate-200/90 pb-3.5">
-                  <div className="flex items-center space-x-2.5">
+                  <div className="flex items-center space-x-2">
                     <CheckCircle2 className="w-5 h-5 text-[#03e78b]" />
                     <h3 className="font-bold text-slate-900 text-base">Extracted Brand DNA</h3>
                   </div>
@@ -874,18 +964,31 @@ export default function HomePage() {
                 </div>
 
                 <div className="space-y-3.5 text-xs">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-slate-500 font-medium">Market Vertical:</span>
-                      <span className="font-bold text-[#0536d2] px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
-                        {brandDNA.vertical}
+                  {/* Conversion Model Badge */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/60 border border-blue-200/90 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-[#0536d2] uppercase tracking-wider">
+                        Conversion Model (วิธีทำเงิน)
+                      </span>
+                      <span className="font-black text-xs px-2.5 py-0.5 rounded-lg bg-blue-600 text-white font-mono">
+                        {brandDNA.conversion_model}
                       </span>
                     </div>
-                    <p className="text-slate-900 font-bold text-sm">{brandDNA.sub_category}</p>
+                    <div className="flex items-center justify-between pt-1 text-[11px]">
+                      <span className="text-slate-600">สัดส่วนที่แนะนำ (Media Mix):</span>
+                      <span className="font-extrabold text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 font-mono">
+                        KOL {brandDNA.kol_koc_mix?.kol}% : KOC {brandDNA.kol_koc_mix?.koc}%
+                      </span>
+                    </div>
+                    {brandDNA.conversion_model_reason && (
+                      <p className="text-[11px] text-slate-600 italic pt-0.5">
+                        "{brandDNA.conversion_model_reason}"
+                      </p>
+                    )}
                   </div>
 
                   <div>
-                    <span className="text-slate-400 font-medium block mb-1">Target Audience & Demographics:</span>
+                    <span className="text-slate-500 font-medium block mb-1">Target Audience & Market:</span>
                     {isEditingDNA ? (
                       <textarea
                         rows={2}
@@ -900,941 +1003,820 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2.5 pt-1">
-                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                      <span className="text-slate-400 block text-[10px] font-medium">Price Positioning</span>
-                      <span className="font-bold text-slate-900 text-xs mt-0.5 block">{brandDNA.price_positioning}</span>
-                      <span className="text-emerald-600 block text-[11px] font-mono mt-0.5 font-bold">
-                        ~{brandDNA.average_price_thb.toLocaleString()} THB
-                      </span>
-                    </div>
-                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                      <span className="text-slate-400 block text-[10px] font-medium">Core Regions & Age</span>
-                      <span className="font-bold text-slate-900 text-xs mt-0.5 block truncate">
-                        {brandDNA.target_locations.slice(0, 2).join(', ')}
-                      </span>
-                      <span className="text-slate-400 block text-[11px] mt-0.5">
-                        Age: {brandDNA.target_age_range}
-                      </span>
-                    </div>
-                  </div>
-
+                  {/* Plain & Natural Thai Search Queries (Spec 3.2) */}
                   <div>
-                    <span className="text-slate-400 font-medium block mb-1.5">Brand Tone & Archetype:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {brandDNA.brand_tone.map((tone, i) => (
+                    <span className="text-slate-600 font-bold block mb-1.5 flex items-center justify-between">
+                      <span>Plain & Natural Thai Search Queries ({brandDNA.search_queries?.length || 0}):</span>
+                      <span className="text-[10px] text-slate-400 font-normal">2-4 words / ≤18 letters / Zero Hardcoded Templates</span>
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {brandDNA.search_queries?.map((q, i) => (
                         <span
                           key={i}
-                          className="px-2.5 py-0.5 rounded-lg bg-slate-50 text-slate-700 text-[11px] border border-slate-200 font-medium"
+                          className="px-2.5 py-1 rounded-xl bg-indigo-50/80 border border-indigo-200 text-indigo-950 text-xs font-medium flex items-center space-x-1.5"
                         >
-                          {tone}
+                          <span className="text-indigo-600 font-bold font-mono">#</span>
+                          <span>{q.query}</span>
+                          {q.syntax_rule && (
+                            <span className="text-[9px] uppercase px-1.5 py-0.2 rounded-md bg-white text-indigo-700 border border-indigo-100 font-mono">
+                              {q.syntax_rule.replace('_', ' ')}
+                            </span>
+                          )}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div>
-                    <span className="text-slate-500 font-medium block mb-1.5">Target Consumer Search Keywords (คำค้นหาสินค้า):</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {brandDNA.thai_keywords.map((kw, i) => (
-                        <span
-                          key={i}
-                          className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0536d2] text-[11px] border border-blue-200 font-medium flex items-center space-x-1"
-                        >
-                          <span>🔍</span>
-                          <span>{kw.replace(/^#/, '')}</span>
-                        </span>
-                      ))}
+                  {/* Grounded Thai Competitor Dictionary (Spec 5.1) */}
+                  {brandDNA.competitors && brandDNA.competitors.length > 0 && (
+                    <div>
+                      <span className="text-slate-600 font-bold block mb-1.5">
+                        Grounded Thai Competitors ({brandDNA.competitors.length}):
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {brandDNA.competitors.map((c, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-1 rounded-xl bg-slate-50 text-slate-800 text-[11px] border border-slate-200 font-medium"
+                            title={`Source: ${c.source}`}
+                          >
+                            <span>{c.brand}</span>
+                            {c.aliases && c.aliases.length > 1 && (
+                              <span className="text-slate-400 text-[10px] ml-1">
+                                ({c.aliases.filter(a => a !== c.brand).slice(0, 1).join(', ')})
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
+
+                {/* Match Button if DNA exists */}
+                <button
+                  onClick={handleMatchKOLs}
+                  disabled={isMatching || isAnalyzing}
+                  className="w-full mt-2 py-3.5 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] text-white font-bold text-xs shadow-md shadow-blue-600/20 transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isMatching ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      <span>Matching Live TikTok Creators...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Compass className="w-4 h-4 text-[#03e78b]" />
+                      <span>Run Stage 2-4 Match (TikTok Scraper & 2x2 Matrix)</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>
 
           {/* RIGHT COLUMN: Results Dashboard (7 Cols) */}
           <div className="lg:col-span-7 space-y-4">
-            {/* Filter Bar */}
-            <div className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-3 backdrop-blur-md">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-[#03e78b]/20 text-[#03e78b] text-xs font-black border border-[#03e78b]/35">
-                    2
-                  </span>
-                  <h3 className="font-bold text-slate-900 text-base">Creator Intelligence</h3>
+            {/* 1. STRATEGY SUMMARY BANNER (Spec 5.3 #1) */}
+            {matchResponse && matchResponse.strategy && (
+              <div className="bg-white border-2 border-[#597ef3]/30 rounded-3xl p-5 shadow-sm space-y-3 relative overflow-hidden animate-in fade-in duration-300">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div className="flex items-center space-x-2.5">
+                    <span className="text-2xl">{modelInfo?.icon || '🎯'}</span>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#0536d2] block">
+                        Campaign Strategy & Media Mix
+                      </span>
+                      <h4 className="text-base font-extrabold text-slate-900">
+                        {modelInfo?.label || matchResponse.strategy.conversion_model}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-500 block">Recommended Mix</span>
+                      <span className="text-xs font-black text-[#0536d2] font-mono">
+                        KOL {matchResponse.strategy.recommended_mix?.kol}% : KOC {matchResponse.strategy.recommended_mix?.koc}%
+                      </span>
+                    </div>
+                    <div className="h-6 w-px bg-slate-200" />
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-500 block">Achieved Top-K</span>
+                      <span className="text-xs font-black text-emerald-700 font-mono">
+                        {matchResponse.strategy.achieved_mix?.KOL || 0} KOL : {matchResponse.strategy.achieved_mix?.KOC || 0} KOC
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {matchResponse && (
-                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-[#0536d2] border border-blue-200">
-                    {filteredRankedKOLs.length} Matches
-                  </span>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  {modelInfo?.desc || matchResponse.strategy.conversion_model_reason}
+                </p>
+
+                {/* Plain & Natural Search Queries Tag Cloud (Spec 6.2) */}
+                {brandDNA?.search_queries && brandDNA.search_queries.length > 0 && (
+                  <div className="pt-2 border-t border-slate-200/60 space-y-1.5">
+                    <span className="text-[11px] font-bold text-slate-700 flex items-center space-x-1">
+                      <span>🔍 Plain & Natural Thai Search Queries ({brandDNA.search_queries.length}):</span>
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {brandDNA.search_queries.map((q, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-xl bg-white/90 border border-slate-200/90 text-[11px] font-medium text-slate-800 shadow-2xs font-mono flex items-center space-x-1"
+                        >
+                          <span className="text-indigo-600 font-bold">#</span>
+                          <span>{q.query}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Filter statistics bar */}
+                {matchResponse.filter_stats && (
+                  <div className="flex items-center space-x-4 pt-1 text-[11px] text-slate-500 font-mono flex-wrap gap-y-1">
+                    <span>Evaluated {matchResponse.filter_stats.unique_creators} Creators</span>
+                    <span>•</span>
+                    <span className="text-rose-600">Filtered: {matchResponse.filter_stats.removed_merchants} Merchants, {matchResponse.filter_stats.removed_affiliate_bots} Spam Bots</span>
+                    <span>•</span>
+                    <span className="text-emerald-700 font-semibold">{matchResponse.filter_stats.scored} Qualified</span>
+                  </div>
                 )}
               </div>
+            )}
 
-              <div className="flex items-center space-x-2 flex-wrap">
+            {/* 2. 2-LEVEL FILTER BAR (Spec 6.2: Main Role & Sub-Style Filters) */}
+            <div className="bg-white border border-slate-200/90 rounded-3xl p-4 shadow-xs space-y-3">
+              {/* Level 1: 3-Way Main Role Filter (Spec 6.2: All / 🧠 KOL / 🛍️ KOC) */}
+              <div className="flex items-center space-x-2 pb-2 border-b border-slate-100 flex-wrap gap-y-1 text-xs">
+                <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider mr-1">Main Role:</span>
+                <button
+                  onClick={() => setRoleFilter('All')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold ${
+                    roleFilter === 'All'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  All Roles
+                </button>
+                <button
+                  onClick={() => setRoleFilter('KOL')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1 ${
+                    roleFilter === 'KOL'
+                      ? 'bg-[#0536d2] text-white shadow-xs'
+                      : 'bg-blue-50 text-[#0536d2] border border-blue-200 hover:bg-blue-100'
+                  }`}
+                >
+                  <span>🧠 KOL (Key Opinion Leader)</span>
+                  {matchResponse && (
+                    <span className="ml-1 text-[10px] opacity-80">
+                      ({matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOL').length})
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setRoleFilter('KOC')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1 ${
+                    roleFilter === 'KOC'
+                      ? 'bg-emerald-700 text-white shadow-xs'
+                      : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                >
+                  <span>🛍️ KOC (Key Opinion Consumer)</span>
+                  {matchResponse && (
+                    <span className="ml-1 text-[10px] opacity-80">
+                      ({matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOC').length})
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Level 2: Sub-Style Tabs */}
+              <div className="flex items-center space-x-1.5 border-b border-slate-100 pb-2.5 overflow-x-auto text-xs font-semibold">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                    activeTab === 'all'
+                      ? 'bg-[#0536d2] text-white font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 bg-slate-100'
+                  }`}
+                >
+                  <span>All Matches</span>
+                  {matchResponse && (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 text-white font-bold">
+                      {matchResponse.ranked_kols.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('guru')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                    activeTab === 'guru'
+                      ? 'bg-indigo-600 text-white font-bold shadow-xs'
+                      : 'text-indigo-900 bg-indigo-50 border border-indigo-200'
+                  }`}
+                >
+                  <span>🧠 KOL: Expert Guru</span>
+                  {matchResponse && (
+                    <span className="ml-1 text-[10px] opacity-80">
+                      ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Expert / Guru').length})
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('lifestyle')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                    activeTab === 'lifestyle'
+                      ? 'bg-teal-600 text-white font-bold shadow-xs'
+                      : 'text-teal-900 bg-teal-50 border border-teal-200'
+                  }`}
+                >
+                  <span>✨ KOL: Lifestyle</span>
+                  {matchResponse && (
+                    <span className="ml-1 text-[10px] opacity-80">
+                      ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Lifestyle / Aesthetic').length})
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('hardsell')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                    activeTab === 'hardsell'
+                      ? 'bg-purple-600 text-white font-bold shadow-xs'
+                      : 'text-purple-900 bg-purple-50 border border-purple-200'
+                  }`}
+                >
+                  <span>🛍️ KOC: Hard-Sell Reviewer</span>
+                  {matchResponse && (
+                    <span className="ml-1 text-[10px] opacity-80">
+                      ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Hard-Sell Reviewer').length})
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('everyday')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                    activeTab === 'everyday'
+                      ? 'bg-amber-600 text-white font-bold shadow-xs'
+                      : 'text-amber-900 bg-amber-50 border border-amber-200'
+                  }`}
+                >
+                  <span>🤳 KOC: Everyday Vlog</span>
+                  {matchResponse && (
+                    <span className="ml-1 text-[10px] opacity-80">
+                      ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Everyday User / Vlog').length})
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('excluded')}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                    activeTab === 'excluded'
+                      ? 'bg-rose-600 text-white font-bold shadow-xs'
+                      : 'text-rose-900 bg-rose-50 border border-rose-200'
+                  }`}
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Filtered ({matchResponse?.excluded_creators?.length || 0})</span>
+                </button>
+              </div>
+
+              {/* Level 2: Search, Tier, Sort, Top-K & Export CSV */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Filter handle, bio..."
-                    className="bg-white border border-slate-200 rounded-2xl pl-8.5 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] w-32 sm:w-44 transition"
+                    placeholder="Search creator, bio..."
+                    className="bg-white border border-slate-200 rounded-2xl pl-8.5 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2] w-36 sm:w-48 transition"
                   />
                 </div>
 
-                <select
-                  value={tierFilter}
-                  onChange={e => setTierFilter(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-slate-800 text-xs focus:outline-none focus:border-[#0536d2]"
-                >
-                  <option value="All">All Tiers</option>
-                  <option value="Nano">Nano (&lt;50K)</option>
-                  <option value="Micro">Micro (50K-250K)</option>
-                  <option value="Mid">Mid-Tier (250K-1M)</option>
-                  <option value="Macro">Macro (&gt;1M)</option>
-                </select>
-
-                <select
-                  value={sortBy}
-                  onChange={e => setSortBy(e.target.value as any)}
-                  className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-slate-800 text-xs focus:outline-none focus:border-[#0536d2]"
-                >
-                  <option value="score">Sort: Match Score</option>
-                  <option value="er">Sort: Highest ER%</option>
-                  <option value="followers">Sort: Followers</option>
-                </select>
-
-                <select
-                  value={topK}
-                  onChange={e => setTopK(Number(e.target.value))}
-                  className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-slate-800 text-xs focus:outline-none focus:border-[#0536d2] font-semibold text-[#0536d2]"
-                  title="Top K KOL Rank Cutoff"
-                >
-                  <option value={10}>Top 10 KOLs</option>
-                  <option value={20}>Top 20 KOLs</option>
-                  <option value={30}>Top 30 KOLs</option>
-                  <option value={50}>Top 50 KOLs</option>
-                </select>
-
-                {matchResponse && (
-                  <button
-                    onClick={exportToCSV}
-                    className="px-3.5 py-2 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                <div className="flex items-center space-x-2 flex-wrap">
+                  {/* Follower Tier Filter */}
+                  <select
+                    value={tierFilter}
+                    onChange={e => setTierFilter(e.target.value)}
+                    className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-slate-800 text-xs focus:outline-none focus:border-[#0536d2]"
                   >
-                    <Download className="w-3.5 h-3.5 text-[#0536d2]" />
-                    <span>Export CSV</span>
-                  </button>
-                )}
+                    <option value="All">All Tiers</option>
+                    <option value="Nano">Nano (1K-10K)</option>
+                    <option value="Micro">Micro (10K-100K)</option>
+                    <option value="Mid-Tier">Mid-Tier (100K-500K)</option>
+                    <option value="Macro">Macro (500K+)</option>
+                  </select>
+
+                  <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value as any)}
+                    className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-slate-800 text-xs focus:outline-none focus:border-[#0536d2]"
+                  >
+                    <option value="score">Sort: Match Score</option>
+                    <option value="er">Sort: Highest ER%</option>
+                    <option value="followers">Sort: Followers</option>
+                  </select>
+
+                  <select
+                    value={topK}
+                    onChange={e => setTopK(Number(e.target.value))}
+                    className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-[#0536d2] font-semibold text-xs focus:outline-none"
+                  >
+                    <option value={10}>Top 10</option>
+                    <option value={20}>Top 20</option>
+                    <option value={30}>Top 30</option>
+                  </select>
+
+                  {matchResponse && (
+                    <button
+                      onClick={exportToCSV}
+                      className="px-3 py-2 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                      title="Export recommendations to CSV"
+                    >
+                      <Download className="w-3.5 h-3.5 text-[#0536d2]" />
+                      <span>CSV</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Real-Time Live Progress Bar & Stepper Dashboard */}
+            {/* Live Progress Stepper */}
             {(isMatching || (isAnalyzing && !matchResponse)) && (
-              <div className="bg-white border-2 border-[#597ef3]/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-lg shadow-blue-500/5 backdrop-blur-md relative overflow-hidden animate-in fade-in duration-300">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-blue-100/40 via-emerald-100/20 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-                {/* Progress Header: Live Badge, Timer & Large Percentage */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 relative z-10">
-                  <div className="flex items-center space-x-2.5">
-                    <span className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0536d2] font-black text-xs uppercase tracking-wider shadow-2xs">
-                      <span className="w-2 h-2 rounded-full bg-[#03e78b] animate-ping" />
-                      <span>{isMatching ? 'Live Matching Active' : 'Brand DNA Ingestion'}</span>
-                    </span>
-                    <span className="inline-flex items-center space-x-1 text-xs text-slate-500 font-mono bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-                      <Clock className="w-3.5 h-3.5 text-slate-500" />
-                      <span>{String(Math.floor(elapsedSeconds / 60)).padStart(2, '0')}:{String(elapsedSeconds % 60).padStart(2, '0')}s</span>
-                    </span>
-                  </div>
-
-                  <div className="flex items-baseline space-x-1.5">
-                    <span className="text-3xl sm:text-4xl font-black text-[#0536d2] font-mono tracking-tight">
-                      {progressPercent}%
-                    </span>
-                    <span className="text-xs text-slate-400 font-semibold uppercase font-mono">progress</span>
-                  </div>
-                </div>
-
-                {/* Primary Animated Progress Bar Track */}
-                <div className="space-y-2 relative z-10">
-                  <div className="w-full h-4 sm:h-5 rounded-full bg-slate-100 border border-slate-200 shadow-inner overflow-hidden p-0.5 relative">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#0536d2] via-[#597ef3] to-[#03e78b] transition-all duration-300 ease-out relative shadow-sm"
-                      style={{ width: `${Math.max(4, progressPercent)}%` }}
-                    >
-                      <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center text-[10px] sm:text-[11px] text-slate-400 font-mono px-1">
-                    <span>0% Start</span>
-                    <span>25% Brand DNA</span>
-                    <span>55% Apify Scraper</span>
-                    <span>80% Scoring</span>
-                    <span>100% Ready</span>
-                  </div>
-                </div>
-
-                {/* Dynamic Phase Headline & Details */}
-                <div className="space-y-1.5 text-center sm:text-left relative z-10 bg-blue-50/60 border border-blue-200/80 rounded-2xl p-4">
-                  <div className="flex items-center space-x-2">
-                    <RefreshCw className="w-4 h-4 text-[#0536d2] animate-spin shrink-0" />
-                    <h4 className="text-sm sm:text-base font-bold text-slate-900">
-                      {progressStageTitle || 'กำลังประมวลผลข้อมูลสด...'}
-                    </h4>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed pl-6">
-                    {progressStageDesc || 'กำลังเชื่อมต่อ Live Scraper และ Gemini AI Engine...'}
-                  </p>
-                </div>
-
-                {/* 4-Step Interactive Milestone Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 text-left text-xs relative z-10">
-                  {/* Step 1 */}
-                  <div className={`p-3.5 rounded-2xl border transition-all ${
-                    activeStep > 1 || progressPercent === 100
-                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
-                      : activeStep === 1
-                      ? 'bg-blue-50 border-blue-300 text-[#0536d2] shadow-xs ring-2 ring-blue-100'
-                      : 'bg-slate-50 border-slate-200 text-slate-400'
-                  }`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-[10px] uppercase font-mono">Step 1</span>
-                      {activeStep > 1 || progressPercent === 100 ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      ) : activeStep === 1 ? (
-                        <RefreshCw className="w-3.5 h-3.5 text-[#0536d2] animate-spin" />
-                      ) : (
-                        <span className="w-2 h-2 rounded-full bg-slate-300" />
-                      )}
-                    </div>
-                    <span className="font-bold block text-xs">Brand DNA</span>
-                    <span className="text-[10px] opacity-80 block truncate">Jina + Gemini</span>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className={`p-3.5 rounded-2xl border transition-all ${
-                    activeStep > 2 || progressPercent === 100
-                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
-                      : activeStep === 2
-                      ? 'bg-blue-50 border-blue-300 text-[#0536d2] shadow-xs ring-2 ring-blue-100'
-                      : 'bg-slate-50 border-slate-200 text-slate-400'
-                  }`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-[10px] uppercase font-mono">Step 2</span>
-                      {activeStep > 2 || progressPercent === 100 ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      ) : activeStep === 2 ? (
-                        <RefreshCw className="w-3.5 h-3.5 text-[#0536d2] animate-spin" />
-                      ) : (
-                        <span className="w-2 h-2 rounded-full bg-slate-300" />
-                      )}
-                    </div>
-                    <span className="font-bold block text-xs">TikTok Scraper</span>
-                    <span className="text-[10px] opacity-80 block truncate">Apify Actor + Filter</span>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className={`p-3.5 rounded-2xl border transition-all ${
-                    activeStep > 3 || progressPercent === 100
-                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
-                      : activeStep === 3
-                      ? 'bg-blue-50 border-blue-300 text-[#0536d2] shadow-xs ring-2 ring-blue-100'
-                      : 'bg-slate-50 border-slate-200 text-slate-400'
-                  }`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-[10px] uppercase font-mono">Step 3</span>
-                      {activeStep > 3 || progressPercent === 100 ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      ) : activeStep === 3 ? (
-                        <RefreshCw className="w-3.5 h-3.5 text-[#0536d2] animate-spin" />
-                      ) : (
-                        <span className="w-2 h-2 rounded-full bg-slate-300" />
-                      )}
-                    </div>
-                    <span className="font-bold block text-xs">Multi-Signals</span>
-                    <span className="text-[10px] opacity-80 block truncate">ER, Utility, ตะกร้า</span>
-                  </div>
-
-                  {/* Step 4 */}
-                  <div className={`p-3.5 rounded-2xl border transition-all ${
-                    progressPercent === 100
-                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
-                      : activeStep === 4
-                      ? 'bg-blue-50 border-blue-300 text-[#0536d2] shadow-xs ring-2 ring-blue-100'
-                      : 'bg-slate-50 border-slate-200 text-slate-400'
-                  }`}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-[10px] uppercase font-mono">Step 4</span>
-                      {progressPercent === 100 ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      ) : activeStep === 4 ? (
-                        <RefreshCw className="w-3.5 h-3.5 text-[#0536d2] animate-spin" />
-                      ) : (
-                        <span className="w-2 h-2 rounded-full bg-slate-300" />
-                      )}
-                    </div>
-                    <span className="font-bold block text-xs">Match & Rank</span>
-                    <span className="text-[10px] opacity-80 block truncate">4 Archetypes & Fit</span>
-                  </div>
-                </div>
-
-                {/* Live Activity Terminal Log Ticker */}
-                {liveLogs.length > 0 && (
-                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-[11px] text-slate-300 space-y-1.5 shadow-inner relative z-10">
-                    <div className="flex items-center justify-between text-slate-500 pb-1.5 border-b border-slate-800/80 text-[10px]">
-                      <span className="flex items-center space-x-1.5">
-                        <Terminal className="w-3 h-3 text-[#03e78b]" />
-                        <span>LIVE PIPELINE LOGS (Zero-Mock 100%)</span>
-                      </span>
-                      <span className="text-slate-400 font-mono">Stream Active</span>
-                    </div>
-                    <div ref={logsContainerRef} className="space-y-1 max-h-28 overflow-y-auto pr-1">
-                      {liveLogs.map((log, idx) => (
-                        <div key={idx} className="flex items-start space-x-2 leading-relaxed">
-                          <span className="text-[#03e78b] select-none">›</span>
-                          <span className={log.includes('Success') || log.includes('ready') || log.includes('100%') ? 'text-emerald-400 font-semibold' : 'text-slate-200'}>
-                            {log}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Empty State before any search */}
-            {!isMatching && !isAnalyzing && !matchResponse && (
-              <div className="bg-white border border-slate-200/90 rounded-3xl p-12 text-center space-y-4 shadow-xs backdrop-blur-md">
-                <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-[#0536d2] shadow-xs">
-                  <Search className="w-8 h-8 text-[#597ef3]" />
-                </div>
-                <div className="space-y-1.5 max-w-sm mx-auto">
-                  <h4 className="text-base font-bold text-slate-900">พร้อมสำหรับการค้นหาครีเอเตอร์</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    กรอกข้อมูลแบรนด์ เว็บไซต์ หรือ Facebook Page ทางด้านซ้าย แล้วกดปุ่มเพื่อเริ่มค้นหาและจับคู่ครีเอเตอร์ตาม 4 Archetypes
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Nav Tabs for Results */}
-            {!isMatching && !isAnalyzing && matchResponse && (
-              <>
-                <div className="flex items-center space-x-2 border-b border-slate-200/90 pb-2 text-xs font-semibold flex-wrap gap-y-2">
-                  <button
-                    onClick={() => setActiveTab('ranked')}
-                    className={`px-3.5 py-1.5 rounded-2xl transition cursor-pointer flex items-center space-x-1.5 ${
-                      activeTab === 'ranked'
-                        ? 'bg-[#0536d2] text-white font-bold shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200'
-                    }`}
-                  >
-                    <span>All Top Matches</span>
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 text-white font-bold">
-                      {matchResponse.ranked_kols.length}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('guru')}
-                    className={`px-3.5 py-1.5 rounded-2xl transition cursor-pointer flex items-center space-x-1.5 ${
-                      activeTab === 'guru'
-                        ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                        : 'text-indigo-800 hover:bg-indigo-100 bg-indigo-50 border border-indigo-200'
-                    }`}
-                  >
-                    <span>🧠 Educated Guru ({matchResponse.ranked_kols.filter(k => k.kol.creator_archetype === 'Educated Guru').length})</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('reviewer')}
-                    className={`px-3.5 py-1.5 rounded-2xl transition cursor-pointer flex items-center space-x-1.5 ${
-                      activeTab === 'reviewer'
-                        ? 'bg-purple-600 text-white font-bold shadow-xs'
-                        : 'text-purple-800 hover:bg-purple-100 bg-purple-50 border border-purple-200'
-                    }`}
-                  >
-                    <span>⭐ Top Reviewer ({matchResponse.ranked_kols.filter(k => k.kol.creator_archetype === 'Top Reviewer').length})</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('lifestyle')}
-                    className={`px-3.5 py-1.5 rounded-2xl transition cursor-pointer flex items-center space-x-1.5 ${
-                      activeTab === 'lifestyle'
-                        ? 'bg-teal-600 text-white font-bold shadow-xs'
-                        : 'text-teal-800 hover:bg-teal-100 bg-teal-50 border border-teal-200'
-                    }`}
-                  >
-                    <span>🌴 Lifestyle & Vlog ({matchResponse.ranked_kols.filter(k => k.kol.creator_archetype === 'Lifestyle & Vlog').length})</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('niche')}
-                    className={`px-3.5 py-1.5 rounded-2xl transition cursor-pointer flex items-center space-x-1.5 ${
-                      activeTab === 'niche'
-                        ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                        : 'text-emerald-800 hover:bg-emerald-100 bg-emerald-50 border border-emerald-200'
-                    }`}
-                  >
-                    <span>🎯 Niche Enthusiast ({matchResponse.ranked_kols.filter(k => k.kol.creator_archetype === 'Niche Enthusiast').length})</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('spam')}
-                    className={`px-3.5 py-1.5 rounded-2xl transition cursor-pointer flex items-center space-x-1.5 ${
-                      activeTab === 'spam'
-                        ? 'bg-rose-500 text-white font-bold shadow-xs'
-                        : 'text-slate-600 hover:bg-slate-200 bg-slate-100 border border-slate-200'
-                    }`}
-                  >
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>Bot & Farm Traps (-55) ({matchResponse.penalized_spam_kols.length})</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('trace')}
-                    className={`px-3.5 py-1.5 rounded-2xl transition cursor-pointer ${
-                      activeTab === 'trace'
-                        ? 'bg-slate-900 text-white font-bold shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200'
-                    }`}
-                  >
-                    Pipeline Trace
-                  </button>
-                </div>
-
-                {/* Telemetry Status Bar */}
-                <div className="p-3.5 rounded-2xl bg-white border border-slate-200/90 text-xs text-slate-300 flex items-center justify-between backdrop-blur">
-                  <div className="flex items-center space-x-2">
-                    <ShieldCheck className="w-4 h-4 text-[#03e78b]" />
-                    <span>Telemetry Source:</span>
-                    <span className="font-semibold text-[#03e78b]">
-                      {matchResponse.apify_enrichment_status}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-slate-400 font-medium font-mono">
-                    Evaluated {matchResponse.total_candidates_evaluated} Live Creators
+              <div className="bg-white border-2 border-[#597ef3]/40 rounded-3xl p-6 sm:p-7 space-y-5 shadow-lg shadow-blue-500/5 animate-in fade-in duration-300">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <span className="flex items-center space-x-2 text-xs font-extrabold text-[#0536d2] uppercase tracking-wider">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#03e78b] animate-ping" />
+                    <span>{isMatching ? 'Stage 2-4 Live Pipeline' : 'Stage 1 Brand Analysis'}</span>
                   </span>
+                  <div className="flex items-baseline space-x-1">
+                    <span className="text-2xl font-black text-[#0536d2] font-mono">{progressPercent}%</span>
+                    <span className="text-xs text-slate-400 font-mono">({elapsedSeconds}s)</span>
+                  </div>
                 </div>
 
-                {/* TAB 1 & 2: RANKED KOLS LIST & ARCHETYPE TABS */}
-                {(activeTab === 'ranked' || activeTab === 'guru' || activeTab === 'reviewer' || activeTab === 'lifestyle' || activeTab === 'niche') && (
-                  <div className="space-y-4">
-                    {filteredRankedKOLs.map(item => {
-                      const isExpanded = expandedKOLId === item.kol.id;
-                      const isShortlisted = shortlist.some(s => s.kol.id === item.kol.id);
+                <div className="w-full h-3.5 rounded-full bg-slate-100 border border-slate-200 p-0.5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#0536d2] via-[#597ef3] to-[#03e78b] transition-all duration-300 ease-out"
+                    style={{ width: `${Math.max(4, progressPercent)}%` }}
+                  />
+                </div>
 
-                      return (
-                        <div
-                          key={item.kol.id}
-                          className="bg-white border border-slate-200/90 hover:border-[#597ef3]/50 rounded-3xl p-5 sm:p-6 shadow-xs transition-all space-y-4 relative backdrop-blur-md"
-                        >
-                          {/* Top Header: Avatar, Names, Links & Total Score */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-start space-x-3.5">
-                              {/* Avatar */}
-                              <div className="relative shrink-0">
-                                {item.kol.avatar_url ? (
-                                  <img
-                                    src={item.kol.avatar_url}
-                                    alt={item.kol.display_name}
-                                    className="w-13 h-13 rounded-2xl bg-slate-100 border-2 border-slate-200 object-cover shadow-xs"
-                                  />
-                                ) : (
-                                  <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#0536d2] to-[#597ef3] border-2 border-blue-400 text-white font-bold text-lg flex items-center justify-center shadow-xs uppercase">
-                                    {(item.kol.display_name || item.kol.handle).slice(0, 1)}
-                                  </div>
-                                )}
-                                <span className="absolute -top-1.5 -left-1.5 flex items-center justify-center w-5 h-5 rounded-full bg-[#0536d2] text-white font-black text-[10px] shadow border border-[#597ef3]">
-                                  #{item.rank}
-                                </span>
-                              </div>
+                <div className="space-y-1 bg-blue-50/60 p-3.5 rounded-2xl border border-blue-200/80">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center space-x-2">
+                    <RefreshCw className="w-3.5 h-3.5 text-[#0536d2] animate-spin" />
+                    <span>{progressStageTitle}</span>
+                  </h4>
+                  <p className="text-xs text-slate-600 pl-5">{progressStageDesc}</p>
+                </div>
 
-                              <div>
-                                <div className="flex items-center space-x-2 flex-wrap">
-                                  <h4 className="font-bold text-slate-900 text-base hover:text-[#0536d2] transition">
-                                    {item.kol.display_name}
-                                  </h4>
-                                  <a
-                                    href={item.kol.tiktok_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center space-x-1 text-xs text-[#0536d2] hover:text-white hover:bg-[#0536d2] font-mono bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 transition"
-                                  >
-                                    <span>@{item.kol.handle}</span>
-                                    <ExternalLink className="w-3 h-3" />
-                                  </a>
-                                </div>
-                                <p className="text-xs text-slate-700 mt-1 line-clamp-2 leading-relaxed">{item.kol.bio}</p>
-                                <div className="flex items-center space-x-2 text-xs text-slate-500 mt-1.5 flex-wrap font-medium gap-y-1">
-                                  <span className="text-slate-800 font-semibold px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200">
-                                    {item.kol.tier}
-                                  </span>
-                                  <span>•</span>
-                                  <span className="font-mono text-slate-600">{item.kol.follower_count.toLocaleString()} Followers</span>
-                                  <span>•</span>
-                                  <span className="text-emerald-700 font-semibold font-mono">
-                                    Est Rate: {item.kol.estimated_rate_thb}
-                                  </span>
-                                  {item.kol.creator_archetype && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="inline-flex items-center space-x-1 font-bold text-indigo-900 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
-                                        <Award className="w-3 h-3 text-indigo-600" />
-                                        <span>{item.kol.creator_archetype}</span>
-                                        {item.kol.recommended_role && (
-                                          <span className="text-[10px] text-indigo-700 bg-indigo-100 px-1.5 py-0.2 rounded font-mono">
-                                            {item.kol.recommended_role}
-                                          </span>
-                                        )}
-                                      </span>
-                                    </>
-                                  )}
-                                  {item.kol.is_work_ready && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="inline-flex items-center space-x-1 font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
-                                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                        <span>พร้อมรับงาน</span>
-                                      </span>
-                                    </>
-                                  )}
-                                  {item.kol.is_casual_niche_fit ? (
-                                    <>
-                                      <span>•</span>
-                                      <span className="inline-flex items-center space-x-1 font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-300 shadow-2xs" title="ตรวจสอบจาก 5 คลิปล่าสุด พบว่าเป็นการเข้ามาสัมผัสชั่วคราว/ท่องเที่ยว (Casual Fit) ไม่ใช่ Core Specialist">
-                                        <span>💡 Casual Niche Fit ({Math.round((item.kol.niche_consistency_ratio ?? 0) * 100)}%)</span>
-                                      </span>
-                                    </>
-                                  ) : (item.kol.niche_consistency_ratio !== undefined && item.kol.niche_consistency_ratio >= 0.5) ? (
-                                    <>
-                                      <span>•</span>
-                                      <span className="inline-flex items-center space-x-1 font-medium text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-300 shadow-2xs" title="ตรวจสอบ 5 คลิปล่าสุด มีความเจาะจงใน Niche นี้สม่ำเสมอ">
-                                        <span>🎯 Core Niche ({Math.round(item.kol.niche_consistency_ratio * 100)}%)</span>
-                                      </span>
-                                    </>
-                                  ) : null}
-                                  <span>•</span>
-                                  <span className="inline-flex items-center space-x-1 font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 shadow-2xs">
-                                    <ShoppingBag className="w-3 h-3 text-amber-600" />
-                                    <span>{item.kol.creator_category || 'Content Creator (เน้นรีวิว)'}</span>
-                                    {item.score_breakdown.yellow_basket_ratio > 0 && (
-                                      <span className="text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded font-mono">
-                                        ตะกร้า {Math.round(item.score_breakdown.yellow_basket_ratio * 100)}%
-                                      </span>
-                                    )}
-                                  </span>
-                                </div>
-
-                                {item.kol.competitor_warning && (
-                                  <div className={`mt-2 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 border ${
-                                    item.kol.competitor_warning.includes('Conflict')
-                                      ? 'bg-rose-50 text-rose-800 border-rose-200'
-                                      : 'bg-indigo-50 text-indigo-800 border-indigo-200'
-                                  }`}>
-                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-                                    <span>{item.kol.competitor_warning}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Match Score Badge & Shortlist */}
-                            <div className="flex flex-col items-end space-y-2 shrink-0">
-                              <div className="inline-flex items-baseline space-x-1 px-3.5 py-1.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-black text-lg shadow-xs">
-                                <span>{item.total_match_score.toFixed(1)}</span>
-                                <span className="text-[10px] text-emerald-600 font-semibold">/100</span>
-                              </div>
-
-                              <button
-                                onClick={() => toggleShortlist(item)}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer ${
-                                  isShortlisted
-                                    ? 'bg-[#03e78b] text-slate-950 shadow-sm font-bold'
-                                    : 'bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-[#0536d2] border border-slate-200'
-                                }`}
-                              >
-                                {isShortlisted ? (
-                                  <>
-                                    <Check className="w-3.5 h-3.5" />
-                                    <span>Shortlisted</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Plus className="w-3.5 h-3.5" />
-                                    <span>Add to Brief</span>
-                                  </>
-                                )}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* 3-Part Hybrid Score Breakdown (Spec 5: 40 / 35 / 25) */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
-                            {/* 1. Relevance (40%) */}
-                            <div className="space-y-1.5">
-                              <div className="flex justify-between items-center text-[11px]">
-                                <span className="text-slate-600 font-semibold">1. Brand Relevance (40%)</span>
-                                <span className="font-bold text-slate-900 font-mono">
-                                  {item.score_breakdown.relevance_weighted.toFixed(1)} / 40 pts
-                                </span>
-                              </div>
-                              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-[#0536d2] to-[#597ef3] rounded-full transition-all duration-500"
-                                  style={{
-                                    width: `${item.score_breakdown.relevance_score_raw}%`,
-                                  }}
-                                />
-                              </div>
-                              <div className="flex justify-between text-[10px] text-slate-500">
-                                <span>Semantic: {item.score_breakdown.semantic_points ?? (item.score_breakdown.semantic_similarity * 28).toFixed(1)}/28</span>
-                                <span className="text-[#0536d2] font-semibold">
-                                  Keywords & Work: {item.score_breakdown.niche_keyword_points ?? (item.score_breakdown.matched_keywords.length * 1.5).toFixed(1)}/12
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* 2. Engagement Quality (35%) */}
-                            <div className="space-y-1.5">
-                              <div className="flex justify-between items-center text-[11px]">
-                                <span className="text-slate-600 font-semibold">2. Engagement Quality (35%)</span>
-                                <span className="font-bold text-slate-900 font-mono">
-                                  {item.score_breakdown.engagement_weighted.toFixed(1)} / 35 pts
-                                </span>
-                              </div>
-                              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-[#0536d2] to-emerald-500 rounded-full transition-all duration-500"
-                                  style={{
-                                    width: `${item.score_breakdown.engagement_score_raw}%`,
-                                  }}
-                                />
-                              </div>
-                              <div className="flex justify-between text-[10px] text-slate-500">
-                                <span>
-                                  Median ER:{' '}
-                                  <strong className="text-emerald-700 font-mono">
-                                    {item.score_breakdown.median_engagement_rate_pct.toFixed(1)}%
-                                  </strong>
-                                </span>
-                                <span className="font-mono text-slate-600">
-                                  Save/View: {(item.kol.save_to_view_ratio || 0.02).toFixed(3)}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* 3. Multi-Signal Demographics (25%) */}
-                            <div className="space-y-1.5">
-                              <div className="flex justify-between items-center text-[11px]">
-                                <span className="text-slate-600 font-semibold">3. Audience Signal (25%)</span>
-                                <span className="font-bold text-slate-900 font-mono">
-                                  {item.score_breakdown.audience_weighted.toFixed(1)} / 25 pts
-                                </span>
-                              </div>
-                              <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                                <div
-                                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                                  style={{
-                                    width: `${item.score_breakdown.audience_score_raw}%`,
-                                  }}
-                                />
-                              </div>
-                              <div className="flex justify-between items-center text-[10px] gap-1.5 min-w-0">
-                                <span className="text-slate-500 truncate">Thai Reach & Intent</span>
-                                <span
-                                  className={`px-2 py-0.5 rounded-full font-bold text-[9px] shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 ${
-                                    item.score_breakdown.confidence_level === 'High'
-                                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                      : item.score_breakdown.confidence_level === 'Medium'
-                                      ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                                      : 'bg-rose-50 text-rose-800 border border-rose-200'
-                                  }`}
-                                >
-                                  <span
-                                    className={`w-1.5 h-1.5 rounded-full ${
-                                      item.score_breakdown.confidence_level === 'High'
-                                        ? 'bg-emerald-500'
-                                        : item.score_breakdown.confidence_level === 'Medium'
-                                        ? 'bg-amber-500'
-                                        : 'bg-rose-500'
-                                    }`}
-                                  />
-                                  <span>{item.score_breakdown.confidence_level} Conf.</span>
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Evidence Tags */}
-                          <div className="space-y-1.5">
-                            <span className="text-[11px] font-semibold text-slate-400 flex items-center space-x-1.5">
-                              <Info className="w-3.5 h-3.5 text-[#597ef3]" />
-                              <span>Live Telemetry Evidence:</span>
-                            </span>
-                            <div className="flex flex-wrap gap-1.5">
-                              {item.score_breakdown.evidence_list.map((ev, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2.5 py-1 rounded-xl bg-slate-50 text-slate-700 text-[11px] border border-slate-200 leading-tight font-medium"
-                                >
-                                  {ev}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Strategic Rationale */}
-                          <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-xs leading-relaxed text-slate-800">
-                            <strong className="text-blue-950 font-bold flex items-center space-x-1.5 mb-1">
-                              <Award className="w-3.5 h-3.5 text-[#0536d2]" />
-                              <span>Convert Cake Performance Rationale:</span>
-                            </strong>
-                            {item.why_this_kol}
-                          </div>
-
-                          {/* Audited Video Telemetry Drawer */}
-                          {item.kol.recent_videos && item.kol.recent_videos.length > 0 && (
-                            <div className="pt-1 border-t border-slate-200">
-                              <button
-                                onClick={() => setExpandedKOLId(isExpanded ? null : item.kol.id)}
-                                className="w-full py-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 font-semibold transition flex items-center justify-center space-x-2 cursor-pointer border border-slate-200"
-                              >
-                                <BarChart3 className="w-3.5 h-3.5 text-[#0536d2]" />
-                                <span>
-                                  {isExpanded
-                                    ? 'Hide Audited TikTok Videos & Audience Telemetry'
-                                    : `Inspect Audited TikTok Videos (${item.kol.recent_videos.length}) & Comments`}
-                                </span>
-                                {isExpanded ? (
-                                  <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
-                                ) : (
-                                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                                )}
-                              </button>
-
-                              {isExpanded && (
-                                <div className="mt-3 space-y-3 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 text-xs animate-in fade-in duration-300">
-                                  <h5 className="font-bold text-slate-900 text-xs flex items-center space-x-2">
-                                    <Eye className="w-3.5 h-3.5 text-[#0536d2]" />
-                                    <span>Recent Videos Audited by Scoring Engine:</span>
-                                  </h5>
-
-                                  <div className="space-y-2">
-                                    {item.kol.recent_videos.map((vid, vIdx) => (
-                                      <div
-                                        key={vIdx}
-                                        className="p-3 rounded-xl bg-white border border-slate-200 space-y-1.5"
-                                      >
-                                        <div className="flex items-start justify-between gap-2">
-                                          <p className="text-slate-900 text-xs font-medium line-clamp-1">
-                                            {vid.caption || 'TikTok video clip'}
-                                          </p>
-                                          {vid.has_yellow_basket && (
-                                            <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200 shrink-0 flex items-center space-x-1">
-                                              <ShoppingBag className="w-2.5 h-2.5" />
-                                              <span>ตะกร้าเหลือง</span>
-                                            </span>
-                                          )}
-                                        </div>
-
-                                        <div className="flex items-center space-x-3 text-[11px] text-slate-500 font-mono flex-wrap gap-y-1">
-                                          <span className="text-slate-800 font-semibold">{vid.views.toLocaleString()} views</span>
-                                          <span>•</span>
-                                          <span>{vid.likes.toLocaleString()} likes</span>
-                                          <span>•</span>
-                                          <span>{vid.comments.toLocaleString()} comments</span>
-                                          <span>•</span>
-                                          <span>{vid.shares.toLocaleString()} shares</span>
-                                          <span>•</span>
-                                          <span className="text-[#0536d2] font-semibold">{(vid.collect_count ?? 0).toLocaleString()} saves</span>
-                                          {vid.location_tag && (
-                                            <>
-                                              <span>•</span>
-                                              <span className="text-emerald-700 font-sans font-medium">📍 {vid.location_tag}</span>
-                                            </>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-
-                                  {/* Audience Comments */}
-                                  {item.kol.sample_comments && item.kol.sample_comments.length > 0 && (
-                                    <div className="pt-2 border-t border-slate-200">
-                                      <h5 className="font-bold text-slate-900 text-xs mb-2 flex items-center space-x-2">
-                                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
-                                        <span>Audience Comments & Sentiment:</span>
-                                      </h5>
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {item.kol.sample_comments.map((cmt, cIdx) => (
-                                          <div
-                                            key={cIdx}
-                                            className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-[11px] italic shadow-2xs"
-                                          >
-                                            "{cmt}"
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                {liveLogs.length > 0 && (
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-[11px] text-slate-300 space-y-1 max-h-28 overflow-y-auto" ref={logsContainerRef}>
+                    {liveLogs.map((log, idx) => (
+                      <div key={idx} className="flex items-start space-x-2">
+                        <span className="text-[#03e78b] select-none">›</span>
+                        <span className={log.includes('Success') ? 'text-emerald-400 font-bold' : 'text-slate-200'}>
+                          {log}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )}
+              </div>
+            )}
 
-                {/* TAB 2: ANTI-SPAM & BOT REPOST TRAPS */}
-                {activeTab === 'spam' && (
-                  <div className="space-y-4">
-                    <div className="p-5 rounded-3xl bg-rose-50 border border-rose-200 text-rose-950 text-xs space-y-2 shadow-xs">
-                      <div className="flex items-center space-x-2 font-bold text-rose-800 text-sm">
-                        <ShieldAlert className="w-4 h-4 text-rose-600" />
-                        <span>Bot & Repost Farm Trap Engine (-55 Pts Penalty)</span>
-                      </div>
-                      <p className="leading-relaxed text-rose-900">
-                        ระบบตรวจจับและหักลบ -55 แต้มเฉพาะบัญชีที่เป็น Bot, ฟาร์มรีโพสต์ หรือบัญชีปั่นยอดวิวที่ไม่มี Engagement คุณภาพจริง <strong>(ครีเอเตอร์สายรีวิวที่ปักตะกร้าเหลือง 100% จะได้รับการยกเว้น ไม่ถูกจัดเป็น Spam Trap และถูกจัดเข้าหมวด Top Reviewer)</strong>
-                      </p>
-                    </div>
+            {/* Empty State */}
+            {!isMatching && !isAnalyzing && !matchResponse && (
+              <div className="bg-white border border-slate-200/90 rounded-3xl p-12 text-center space-y-3 shadow-xs">
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-[#0536d2]">
+                  <Search className="w-7 h-7 text-[#597ef3]" />
+                </div>
+                <h4 className="text-base font-bold text-slate-900">พร้อมสำหรับการค้นหาครีเอเตอร์</h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                  ระบุชื่อแบรนด์, เว็บไซต์ หรือ Facebook Page ทางด้านซ้าย แล้วกดปุ่มเพื่อเริ่มค้นหา TikTok ครีเอเตอร์สดตามสเปก 4 ขั้นตอน
+                </p>
+              </div>
+            )}
 
-                    {matchResponse.penalized_spam_kols.map(item => (
-                      <div
-                        key={item.kol.id}
-                        className="bg-white border border-rose-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-3"
-                      >
-                        <div className="flex items-start justify-between">
+            {/* 3. EXPLAINABLE CREATOR CARDS (Spec 5.3 #3) */}
+            {!isMatching && !isAnalyzing && matchResponse && activeTab !== 'excluded' && activeTab !== 'trace' && (
+              <div className="space-y-4">
+                {filteredRankedKOLs.map(item => {
+                  const isExpanded = expandedKOLId === item.kol.id;
+                  const isCopied = copiedHookId === item.kol.id;
+
+                  return (
+                    <div
+                      key={item.kol.id}
+                      className="bg-white border border-slate-200/90 hover:border-[#597ef3]/50 rounded-3xl p-5 sm:p-6 shadow-xs transition space-y-4"
+                    >
+                      {/* Top Header: Rank, Names, Badges & Score */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start space-x-3.5">
+                          {/* Avatar */}
+                          <div className="relative shrink-0">
+                            {item.kol.avatar_url ? (
+                              <img
+                                src={item.kol.avatar_url}
+                                alt={item.kol.display_name}
+                                className="w-13 h-13 rounded-2xl bg-slate-100 border-2 border-slate-200 object-cover"
+                              />
+                            ) : (
+                              <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#0536d2] to-[#597ef3] border-2 border-blue-400 text-white font-bold text-lg flex items-center justify-center uppercase">
+                                {(item.kol.display_name || item.kol.handle).slice(0, 1)}
+                              </div>
+                            )}
+                            <span className="absolute -top-1.5 -left-1.5 flex items-center justify-center w-5 h-5 rounded-full bg-[#0536d2] text-white font-black text-[10px] shadow border border-[#597ef3]">
+                              #{item.rank}
+                            </span>
+                          </div>
+
                           <div>
-                            <div className="flex items-center space-x-2">
-                              <span className="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200">
-                                FLAGGED BOT / FARM
-                              </span>
-                              <h4 className="font-bold text-slate-900 text-base">{item.kol.display_name}</h4>
+                            <div className="flex items-center space-x-2 flex-wrap">
+                              <h4 className="font-bold text-slate-900 text-base">
+                                {item.kol.display_name}
+                              </h4>
+                              {/* Direct TikTok profile link */}
                               <a
                                 href={item.kol.tiktok_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-[#0536d2] hover:underline font-mono flex items-center space-x-0.5"
+                                className="inline-flex items-center space-x-1 text-xs text-[#0536d2] hover:underline font-mono bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 transition"
                               >
                                 <span>@{item.kol.handle}</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             </div>
-                            <p className="text-xs text-slate-600 mt-1">{item.kol.bio}</p>
-                          </div>
 
-                          <div className="text-right">
-                            <span className="text-base font-extrabold text-rose-700 font-mono">
-                              {item.total_match_score.toFixed(1)} / 100
-                            </span>
-                            <span className="block text-[10px] text-rose-600 font-semibold font-mono">
-                              -55 pts Bot Penalty
-                            </span>
+                            <p className="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">
+                              {item.kol.bio}
+                            </p>
+
+                            {/* Badge row: Role, Sub-Style, Work-Ready, Tier */}
+                            <div className="flex items-center space-x-2 text-xs text-slate-500 mt-2 flex-wrap gap-y-1">
+                              {/* Main Role badge (Spec 6.2) */}
+                              <span className={`inline-flex items-center space-x-1 font-bold text-[11px] px-2.5 py-0.5 rounded-lg border ${
+                                item.kol.funnel_role === 'KOL'
+                                  ? 'bg-blue-100 text-[#0536d2] border-blue-300'
+                                  : 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                              }`}>
+                                <span>{item.kol.funnel_role === 'KOL' ? '🧠 KOL' : '🛍️ KOC'}</span>
+                              </span>
+
+                              {/* Sub-style badge */}
+                              {item.kol.sub_style && (
+                                <span className={`inline-flex items-center space-x-1 font-bold text-[11px] px-2.5 py-0.5 rounded-lg border ${
+                                  item.kol.sub_style.includes('Expert')
+                                    ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
+                                    : item.kol.sub_style.includes('Lifestyle')
+                                    ? 'bg-teal-50 text-teal-900 border-teal-200'
+                                    : item.kol.sub_style.includes('Hard-Sell')
+                                    ? 'bg-purple-50 text-purple-900 border-purple-200'
+                                    : 'bg-amber-50 text-amber-900 border-amber-200'
+                                }`}>
+                                  <Award className="w-3 h-3" />
+                                  <span>{item.kol.sub_style}</span>
+                                </span>
+                              )}
+
+                              {/* Work-Ready badge */}
+                              {item.kol.is_work_ready && (
+                                <span className="inline-flex items-center space-x-1 font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 text-[11px]">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  <span>✅ Open for Work</span>
+                                </span>
+                              )}
+
+                              <span className="text-slate-800 font-semibold px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-[11px]">
+                                {item.kol.tier} ({item.kol.follower_count.toLocaleString()})
+                              </span>
+
+                              {item.kol.signals.basket_ratio > 0 && (
+                                <span className="inline-flex items-center space-x-1 text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200 font-mono">
+                                  <ShoppingBag className="w-3 h-3 text-amber-600" />
+                                  <span>ตะกร้า {Math.round(item.kol.signals.basket_ratio * 100)}%</span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Key Performance Metrics Bar (Spec 6.2: Followers, Median Views, ER%, Save Rate%) */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-center font-mono">
+                              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl py-2 px-2.5">
+                                <span className="text-[10px] text-slate-500 block uppercase font-sans font-medium">Followers</span>
+                                <span className="text-xs font-bold text-slate-800">{item.kol.follower_count.toLocaleString()}</span>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl py-2 px-2.5">
+                                <span className="text-[10px] text-slate-500 block uppercase font-sans font-medium">Median Views</span>
+                                <span className="text-xs font-bold text-slate-800">
+                                  {item.kol.signals.median_views > 0
+                                    ? Math.round(item.kol.signals.median_views).toLocaleString()
+                                    : Math.round(item.kol.recent_videos.reduce((a, b) => a + b.views, 0) / Math.max(item.kol.recent_videos.length, 1)).toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl py-2 px-2.5">
+                                <span className="text-[10px] text-slate-500 block uppercase font-sans font-medium">Median ER%</span>
+                                <span className="text-xs font-bold text-[#0536d2]">
+                                  {(item.score_breakdown.median_engagement_rate * 100).toFixed(1)}%
+                                </span>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl py-2 px-2.5">
+                                <span className="text-[10px] text-slate-500 block uppercase font-sans font-medium">Save Rate%</span>
+                                <span className="text-xs font-bold text-emerald-700">
+                                  {(item.kol.signals.save_rate * 100).toFixed(2)}%
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Competitor Warning / Comparison Badge */}
+                            {item.kol.competitor_flags && item.kol.competitor_flags.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {item.kol.competitor_flags.map((flag, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={`px-3 py-1 rounded-xl text-xs font-semibold flex items-center space-x-1.5 border ${
+                                      flag.type === 'conflict'
+                                        ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                        : 'bg-indigo-50 text-indigo-800 border-indigo-200'
+                                    }`}
+                                  >
+                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                                    <span>{flag.label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-rose-50/80 border border-rose-200 text-xs text-rose-900 leading-relaxed">
-                          <strong className="text-rose-950 font-bold">Detection Trigger: </strong>
-                          {item.score_breakdown.affiliate_spam_reason}
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
-                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                            <span className="block text-[10px] text-slate-500 font-sans font-medium">Utility Save/View</span>
-                            <span className="font-bold text-slate-800 text-sm">
-                              {(item.kol.save_to_view_ratio || 0).toFixed(4)}
-                            </span>
-                          </div>
-                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                            <span className="block text-[10px] text-slate-500 font-sans font-medium">Median ER</span>
-                            <span className="font-bold text-slate-800 text-sm">
-                              {item.score_breakdown.median_engagement_rate_pct.toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                            <span className="block text-[10px] text-slate-500 font-sans font-medium">View Consistency</span>
-                            <span className="font-bold text-slate-800 text-sm">
-                              {(item.kol.view_consistency_ratio || 0).toFixed(2)}
-                            </span>
+                        {/* Match Score Badge */}
+                        <div className="flex flex-col items-end space-y-1 shrink-0">
+                          <div className="inline-flex items-baseline space-x-1 px-3.5 py-1.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-black text-lg shadow-xs">
+                            <span>{item.total_match_score.toFixed(1)}</span>
+                            <span className="text-[10px] text-emerald-600 font-semibold">/100</span>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
 
-                {/* TAB 3: WORKFLOW TRACE */}
-                {activeTab === 'trace' && (
-                  <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-                    <h4 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
-                      <RefreshCw className="w-4 h-4 text-[#0536d2]" />
-                      <span>LangGraph Execution Nodes & State Transitions</span>
-                    </h4>
-                    <div className="space-y-2">
-                      {matchResponse.workflow_trace.map((step, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-start space-x-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-800"
-                        >
-                          <span className="text-[#0536d2] font-bold shrink-0">[{idx + 1}]</span>
-                          <span>{step}</span>
+                      {/* 1-Sentence Strategic Fit Rationale (Spec 4.1 Gate 2 & 5.3) */}
+                      {item.kol.why_it_fits && (
+                        <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200 text-xs text-slate-800 leading-relaxed">
+                          <strong className="text-[#0536d2] font-bold block mb-0.5">
+                            💡 Strategic Brand Fit (Why this creator):
+                          </strong>
+                          {item.kol.why_it_fits}
                         </div>
-                      ))}
+                      )}
+
+                      {/* 3-DIMENSION SCORE BREAKDOWN BARS (Spec 4.3: 40 / 35 / 25) */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+                        {/* 1. Relevance (40) */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center text-[11px]">
+                            <span className="text-slate-600 font-semibold">1. Brand Relevance (40)</span>
+                            <span className="font-bold text-slate-900 font-mono">
+                              {item.score_breakdown.relevance_total.toFixed(1)} / 40
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-[#0536d2] to-[#597ef3] rounded-full transition-all"
+                              style={{ width: `${(item.score_breakdown.relevance_total / 40) * 100}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                            <span>Semantic+LLM: {item.score_breakdown.semantic_llm_points.toFixed(1)}/30</span>
+                            <span>Niche/Work: {item.score_breakdown.subniche_workready_points.toFixed(1)}/10</span>
+                          </div>
+                        </div>
+
+                        {/* 2. Engagement Quality (35) */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center text-[11px]">
+                            <span className="text-slate-600 font-semibold">2. Engagement Quality (35)</span>
+                            <span className="font-bold text-slate-900 font-mono">
+                              {item.score_breakdown.engagement_total.toFixed(1)} / 35
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-[#0536d2] to-emerald-500 rounded-full transition-all"
+                              style={{ width: `${(item.score_breakdown.engagement_total / 35) * 100}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                            <span>Median ER: {(item.score_breakdown.median_engagement_rate * 100).toFixed(1)}%</span>
+                            <span>Utility: {(item.score_breakdown.utility_score * 100).toFixed(1)}%</span>
+                          </div>
+                        </div>
+
+                        {/* 3. Audience Proxy (25) */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center text-[11px]">
+                            <span className="text-slate-600 font-semibold">3. Audience Proxy (25)</span>
+                            <span className="font-bold text-slate-900 font-mono">
+                              {item.score_breakdown.audience_total.toFixed(1)} / 25
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                            <div
+                              className="h-full bg-emerald-500 rounded-full transition-all"
+                              style={{ width: `${(item.score_breakdown.audience_total / 25) * 100}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                            <span>Thai: {item.score_breakdown.thai_authenticity_points.toFixed(1)}/10</span>
+                            <span>Intent: {item.score_breakdown.buyer_intent_points.toFixed(1)}/10</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 3-SECOND CAMPAIGN PITCH HOOK (Spec 5.2 & 5.3) */}
+                      {item.pitch_hook && (
+                        <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 flex items-start justify-between gap-3 text-xs">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 flex items-center space-x-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                              <span>3-Sec Role-Adaptive Pitch Hook ({item.kol.sub_style})</span>
+                            </span>
+                            <p className="text-slate-900 font-semibold italic text-xs leading-relaxed">
+                              "{item.pitch_hook}"
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => handleCopyHook(item.kol.id, item.pitch_hook)}
+                            className="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shrink-0"
+                          >
+                            {isCopied ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="text-emerald-700">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5 text-amber-700" />
+                                <span>Copy Hook</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Audited Video Telemetry Drawer */}
+                      {item.kol.recent_videos && item.kol.recent_videos.length > 0 && (
+                        <div className="pt-1 border-t border-slate-100">
+                          <button
+                            onClick={() => setExpandedKOLId(isExpanded ? null : item.kol.id)}
+                            className="w-full py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-xs text-slate-700 font-semibold transition flex items-center justify-center space-x-2 cursor-pointer border border-slate-200"
+                          >
+                            <BarChart3 className="w-3.5 h-3.5 text-[#0536d2]" />
+                            <span>
+                              {isExpanded
+                                ? 'Hide Audited Video Telemetry'
+                                : `Inspect Audited Videos (${item.kol.recent_videos.length}) & Intent Signals`}
+                            </span>
+                            {isExpanded ? (
+                              <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                            )}
+                          </button>
+
+                          {isExpanded && (
+                            <div className="mt-3 space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs animate-in fade-in duration-200">
+                              <h5 className="font-bold text-slate-900 text-xs flex items-center space-x-2">
+                                <Eye className="w-3.5 h-3.5 text-[#0536d2]" />
+                                <span>Audited Videos Telemetry (Median ER & Utility calculation):</span>
+                              </h5>
+
+                              <div className="space-y-2">
+                                {item.kol.recent_videos.map((vid, vIdx) => (
+                                  <div
+                                    key={vIdx}
+                                    className="p-3 rounded-xl bg-white border border-slate-200 space-y-1.5"
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <p className="text-slate-900 text-xs font-medium line-clamp-1">
+                                        {vid.caption || 'TikTok video clip'}
+                                      </p>
+                                      {vid.has_yellow_basket && (
+                                        <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200 shrink-0 flex items-center space-x-1">
+                                          <ShoppingBag className="w-2.5 h-2.5" />
+                                          <span>ตะกร้า</span>
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center space-x-3 text-[11px] text-slate-500 font-mono flex-wrap gap-y-1">
+                                      <span className="text-slate-800 font-semibold">{vid.views.toLocaleString()} views</span>
+                                      <span>•</span>
+                                      <span>{vid.likes.toLocaleString()} likes</span>
+                                      <span>•</span>
+                                      <span>{vid.comments.toLocaleString()} comments</span>
+                                      <span>•</span>
+                                      <span>{vid.shares.toLocaleString()} shares</span>
+                                      <span>•</span>
+                                      <span className="text-[#0536d2] font-semibold">{(vid.collect_count ?? 0).toLocaleString()} saves</span>
+                                      {vid.query_origin && (
+                                        <>
+                                          <span>•</span>
+                                          <span className="text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded font-sans text-[10px]">
+                                            {vid.query_origin}
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Real Comments if scraped */}
+                              {item.kol.real_comments && item.kol.real_comments.length > 0 && (
+                                <div className="pt-2 border-t border-slate-200">
+                                  <h5 className="font-bold text-slate-900 text-xs mb-1.5 flex items-center space-x-1.5">
+                                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Tier-2 Scraped Comments (Buyer Intent Analysis):</span>
+                                  </h5>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {item.kol.real_comments.slice(0, 6).map((c, ci) => (
+                                      <div key={ci} className="p-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-[11px] italic">
+                                        "{c}"
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* TAB: EXCLUDED CREATORS (Transparency on Gate 1 & 2 Filters) */}
+            {activeTab === 'excluded' && matchResponse && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-3xl bg-rose-50 border border-rose-200 text-rose-950 text-xs space-y-1.5">
+                  <div className="flex items-center space-x-2 font-bold text-rose-800 text-sm">
+                    <ShieldAlert className="w-4 h-4 text-rose-600" />
+                    <span>Two-Stage Entity Exclusion Transparency</span>
+                  </div>
+                  <p className="leading-relaxed text-rose-900">
+                    แสดงรายชื่อบัญชีที่ถูกตัดออกผ่าน <strong>Gate 1 (ร้านค้า/โรงงาน, Official Store, Smart Spam Bot)</strong> หรือ <strong>Gate 2 (ช่องข่าว/มีมตลก/คำพ้องรูปหลุดหมวด)</strong> เพื่อความโปร่งใสและปกป้องงบประมาณโฆษณา
+                  </p>
+                </div>
+
+                {matchResponse.excluded_creators.map((c, i) => (
+                  <div
+                    key={i}
+                    className="bg-white border border-rose-200 rounded-3xl p-5 shadow-xs space-y-2"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px] uppercase font-mono">
+                            {c.stage.replace('_', ' ')}
+                          </span>
+                          <h4 className="font-bold text-slate-900 text-base">{c.display_name}</h4>
+                          <a
+                            href={c.tiktok_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-[#0536d2] hover:underline font-mono"
+                          >
+                            @{c.handle}
+                          </a>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-1">{c.bio}</p>
+                      </div>
+
+                      <span className="text-xs text-slate-400 font-mono">
+                        {c.follower_count.toLocaleString()} fans
+                      </span>
+                    </div>
+
+                    <div className="p-3 rounded-2xl bg-rose-50/70 border border-rose-200 text-xs text-rose-900">
+                      <strong>Exclusion Reason:</strong> {c.reason}
                     </div>
                   </div>
-                )}
-              </>
+                ))}
+              </div>
             )}
           </div>
         </div>
       </main>
-
-      {/* CAMPAIGN SHORTLIST FLOATING DRAWER */}
-      {shortlist.length > 0 && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-11/12 max-w-3xl bg-slate-950/95 border border-slate-800 rounded-3xl p-4 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-4 animate-in slide-in-from-bottom duration-300 text-white">
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#0536d2] text-white flex items-center justify-center font-black text-sm shrink-0 font-mono shadow-md">
-              {shortlist.length}
-            </div>
-            <div>
-              <h4 className="font-bold text-white text-xs sm:text-sm">
-                Campaign Shortlist ({shortlist.length} Creators)
-              </h4>
-              <p className="text-[11px] text-slate-400">
-                Projected Potential Reach:{' '}
-                <strong className="text-[#03e78b] font-semibold font-mono">
-                  {shortlist.reduce((acc, c) => acc + c.kol.follower_count, 0).toLocaleString()}
-                </strong>{' '}
-                followers
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={copyCampaignProposal}
-              className="px-5 py-2.5 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] active:bg-[#031f7a] text-white font-bold text-xs transition flex items-center space-x-1.5 shadow-md shadow-blue-600/30 cursor-pointer border border-blue-500"
-            >
-              {copiedBrief ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>Copied Proposal!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4 text-white" />
-                  <span>Copy Pitch Proposal</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => setShortlist([])}
-              className="p-2.5 rounded-2xl bg-slate-900 hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-800 transition cursor-pointer"
-              title="Clear shortlist"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

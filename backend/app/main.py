@@ -24,6 +24,7 @@ from app.models import (
     MatchResponse,
 )
 from app.services.brand_analyzer import get_brand_analyzer
+from app.services.demo_cache import get_demo_cache
 from app.workflow.graph import run_full_matching
 
 app = FastAPI(
@@ -50,6 +51,7 @@ async def root():
         "market": "Thailand",
         "endpoints": [
             "/api/health",
+            "/api/demo-presets",
             "/api/analyze-brand",
             "/api/match-kols",
             "/api/auto-match",
@@ -62,15 +64,43 @@ async def health():
     return {"status": "healthy", "service": "kol-matcher-backend"}
 
 
+@app.get("/api/demo-presets")
+async def demo_presets():
+    """
+    Pre-warmed demo brands that bypass live API costs (0 Gemini tokens & 0 Apify credits).
+    """
+    cache = get_demo_cache()
+    return cache.get_presets()
+
+
 @app.post("/api/analyze-brand", response_model=BrandDNA)
 async def analyze_brand(req: BrandAnalyzeRequest):
     """
     Stage 1: Extract Brand DNA from client website/Facebook page with Gemini 3.5 Flash Lite.
     Supports Human-in-the-Loop review & editing prior to Stage 2.
+    Checks Demo Cache first to save tokens on repeated brand runs.
     """
     try:
+        demo_cache = get_demo_cache()
+        if not req.force_refresh:
+            cached_dna = demo_cache.get_cached_brand_dna(
+                brand_name=req.brand_name,
+                website_url=req.website_url,
+                facebook_url=req.facebook_url,
+                force_refresh=req.force_refresh,
+            )
+            if cached_dna:
+                return cached_dna
+
         analyzer = get_brand_analyzer()
         brand_dna = await analyzer.analyze(req)
+        # Dynamically cache for demo
+        demo_cache.save_brand_dna(
+            brand_name=req.brand_name,
+            website_url=req.website_url,
+            facebook_url=req.facebook_url,
+            brand_dna=brand_dna,
+        )
         return brand_dna
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to analyze brand: {str(e)}")
@@ -81,44 +111,82 @@ async def match_kols(req: MatchRequest):
     """
     Stage 2: Evaluate & rank live Thai TikTok creators against Brand DNA
     using the Archetype-Aware Dynamic Scoring Engine (Relevance 40%, Engagement 35%, Multi-Signal Audience 25%).
+    Checks Demo Cache first for instant presentation throughput.
     """
     try:
+        demo_cache = get_demo_cache()
+        if not req.force_refresh:
+            cached_resp = demo_cache.get_cached_match_response(
+                brand_name=req.brand_dna.brand_name,
+                website_url=req.brand_dna.website_url,
+                facebook_url=req.brand_dna.facebook_url,
+                top_k=req.top_k,
+                force_refresh=req.force_refresh,
+            )
+            if cached_resp:
+                return cached_resp
+
         response = await run_full_matching(
             brand_dna=req.brand_dna,
             top_k=req.top_k,
-            include_traps=req.include_penalized_traps,
-            min_followers=req.min_followers,
-            max_followers=req.max_followers,
+        )
+        demo_cache.save_match_response(
+            brand_name=req.brand_dna.brand_name,
+            website_url=req.brand_dna.website_url,
+            facebook_url=req.brand_dna.facebook_url,
+            response=response,
         )
         return response
     except Exception as e:
-        if "HTTP 402" in str(e) or "Quota Exhausted" in str(e):
-            raise HTTPException(status_code=402, detail=str(e))
-        raise HTTPException(status_code=500, detail=f"KOL matching failed: {str(e)}")
+        err_msg = str(e)
+        if any(keyword in err_msg for keyword in ["HTTP 402", "HTTP 403", "Quota Exhausted", "hard limit exceeded", "usage limit"]):
+            raise HTTPException(status_code=402, detail=f"Apify Usage Quota Exhausted: {err_msg}")
+        raise HTTPException(status_code=500, detail=f"KOL matching failed: {err_msg}")
 
 
 @app.post("/api/auto-match", response_model=MatchResponse)
 async def auto_match(req: AutoMatchRequest):
     """
     1-Click End-to-End matching pipeline combining Stage 1 & Stage 2 via LangGraph.
+    Checks Demo Cache first: 0 tokens, 0 Apify credits, < 0.1s latency.
     """
     try:
+        demo_cache = get_demo_cache()
+        if not req.force_refresh:
+            cached_resp = demo_cache.get_cached_match_response(
+                brand_name=req.brand_name,
+                website_url=req.website_url,
+                facebook_url=req.facebook_url,
+                top_k=req.top_k,
+                force_refresh=req.force_refresh,
+            )
+            if cached_resp:
+                return cached_resp
+
         brand_req = BrandAnalyzeRequest(
             brand_name=req.brand_name,
             website_url=req.website_url,
             facebook_url=req.facebook_url,
             custom_notes=req.custom_notes,
             manual_competitors=req.manual_competitors,
+            force_refresh=req.force_refresh,
         )
         response = await run_full_matching(
             brand_request=brand_req,
             top_k=req.top_k,
         )
+        demo_cache.save_match_response(
+            brand_name=req.brand_name,
+            website_url=req.website_url,
+            facebook_url=req.facebook_url,
+            response=response,
+        )
         return response
     except Exception as e:
-        if "HTTP 402" in str(e) or "Quota Exhausted" in str(e):
-            raise HTTPException(status_code=402, detail=str(e))
-        raise HTTPException(status_code=500, detail=f"Auto matching failed: {str(e)}")
+        err_msg = str(e)
+        if any(keyword in err_msg for keyword in ["HTTP 402", "HTTP 403", "Quota Exhausted", "hard limit exceeded", "usage limit"]):
+            raise HTTPException(status_code=402, detail=f"Apify Usage Quota Exhausted: {err_msg}")
+        raise HTTPException(status_code=500, detail=f"Auto matching failed: {err_msg}")
 
 
 if __name__ == "__main__":

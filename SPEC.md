@@ -1,28 +1,31 @@
-# Convert Cake — TikTok KOL Matcher (Thailand) Architecture Spec
+# Convert Cake — TikTok KOL/KOC Matching Engine (Thailand) Specification
 
-## 1. Objective
-Build a working prototype for Convert Cake (Digital Marketing Agency) that:
-1. Analyzes a client's Facebook Page and Website to extract Brand DNA (industry/vertical, target audience, brand tone, content style, price positioning, Thai search keywords/hashtags).
-2. Identifies & evaluates relevant Thai TikTok Influencers / KOLs using a Two-Stage RAG + Live Apify Enrichment pipeline (with resilient local fallback dataset).
-3. Ranks KOLs using a Hybrid Scoring Engine:
-   - **Brand & Content Relevance (45%)**: Semantic vector similarity + LLM rubric alignment.
-   - **Engagement Quality & Consistency (35%)**: Deterministic math on recent videos (`Median((Likes + Comments*2 + Shares*3) / Views)` + `Views-to-Followers Ratio`) with an **Affiliate Spam / Yellow-Basket Penalty Filter**.
-   - **Multi-Signal Audience Alignment (20%)**: Public data inference across 4 signals (1. Creator persona & visual style, 2. Product price-point proxy, 3. Thai geo/language & check-in signals, 4. Commenters sample) + explicit `Confidence Level (High/Medium/Low)` and evidence list.
-4. Outputs a curated, ranked list of Thai TikTok KOLs with direct TikTok profile links (`https://www.tiktok.com/@handle`), score breakdowns, audience persona alignment, and custom Thai TikTok campaign hook ideas.
+## 1. Overview & Funnel Pipeline Architecture
+ระบบจับคู่แบรนด์ลูกค้าเข้ากับ TikTok KOL และ KOC ในประเทศไทยที่ออกแบบตามหลักการทำงานจริงของ **Convert Cake (Performance-Only Marketing Agency)**
+ขับเคลื่อนด้วย Marketing Funnel และ Data Proxy 4 ขั้นตอนหลัก:
 
-## 2. Architecture & Stack
-- **Backend (`/backend`)**:
-  - Python FastAPI (`app/main.py`)
-  - LangGraph 2-Stage Workflow (`app/workflow/graph.py`):
-    - Stage 1 (`analyze_brand_node`): Scrapes Website (via Jina Reader / BeautifulSoup httpx + Apify FB fallback + preset Thai brand cases) -> produces structured `BrandDNA` (supports Human-in-the-Loop review/edit before Stage 2, plus 1-click Auto-Run).
-    - Stage 2 (`discover_kols_node` -> `enrich_apify_node` -> `score_and_rank_node` -> `generate_hooks_node`): Queries the pre-indexed Thai TikTok KOL pool (in-memory cosine vector search + TF-IDF/embedding hybrid + optional live Apify `clockworks/tiktok-scraper` or `apify/tiktok-scraper` actor call when `APIFY_API_TOKEN` is set) -> computes deterministic engagement + multi-signal audience alignment + LLM/heuristic rationale & Thai campaign hooks.
-  - Seed Dataset (`app/data/thai_kols_seed.json` & `app/data/sample_brands.json`):
-    - ~36 realistic, richly detailed Thai TikTok KOL profiles across 3 core verticals (**Beauty & Skincare**, **Cafe / F&B & Lifestyle**, **Gadgets / Home & Living**), including several deliberate 'trap/affiliate spam' profiles so the anti-spam penalty filter is demonstrably tested.
-    - Each KOL has real TikTok URL format (`https://www.tiktok.com/@...`), bio, follower count, recent 10 videos metrics (views, likes, comments, shares, captions, hashtags, price-point signals, location tags, sample Thai comments).
-  - Comprehensive `pytest` test suite (`backend/tests/test_api_and_scoring.py`) testing Stage 1, Stage 2, math scoring, anti-spam penalty, multi-signal demographics, and API endpoints.
-- **Frontend (`/frontend`)**:
-  - Next.js (App Router, TypeScript, Tailwind CSS, Lucide icons) agency dashboard.
-  - Features:
-    - Sample Thai Brand quick-fill presets (e.g., *Srichand / Cute Press Skincare*, *After You / Specialty Cafe BKK*, *Ergonomic Desk & Gadget Brand*) + custom Website URL & Facebook URL inputs.
-    - Step 1: Interactive **Brand DNA Card** (editable target audience, tone, price tier, Thai hashtags) with 'Confirm & Match KOLs' button + '1-Click Auto Match'.
-    - Step 2: **Curated Ranked KOL List** with Total Match Score, 3-part progress bars (Relevance 45%, Engagement 35%, Multi-Signal Demographics 20%), Confidence Badge, Evidence Pills (Price proxy, Geo signal, Persona, Comment sample), Affiliate Spam warning badge (if penalized), Custom Thai TikTok Hook idea, Direct link to TikTok profile, and CSV/JSON Export.
+1. **ขั้นที่ 1 — Brand DNA & Conversion Model Classification:**
+   - วิเคราะห์ Website (Jina Reader API + fallback httpx/BeautifulSoup) และ Facebook Page (Apify Facebook Scraper)
+   - จำแนกแบรนด์ตาม 4 โมเดลธุรกิจตามวิธีทำเงิน (`ECOMMERCE_PRODUCT`, `APP_DIGITAL_SERVICE`, `HIGH_TICKET_LEADGEN`, `LIFESTYLE_EXPERIENCE`)
+   - กำหนดสัดส่วนแนะนำ Media Mix (KOL : KOC)
+   - สกัดคู่แข่งในไทยผ่าน Google Search Grounding (Competitor Layer 1)
+2. **ขั้นที่ 2 — Adaptive Scene Translation & TikTok Discovery:**
+   - แปลงธุรกิจเป็นคำค้นหาที่ครีเอเตอร์ไทยพูดเปิดคลิป (สั้นกระชับ 2-3 คำ, ไม่เกิน 18 ตัวอักษรไทย, 60/40 Direct vs Adjacent funnel, Anti-Merchant Guardrail)
+   - แยกชุดคำค้นหาฝั่ง `KOL_QUERY` และ `KOC_QUERY` กวาดคลิปสดผ่าน Apify (ล็อก `proxyCountryCode: "TH"`)
+   - ตรวจจับคู่แข่งร่วมในแฮชแท็กของคลิป (Competitor Layer 2 Co-occurrence)
+3. **ขั้นที่ 3 — Two-Stage Filtering, 2x2 KOL/KOC Classification & Dynamic Scoring:**
+   - **Gate 1:** กรองร้านค้า/โรงงาน และ Smart Affiliate Bot Filter (ตัดเฉพาะตะกร้า >85% AND ไร้ข้อความรับงาน AND ยอดคอมเมนต์<=1 หรือวิวมัธยฐาน<300) โดยไม่ตัด KOC สายป้ายยาตัวท็อป
+   - **Gate 2:** Batch LLM Relevance Gate (1 API Call) คัดช่องหลุดหมวด/มีมตลกออก
+   - **2x2 Matrix:** จัดเข้า 2 บทบาทหลัก แตกเป็น 4 สไตล์ย่อย (`KOL - Expert / Guru`, `KOL - Lifestyle / Aesthetic`, `KOC - Hard-Sell Reviewer`, `KOC - Everyday User / Vlog`)
+   - **Competitor Layer 3:** ติดป้าย `⚠️ Competitor Conflict` (รีวิวเดี่ยว) หรือ `🎯 Comparison Opportunity` (คลิปเปรียบเทียบหลายแบรนด์)
+   - **Dynamic Scoring (100 คะแนนเต็ม):**
+     - Brand & Funnel Relevance (40 คะแนน): Semantic & LLM Fit (28) + Niche & Work-Ready Bonus (12)
+     - Engagement Quality & Content Utility (35 คะแนน): Median ER บนคลิปวิว >= 500 (15) + Save/Share Utility (10) + Consistency (10)
+     - Audience Proxy & Commercial Viability (25 คะแนน): Thai Authenticity (10) + Buyer Intent Proxy (10) + Brand-Adaptive Affiliate Health (5)
+4. **ขั้นที่ 4 — Role-Adaptive Pitch Hooks & Agency Dashboard:**
+   - สร้างไอเดียเปิดคลิป 3 วินาทีแรกปรับตามสไตล์ย่อยของแต่ละคน (Expert Hook, Aesthetic Hook, Value Proof Hook, Daily Routine Hook)
+   - Frontend Dashboard: Strategy Summary Banner, 2-Level Filter Bar (Sub-style & Tier), Explainable Creator Cards, Copy 3-Sec Hook, Export CSV, และ Excluded Transparency tab.
+
+## 2. Technical Stack
+- **Backend:** FastAPI (Python 3.14 / 3.12), LangGraph (StateGraph 4 Nodes), google-genai 2.33, httpx, BeautifulSoup4, numpy.
+- **Frontend:** Vite 6 + React 19 + TypeScript + Tailwind CSS v4 + Lucide React.

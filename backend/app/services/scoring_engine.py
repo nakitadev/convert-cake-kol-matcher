@@ -1,40 +1,63 @@
-import math
+"""
+Stage 3 — Dynamic Scoring Engine (Spec 4.3 - 100 คะแนนเต็ม).
+
+3 Balanced Dimensions:
+1. Brand & Funnel Relevance (40 คะแนน):
+   - Semantic & LLM Fit Score (28 คะแนน): Cosine similarity (Brand Embedding vs Bio + Captions)
+     blended with LLM Relevance Gate score.
+   - Sub-Niche & Work-Ready Bonus (12 คะแนน): Niche keyword matches (8 pts) + Work-Ready signal (4 pts).
+2. Engagement Quality & Content Utility (35 คะแนน):
+   - Median Engagement Rate (15 คะแนน): (Likes + Comments + Shares + Saves) / Views median on clips >= 500 views.
+   - Save & Share Utility Score (10 คะแนน): (collectCount + 0.7 * shareCount) / max(playCount, 500),
+     bonus for 'KOL - Expert / Guru'.
+   - View Consistency Ratio (10 คะแนน): Median Views / Mean Views.
+3. Audience Proxy & Commercial Viability (25 คะแนน):
+   - Thai Audience Authenticity (10 คะแนน): Thai character presence in captions and comments.
+   - Buyer Intent Proxy (10 คะแนน): Tier-1 Fast Proxy vs Tier-2 Targeted Comment Analysis for Top-K.
+   - Brand-Adaptive Affiliate Health (5 คะแนน):
+     * ECOMMERCE_PRODUCT: KOC - Hard-Sell Reviewer with high basket & engagement gets full 5/5.
+     * LIFESTYLE_EXPERIENCE & HIGH_TICKET_LEADGEN: basket > 70% penalized to favor clean-image creators.
+     * Otherwise balanced ratio.
+"""
 import re
 import asyncio
+from statistics import median, mean
 from typing import List, Tuple, Dict, Any, Optional
+
 import numpy as np
 
 from app.models import (
     BrandDNA,
     KOLProfile,
     SignalBreakdown,
-    RankedKOL,
 )
 from app.services.gemini_service import get_gemini_service
+
+THAI_CHAR_PATTERN = re.compile(r"[\u0E00-\u0E7F]")
+
+BUYER_INTENT_KEYWORDS = [
+    "ราคา", "พิกัด", "ซื้อที่ไหน", "ใช้ดีไหม", "ใช้ดีมั้ย", "สั่งซื้อ",
+    "เท่าไหร่", "กี่บาท", "สนใจ", "ป้ายยา", "สั่งจากไหน", "ดีจริง", "ของแท้ไหม"
+]
 
 
 class ScoringEngine:
     """
-    Hybrid Scoring Engine for Thai TikTok KOL Matching:
-    1. Brand & Content Relevance (45%)
-    2. Deterministic Engagement Quality & Anti-Spam (35%)
-    3. Multi-Signal Audience Alignment (20%)
-    Zero-Hardcode: Dynamically synthesizes insights and hooks from live creator data.
+    Performance & Proxy-Driven Scoring Engine (100 Points Total)
+    Spec 4.3 implementation.
     """
 
     def get_kol_text_corpus(self, kol: KOLProfile) -> str:
-        return (
-            f"{kol.display_name} {kol.vertical} {' '.join(kol.secondary_verticals)} "
-            f"{kol.bio} {kol.creator_persona} {' '.join(kol.content_styles)} "
-            f"{' '.join([v.caption for v in kol.recent_videos])} "
-            f"{' '.join([tag for v in kol.recent_videos for tag in v.hashtags])}"
-        ).lower()
+        captions = " ".join([v.caption for v in kol.recent_videos if v.caption])
+        hashtags = " ".join([t for v in kol.recent_videos for t in v.hashtags if t])
+        return f"{kol.display_name} @{kol.handle} {kol.bio} {captions} {hashtags}".lower()
 
     def get_brand_text_corpus(self, brand: BrandDNA) -> str:
         return (
             f"{brand.brand_name} {brand.vertical} {brand.sub_category} "
             f"{brand.brand_summary} {brand.target_audience} "
-            f"{' '.join(brand.brand_tone)} {' '.join(brand.thai_keywords)}"
+            f"{' '.join(brand.brand_tone)} {' '.join(brand.niche_keywords)} "
+            f"{' '.join([q.query for q in brand.search_queries])}"
         ).lower()
 
     def evaluate_kol(
@@ -43,152 +66,200 @@ class ScoringEngine:
         brand: BrandDNA,
         kol_embedding: Optional[List[float]] = None,
         brand_embedding: Optional[List[float]] = None,
-    ) -> Tuple[float, SignalBreakdown, str, List[str]]:
-        # 1. Relevance (Spec 5.1: 40 pts max - Semantic 28 pts + Niche Keyword & Work-Ready 12 pts)
-        rel_raw, sem_sim, matched_kw, emb_model, sem_pts, kw_pts = self._calculate_relevance(
-            kol, brand, kol_embedding=kol_embedding, brand_embedding=brand_embedding
-        )
-        rel_weighted = round(sem_pts + kw_pts, 2)
+    ) -> Tuple[float, SignalBreakdown]:
+        evidence: List[str] = []
 
-        # 2. Engagement Quality (Spec 5.2: 35 pts max - Median ER 15 pts + Save-to-View 10 pts + Consistency 10 pts)
-        eng_raw, median_er, v_to_f, yb_ratio, is_penalized, pen_pts, pen_reason, er_pts, save_pts, cons_pts = self._calculate_engagement(kol)
-        eng_weighted = round(max(0.0, er_pts + save_pts + cons_pts - (pen_pts if is_penalized else 0.0)), 2)
+        # -------------------------------------------------------------
+        # 1. Brand & Funnel Relevance (40 คะแนน)
+        # -------------------------------------------------------------
+        # 1.1 Semantic & LLM Fit Score (28 คะแนน)
+        gemini = get_gemini_service()
+        cos_sim = 0.0
+        if kol_embedding and brand_embedding:
+            cos_sim = gemini.cosine_similarity(brand_embedding, kol_embedding)
+        else:
+            # Token fallback if embeddings unavailable
+            b_tokens = set(re.findall(r"\w+", self.get_brand_text_corpus(brand)))
+            k_tokens = set(re.findall(r"\w+", self.get_kol_text_corpus(kol)))
+            overlap = len(b_tokens & k_tokens)
+            union = len(b_tokens | k_tokens) or 1
+            cos_sim = min(1.0, max(0.05, (overlap / union) * 4.0))
 
-        # 3. Audience & Commercial Viability (Spec 5.3: 25 pts max - Thai Authenticity 10 pts + Buyer Intent 10 pts + Saturation 5 pts)
-        aud_raw, thai_pts, buyer_pts, sat_pts, s1, s2, s3, s4, conf, evidence = self._calculate_audience_signals(kol, brand)
-        aud_weighted = round(thai_pts + buyer_pts + sat_pts, 2)
+        # Normalized cosine [0, 1]
+        norm_cos = max(0.0, min(1.0, (cos_sim + 1.0) / 2.0 if cos_sim < 0 else cos_sim))
+        llm_score = kol.llm_relevance_score if kol.llm_relevance_score > 0 else norm_cos
+        blended_fit = (norm_cos * 0.5) + (llm_score * 0.5)
+        semantic_llm_pts = round(blended_fit * 30.0, 2)
 
-        # Final Score (100 pts total)
-        total_score = round(rel_weighted + eng_weighted + aud_weighted, 1)
-        total_score = max(0.0, min(100.0, total_score))
-
-        breakdown = SignalBreakdown(
-            relevance_score_raw=rel_raw,
-            relevance_weighted=rel_weighted,
-            semantic_similarity=sem_sim,
-            semantic_points=sem_pts,
-            niche_keyword_points=kw_pts,
-            niche_consistency_ratio=getattr(kol, 'niche_consistency_ratio', 1.0),
-            is_casual_niche_fit=getattr(kol, 'is_casual_niche_fit', False),
-            matched_keywords=matched_kw,
-            embedding_model=emb_model,
-            engagement_score_raw=eng_raw,
-            engagement_weighted=eng_weighted,
-            median_engagement_rate_pct=round(median_er, 2),
-            median_er_points=er_pts,
-            save_to_view_points=save_pts,
-            view_consistency_points=cons_pts,
-            views_to_followers_ratio=round(v_to_f, 3),
-            yellow_basket_ratio=round(yb_ratio, 2),
-            affiliate_spam_penalty_applied=is_penalized,
-            affiliate_spam_penalty_points=pen_pts,
-            affiliate_spam_reason=pen_reason,
-            audience_score_raw=aud_raw,
-            audience_weighted=aud_weighted,
-            thai_authenticity_points=thai_pts,
-            buyer_intent_points=buyer_pts,
-            affiliate_saturation_points=sat_pts,
-            persona_signal_score=s1,
-            price_proxy_signal_score=s2,
-            geo_language_signal_score=s3,
-            comment_sentiment_signal_score=s4,
-            confidence_level=conf,
-            evidence_list=evidence,
-        )
-
-        why_text = self._generate_strategic_rationale(kol, brand, breakdown)
-        hooks = self._generate_thai_campaign_hooks(kol, brand)
-
-        return total_score, breakdown, why_text, hooks
-
-    def _calculate_relevance(
-        self,
-        kol: KOLProfile,
-        brand: BrandDNA,
-        kol_embedding: Optional[List[float]] = None,
-        brand_embedding: Optional[List[float]] = None,
-    ) -> Tuple[float, float, List[str], str, float, float]:
-        brand_text_corpus = self.get_brand_text_corpus(brand)
-        kol_text_corpus = self.get_kol_text_corpus(kol)
-
-        vertical_match = 1.0 if brand.vertical.lower() in kol.vertical.lower() or kol.vertical.lower() in brand.vertical.lower() else 0.35
-        for sec in kol.secondary_verticals:
-            if sec.lower() in brand.vertical.lower() or brand.vertical.lower() in sec.lower():
-                vertical_match = max(vertical_match, 0.75)
-
-        matched_kw = []
-        for kw in brand.thai_keywords:
+        # 1.2 Sub-Niche & Work-Ready Bonus (10 คะแนน - Spec 4.3)
+        corpus = self.get_kol_text_corpus(kol)
+        matched_kw: List[str] = []
+        for kw in brand.niche_keywords:
             clean_kw = kw.strip().lower()
-            if clean_kw and clean_kw in kol_text_corpus:
+            if clean_kw and clean_kw in corpus:
                 matched_kw.append(kw)
 
-        kw_ratio = len(matched_kw) / max(len(brand.thai_keywords), 1)
+        kw_ratio = len(matched_kw) / max(len(brand.niche_keywords), 1)
+        kw_pts = min(6.0, kw_ratio * 6.0)
+        work_ready_pts = 4.0 if kol.is_work_ready else 0.0
+        subniche_work_pts = round(kw_pts + work_ready_pts, 2)
 
-        gemini = get_gemini_service()
-        emb_model = "gemini-embedding-2 (dense)"
-        sem_sim = 0.0
+        relevance_total = round(min(40.0, semantic_llm_pts + subniche_work_pts), 2)
+        evidence.append(f"Relevance ({relevance_total}/40): Cosine {cos_sim:.2f}, LLM fit {llm_score:.2f}, matched {len(matched_kw)} niche tags.")
+        if kol.is_work_ready:
+            evidence.append("Work-Ready signal confirmed (+4.0 bonus).")
 
-        if kol_embedding and brand_embedding:
-            sem_sim = round(gemini.cosine_similarity(brand_embedding, kol_embedding), 3)
-        elif gemini.is_configured:
-            b_emb = brand_embedding or gemini.get_embedding(brand_text_corpus)
-            k_emb = kol_embedding or gemini.get_embedding(kol_text_corpus)
-            if b_emb and k_emb:
-                sem_sim = round(gemini.cosine_similarity(b_emb, k_emb), 3)
+        # -------------------------------------------------------------
+        # 2. Engagement Quality & Content Utility (35 คะแนน)
+        # -------------------------------------------------------------
+        videos = kol.recent_videos
+        # Filter eligible clips with playCount >= 500 (Spec 4.3)
+        eligible = [v for v in videos if v.views >= 500]
+        clips_to_score = eligible if eligible else videos
+        eligible_count = len(eligible)
 
-        if sem_sim == 0.0:
-            brand_tokens = set(re.findall(r'\w+', brand_text_corpus))
-            kol_tokens = set(re.findall(r'\w+', kol_text_corpus))
-            overlap = len(brand_tokens & kol_tokens)
-            union = len(brand_tokens | kol_tokens) if brand_tokens | kol_tokens else 1
-            sem_sim = min(1.0, max(0.05, round(overlap / union * 3.5, 3)))
+        if clips_to_score:
+            er_list = [
+                ((v.likes + v.comments + v.shares + v.collect_count) / max(v.views, 1))
+                for v in clips_to_score
+            ]
+            median_er = float(median(er_list))
+            # 8% ER gets full 15 pts
+            er_pts = round(min(15.0, (median_er / 0.08) * 15.0), 2)
 
-        # Spec 5.1: Semantic Similarity (28 pts) + Niche Keyword & Work-Ready Match (12 pts)
-        sem_pts = round(sem_sim * 28.0, 2)
-        work_ready_bonus = 4.0 if kol.is_work_ready else 0.0
-        kw_pts = round(min(8.0, (len(matched_kw) / max(len(brand.thai_keywords), 1)) * 8.0) + work_ready_bonus, 2)
+            # Save & Share Utility Score (10 pts)
+            # equation: (collectCount + 0.7 * shareCount) / max(playCount, 500)
+            util_list = [
+                ((v.collect_count + (0.7 * v.shares)) / max(v.views, 500))
+                for v in clips_to_score
+            ]
+            median_util = float(median(util_list))
+            # 3.5% utility gets 8.0 pts base
+            base_util_pts = (median_util / 0.035) * 8.0
+            if kol.sub_style == "KOL - Expert / Guru":
+                base_util_pts += 2.0  # Special bonus for Expert/Guru
+            utility_pts = round(min(10.0, max(1.0, base_util_pts)), 2)
 
-        # แนวทางที่ 2: Niche Consistency Ratio (Topic Concentration across audited videos)
-        total_recent = len(kol.recent_videos)
-        brand_kws = [k.strip().lower() for k in brand.thai_keywords if k and k.strip()]
-        niche_video_count = 0
-        for v in kol.recent_videos:
-            v_text = f"{v.caption} {' '.join(v.hashtags)}".lower()
-            is_niche = (
-                any(kw in v_text for kw in brand_kws) or
-                (brand.vertical.lower() in v_text) or
-                (brand.sub_category.lower() in v_text if brand.sub_category else False)
-            )
-            if is_niche:
-                niche_video_count += 1
-
-        niche_ratio = (niche_video_count / total_recent) if total_recent > 0 else 1.0
-        kol.niche_consistency_ratio = round(niche_ratio, 2)
-
-        # แนวทางที่ 2 Rule: If audited videos >= 3 and Niche Ratio < 0.20 (e.g. 0/5 or 1/5 clips)
-        # This creator is an Ad-hoc / Casual Niche Visitor (e.g. tourist trip or single ski resort visit)
-        # Reduce relevance to Casual Fit level (max 12 pts out of 28, or 50% discount)
-        if total_recent >= 3 and niche_ratio < 0.20:
-            kol.is_casual_niche_fit = True
-            sem_pts = round(min(sem_pts * 0.5, 12.0), 2)
-            # Reclassify to Lifestyle & Vlog if erroneously classified as Guru / Niche Enthusiast
-            if kol.creator_archetype in ["Educated Guru", "Niche Enthusiast"]:
-                kol.creator_archetype = "Lifestyle & Vlog"
-                kol.recommended_role = "Brand Awareness & Discovery (Casual Fit)"
+            # View Consistency Ratio (10 pts): Median Views / Mean Views
+            views_list = [v.views for v in clips_to_score]
+            med_views = float(median(views_list))
+            avg_views = float(mean(views_list))
+            consistency_ratio = (med_views / max(avg_views, 1.0)) if avg_views > 0 else 0.5
+            consistency_pts = round(min(10.0, max(2.0, consistency_ratio * 10.0)), 2)
         else:
-            kol.is_casual_niche_fit = False
+            median_er = 0.03
+            er_pts = 5.0
+            median_util = 0.01
+            utility_pts = 3.0
+            consistency_ratio = 0.5
+            consistency_pts = 5.0
 
-        raw_score = round(((sem_pts + kw_pts) / 40.0) * 100.0, 1)
-        return raw_score, sem_sim, matched_kw, emb_model, sem_pts, kw_pts
+        engagement_total = round(min(35.0, er_pts + utility_pts + consistency_pts), 2)
+        evidence.append(
+            f"Engagement ({engagement_total}/35): Median ER {median_er*100:.1f}% ({er_pts}/15), "
+            f"Utility {median_util*100:.2f}% ({utility_pts}/10), Consistency {consistency_ratio:.2f} ({consistency_pts}/10)."
+        )
+
+        # -------------------------------------------------------------
+        # 3. Audience Proxy & Commercial Viability (25 คะแนน)
+        # -------------------------------------------------------------
+        # 3.1 Thai Audience Authenticity (10 คะแนน)
+        all_text = " ".join([v.caption for v in videos] + kol.real_comments)
+        thai_char_count = len(THAI_CHAR_PATTERN.findall(all_text))
+        total_chars = len(all_text) or 1
+        thai_ratio = round(min(1.0, (thai_char_count * 2.5) / total_chars), 3) if all_text.strip() else 0.8
+        thai_pts = round(min(10.0, max(2.0, thai_ratio * 10.0)), 2)
+
+        # 3.2 Buyer Intent Proxy (10 คะแนน)
+        buyer_intent_tier = "tier1_fast_proxy"
+        if kol.real_comments and len(kol.real_comments) >= 5:
+            buyer_intent_tier = "tier2_comment_analysis"
+            # Count comments with purchase intent keywords
+            intent_matches = sum(
+                1 for c in kol.real_comments
+                if any(kw in c.lower() for kw in BUYER_INTENT_KEYWORDS)
+            )
+            intent_ratio = intent_matches / len(kol.real_comments)
+            kol.comment_intent_ratio = round(intent_ratio, 3)
+            # 25% purchase-intent comments yields full 10 pts
+            buyer_pts = round(min(10.0, max(2.5, (intent_ratio / 0.25) * 10.0)), 2)
+            evidence.append(f"Buyer Intent Tier-2 ({buyer_pts}/10): {intent_matches}/{len(kol.real_comments)} comments asked for price/where to buy.")
+        else:
+            # Tier-1 Fast Proxy: commentCount/diggCount and shareCount/diggCount
+            c_to_l = kol.signals.comment_to_like
+            s_to_l = kol.signals.share_to_like
+            # Typical c_to_l ~ 0.015, s_to_l ~ 0.01
+            proxy_val = (c_to_l * 1.5) + (s_to_l * 1.0)
+            buyer_pts = round(min(10.0, max(2.5, proxy_val * 200.0)), 2)
+            evidence.append(f"Buyer Intent Tier-1 Fast Proxy ({buyer_pts}/10): Comment/Like {c_to_l:.4f}, Share/Like {s_to_l:.4f}.")
+
+        # 3.3 Brand-Adaptive Affiliate Health (5 คะแนน)
+        basket_ratio = kol.signals.basket_ratio
+        conv_model = brand.conversion_model
+
+        if conv_model == "ECOMMERCE_PRODUCT":
+            # E-commerce: KOC - Hard-Sell Reviewer with high basket & engagement gets full 5/5
+            if kol.sub_style == "KOC - Hard-Sell Reviewer" and median_er >= 0.015:
+                affiliate_pts = 5.0
+                evidence.append(f"Affiliate Health (5/5): Top Hard-Sell Reviewer with {basket_ratio:.0%} basket driving direct conversions.")
+            elif basket_ratio <= 0.85:
+                affiliate_pts = 5.0
+            else:
+                affiliate_pts = 4.0
+        elif conv_model in ("LIFESTYLE_EXPERIENCE", "HIGH_TICKET_LEADGEN"):
+            # High-ticket / Luxury: basket > 70% penalized to favor cleaner image channels
+            if basket_ratio > 0.70:
+                affiliate_pts = 1.5
+                evidence.append(f"Affiliate Health (1.5/5): High commercial basket density ({basket_ratio:.0%}) penalized for {conv_model} prestige.")
+            elif basket_ratio > 0.40:
+                affiliate_pts = 3.5
+            else:
+                affiliate_pts = 5.0
+                evidence.append(f"Affiliate Health (5/5): Clean image profile with low basket density ({basket_ratio:.0%}).")
+        else:
+            # APP_DIGITAL_SERVICE
+            if basket_ratio > 0.70:
+                affiliate_pts = 3.0
+            else:
+                affiliate_pts = 5.0
+
+        audience_total = round(min(25.0, thai_pts + buyer_pts + affiliate_pts), 2)
+
+        # Total 100
+        total_score = round(min(100.0, max(0.0, relevance_total + engagement_total + audience_total)), 1)
+
+        breakdown = SignalBreakdown(
+            relevance_total=relevance_total,
+            semantic_llm_points=semantic_llm_pts,
+            cosine_similarity=round(cos_sim, 3),
+            subniche_workready_points=subniche_work_pts,
+            matched_keywords=matched_kw,
+            engagement_total=engagement_total,
+            median_er_points=er_pts,
+            median_engagement_rate=round(median_er, 4),
+            eligible_clips=eligible_count,
+            utility_points=utility_pts,
+            utility_score=round(median_util, 4),
+            consistency_points=consistency_pts,
+            view_consistency_ratio=round(consistency_ratio, 3),
+            audience_total=audience_total,
+            thai_authenticity_points=thai_pts,
+            thai_ratio=thai_ratio,
+            buyer_intent_points=buyer_pts,
+            buyer_intent_tier=buyer_intent_tier,
+            affiliate_health_points=round(affiliate_pts, 2),
+            evidence=evidence,
+        )
+
+        return total_score, breakdown
 
     async def evaluate_kols_batch(
         self,
         kols: List[KOLProfile],
         brand: BrandDNA,
-    ) -> List[Tuple[float, SignalBreakdown, str, List[str]]]:
+    ) -> List[Tuple[float, SignalBreakdown]]:
         """
-        Batch-evaluate all candidates (e.g. 50 KOLs) asynchronously.
-        Embeds the brand corpus and all 50 candidate corpora in parallel using Gemini Embedding 2.
+        Batch-evaluate all creators asynchronously with Gemini embeddings.
         """
         if not kols:
             return []
@@ -200,213 +271,27 @@ class ScoringEngine:
         if gemini.is_configured:
             brand_corpus = self.get_brand_text_corpus(brand)
             kol_corpora = [self.get_kol_text_corpus(k) for k in kols]
-
-            # Concurrently compute brand embedding and 50 KOL embeddings
             brand_task = gemini.get_embedding_async(brand_corpus)
             kols_task = gemini.get_embeddings_batch(kol_corpora, max_concurrency=15)
-
             brand_res, kols_res = await asyncio.gather(brand_task, kols_task)
             brand_embedding = brand_res
             kol_embeddings = kols_res
 
         results = []
         for kol, k_emb in zip(kols, kol_embeddings):
-            res = self.evaluate_kol(
-                kol,
-                brand,
+            score, breakdown = self.evaluate_kol(
+                kol=kol,
+                brand=brand,
                 kol_embedding=k_emb,
                 brand_embedding=brand_embedding,
             )
-            results.append(res)
+            results.append((score, breakdown))
 
         return results
 
-    def _calculate_engagement(self, kol: KOLProfile) -> Tuple[float, float, float, float, bool, float, str, float, float, float]:
-        if not kol.recent_videos:
-            return 50.0, 3.0, 0.25, 0.0, False, 0.0, "", 7.5, 5.0, 5.0
-
-        er_list = []
-        views_list = []
-        yb_count = 0
-
-        for v in kol.recent_videos:
-            views = max(v.views, 1)
-            views_list.append(views)
-            video_er = ((v.likes + (v.comments * 2.0) + (v.shares * 3.0) + getattr(v, 'collect_count', 0)) / views) * 100.0
-            er_list.append(video_er)
-            if v.has_yellow_basket:
-                yb_count += 1
-
-        median_er = float(np.median(er_list))
-        median_views = float(np.median(views_list))
-        v_to_f = median_views / max(kol.follower_count, 1)
-        yb_ratio = yb_count / len(kol.recent_videos)
-
-        # Spec 5.2: Median ER (15 pts) + Save-to-View (10 pts) + View Consistency (10 pts) = 35 pts
-        er_pts = round(min(15.0, (median_er / 8.0) * 15.0), 2)
-        
-        # Save-to-View Utility (10 pts) with bonus for Educated Guru
-        base_save_ratio = kol.save_to_view_ratio if kol.save_to_view_ratio > 0 else 0.02
-        save_calc = (base_save_ratio / 0.035) * 8.0
-        if kol.creator_archetype == "Educated Guru":
-            save_calc += 2.0
-        save_pts = round(min(10.0, max(2.0, save_calc)), 2)
-
-        # View Consistency Ratio (10 pts)
-        base_cons = kol.view_consistency_ratio if kol.view_consistency_ratio > 0 else 0.7
-        cons_pts = round(min(10.0, max(2.0, base_cons * 10.0)), 2)
-
-        is_penalized = False
-        penalty_points = 0.0
-        penalty_reason = ""
-
-        # Spec: ยอมให้มีปักตะกร้าเหลืองได้ 100% โดยจัดเข้าหมวดหมู่ "Content Creator (เน้นรีวิว)"
-        # จะไม่หักคะแนนตะกร้าเหลือง หากเป็นครีเอเตอร์สายรีวิว (Shoppertainment / Review)
-        # จะ penalize เฉพาะบัญชีที่เป็น Fake/Bot Spam Trap ชัดเจน
-        if kol.is_affiliate_spam_trap:
-            is_penalized = True
-            penalty_points = 55.0
-            penalty_reason = (
-                f"Penalized by Bot/Spam Filter: Account detected as automated affiliate repost farm."
-            )
-
-        base_engagement = er_pts + save_pts + cons_pts - (penalty_points if is_penalized else 0.0)
-        final_eng = max(0.0, min(100.0, round((base_engagement / 35.0) * 100.0, 1)))
-        return final_eng, median_er, v_to_f, yb_ratio, is_penalized, penalty_points, penalty_reason, er_pts, save_pts, cons_pts
-
-    def _calculate_audience_signals(
-        self, kol: KOLProfile, brand: BrandDNA
-    ) -> Tuple[float, float, float, float, float, float, float, float, str, List[str]]:
-        evidence = []
-        signals_high_count = 0
-
-        # 1. Thai Audience Authenticity (10 pts max - Spec 5.3)
-        thai_char_pattern = re.compile(r'[฀-๿]')
-        captions_thai_count = sum(1 for v in kol.recent_videos if v.caption and thai_char_pattern.search(v.caption))
-        captions_thai_ratio = (captions_thai_count / len(kol.recent_videos)) if kol.recent_videos else 1.0
-        
-        comments_thai_count = sum(1 for c in kol.sample_comments if thai_char_pattern.search(c))
-        comments_thai_ratio = (comments_thai_count / len(kol.sample_comments)) if kol.sample_comments else 1.0
-        
-        blended_thai_ratio = (captions_thai_ratio * 0.6) + (comments_thai_ratio * 0.4)
-        if kol.audience_language.lower().startswith("thai"):
-            blended_thai_ratio = max(blended_thai_ratio, 0.9)
-        thai_pts = round(min(10.0, max(2.0, blended_thai_ratio * 10.0)), 2)
-        evidence.append(f"Thai Audience Authenticity ({thai_pts}/10 pts): {int(blended_thai_ratio * 100)}% verified Thai geo/language presence.")
-        if thai_pts >= 8.0:
-            signals_high_count += 1
-
-        # 2. Buyer Intent Proxy (10 pts max - Spec 5.3 & 6.1)
-        # Tier-1 Fast Proxy: Inquiry & Viral Action Ratio
-        total_likes = sum(v.likes for v in kol.recent_videos) or 1
-        total_comments = sum(v.comments for v in kol.recent_videos)
-        total_shares = sum(v.shares for v in kol.recent_videos)
-        action_ratio = (total_comments + (total_shares * 1.5)) / max(total_likes, 100)
-        
-        # Tier-2 High-intent keyword matching
-        high_intent_keywords = ["ใช้ตาม", "พิกัด", "ซื้อที่ไหน", "ราคา", "ผิวแพ้ง่าย", "ป้ายยา", "อร่อย", "สั่งแล้ว", "จึ้ง", "ดีจริง", "ใช้ดี", "คุ้ม"]
-        comments_text = ' '.join(kol.sample_comments)
-        intent_keyword_matches = sum(1 for kw in high_intent_keywords if kw in comments_text)
-        
-        fast_intent_score = min(5.0, action_ratio * 40.0)
-        text_intent_score = min(5.0, intent_keyword_matches * 1.5)
-        buyer_pts = round(min(10.0, max(2.5, fast_intent_score + text_intent_score + (1.5 if kol.creator_archetype in ["Top Reviewer", "Educated Guru"] else 0.5))), 2)
-        evidence.append(f"Buyer Intent Proxy ({buyer_pts}/10 pts): High commercial interest with {intent_keyword_matches} buying inquiry signals.")
-        if buyer_pts >= 7.5:
-            signals_high_count += 1
-
-        # 3. Affiliate Saturation Health (5 pts max - Spec 5.3 & User agreement)
-        # Top Reviewers / Review category are accepted up to 100% yellow basket without penalty
-        yellow_ratio = (sum(1 for v in kol.recent_videos if v.has_yellow_basket) / len(kol.recent_videos)) if kol.recent_videos else 0.0
-        is_review_creator = (kol.creator_category == "Content Creator (เน้นรีวิว)") or (kol.creator_archetype == "Top Reviewer")
-        
-        if is_review_creator:
-            sat_pts = 5.0
-            evidence.append(f"Affiliate Saturation (5/5 pts): Legitimate review creator allowed 100% yellow basket ({int(yellow_ratio*100)}% commercial density with healthy intent).")
-        else:
-            if yellow_ratio <= 0.40:
-                sat_pts = 5.0
-                evidence.append(f"Affiliate Saturation (5/5 pts): Balanced organic-to-ad ratio ({int(yellow_ratio*100)}% yellow basket).")
-            elif yellow_ratio <= 0.70:
-                sat_pts = 3.5
-                evidence.append(f"Affiliate Saturation (3.5/5 pts): Moderate commercial load ({int(yellow_ratio*100)}% yellow basket).")
-            else:
-                sat_pts = 2.0
-                evidence.append(f"Affiliate Saturation (2/5 pts): High ad saturation for non-reviewer profile ({int(yellow_ratio*100)}% yellow basket).")
-
-        # Internal Legacy Multi-Signals for compatibility
-        s1 = 20.0
-        s2 = 20.0
-        s3 = round(thai_pts * 2.5, 1)
-        s4 = round(buyer_pts * 2.5, 1)
-        
-        raw_aud = round(((thai_pts + buyer_pts + sat_pts) / 25.0) * 100.0, 1)
-        confidence = "High" if signals_high_count >= 2 else ("Medium" if signals_high_count >= 1 else "Low")
-        return raw_aud, thai_pts, buyer_pts, sat_pts, s1, s2, s3, s4, confidence, evidence
-
-    def _generate_strategic_rationale(self, kol: KOLProfile, brand: BrandDNA, b: SignalBreakdown) -> str:
-        if b.affiliate_spam_penalty_applied:
-            return (
-                f"[PENALIZED] {kol.display_name} was detected by the Bot/Spam Filter. "
-                f"{b.affiliate_spam_reason} "
-                f"Convert Cake Recommendation: Avoid partnering due to automated repost signals."
-            )
-
-        kw_str = f" (matched tags: {', '.join(b.matched_keywords[:3])})" if b.matched_keywords else ""
-        loc_str = f"and active {', '.join(kol.primary_locations[:2])} audience footprint" if kol.primary_locations else "and nationwide audience reach"
-        price_str = f" (~{kol.avg_reviewed_price_thb:,} THB)" if kol.avg_reviewed_price_thb > 0 else ""
-        cat_name = getattr(kol, 'creator_category', 'Content Creator (เน้นรีวิว)')
-        cat_str = f" [หมวดหมู่: {cat_name} | ตะกร้าเหลือง {int(b.yellow_basket_ratio*100)}%]" if b.yellow_basket_ratio > 0 else f" [หมวดหมู่: {cat_name}]"
-        archetype_str = f" [Archetype: {kol.creator_archetype} ({kol.recommended_role})]" if kol.creator_archetype else ""
-        niche_str = f" [💡 Casual Niche Fit: {int(b.niche_consistency_ratio*100)}%]" if getattr(b, 'is_casual_niche_fit', False) else (f" [🎯 Core Niche Specialist: {int(b.niche_consistency_ratio*100)}%]" if getattr(b, 'niche_consistency_ratio', 1.0) >= 0.6 else "")
-        comp_str = f" {kol.competitor_warning}." if kol.competitor_warning else ""
-        work_str = " ✅ Open for Sponsor / พร้อมรับงาน" if kol.is_work_ready else ""
-
-        role_context = ""
-        if kol.creator_archetype == "Lifestyle & Vlog":
-            role_context = f" เหมาะอย่างยิ่งสำหรับเป้าหมายเปิดการมองเห็นร้านเปิดใหม่ (Brand Awareness) เพื่อพากลุ่มผู้ติดตามสายท่องเที่ยว/ไลฟ์สไตล์มาเปิดประสบการณ์กิจกรรมจำลองในร่ม"
-        elif kol.creator_archetype == "Educated Guru":
-            role_context = f" เหมาะสำหรับการสร้างความน่าเชื่อถือ อธิบายเทคนิค ท่าฝึกที่ถูกต้อง และกลไกของเครื่องเล่นจำลอง (Trust & Credibility)"
-        elif kol.creator_archetype == "Top Reviewer":
-            role_context = f" เหมาะสำหรับกระตุ้นการตัดสินใจ จองคอร์สทดลอง หรือซื้อแพ็กเกจ (Conversion & Sales)"
-        elif kol.creator_archetype == "Niche Enthusiast":
-            role_context = f" เหมาะสำหรับเจาะกลุ่มผู้เล่นประจำที่กำลังมองหาสถานที่ซ้อมสกีก่อนออกทริปจริง (Hyper-Targeted Reach)"
-
-        return (
-            f"{kol.display_name}{cat_str}{archetype_str}{niche_str} is an ideal {kol.tier} partner for {brand.brand_name}."
-            f"{work_str} Delivers healthy engagement with a {b.median_engagement_rate_pct:.1f}% median ER and strong content relevance{kw_str}. "
-            f"Save-to-View utility points ({b.save_to_view_points}/10) & Thai Authenticity ({b.thai_authenticity_points}/10) confirm genuine local reach. "
-            f"Audience alignment confidence is {b.confidence_level} based on price-point compatibility{price_str} "
-            f"{loc_str}.{role_context}{comp_str}"
-        )
-
-    def _generate_thai_campaign_hooks(self, kol: KOLProfile, brand: BrandDNA) -> List[str]:
-        if kol.is_affiliate_spam_trap:
-            return ["(N/A — Account flagged as affiliate spam)"]
-
-        import re
-        real_captions = [v.caption.split('#')[0].strip() for v in kol.recent_videos if v.caption.strip()]
-        caption_topic = real_captions[0] if real_captions else (brand.sub_category or brand.vertical)
-        clean_topic = re.sub(r'[\r\n\t]+', ' ', caption_topic).strip()[:50]
-        price_tag = f"งบ {brand.average_price_thb:,} บาท" if brand.average_price_thb else "ราคาจับต้องได้"
-        category_label = brand.sub_category or brand.vertical
-
-        # Spec: สำหรับหมวดหมู่ Content Creator เน้นรีวิว (รองรับปักตะกร้าเหลือง 100%)
-        if getattr(kol, 'creator_category', '') == 'Content Creator (เน้นรีวิว)' or any(v.has_yellow_basket for v in kol.recent_videos):
-            h1 = f"\"ใครกำลังมองหา {category_label} หรือ {clean_topic} ปักตะกร้าเหลือง {brand.brand_name} {price_tag} ไว้ให้แล้ว รีวิวการใช้งานจริงตรงปก!\""
-            h2 = f"\"สรุปข้อดี-ข้อสังเกต {brand.brand_name} สำหรับ {category_label} คุ้มมั้ยกับราคานี้ พิกัดจิ้มตะกร้าเหลืองด้านล่างได้เลย\""
-            h3 = f"\"ทดลองใช้ {brand.brand_name} 7 วันเต็ม ตอบโจทย์คนหา {clean_topic} มั้ย สนใจกดสั่งซื้อตามในตะกร้าได้เลย!\""
-            return [h1, h2, h3]
-
-        # 100% Dynamic synthesis from real brand DNA and audited creator video context
-        h1 = f"\"ใครกำลังมองหา {category_label} หรือ {clean_topic} มาดูรีวิวทดสอบ {brand.brand_name} {price_tag} ใช้งานจริงกัน\""
-        h2 = f"\"สรุปข้อดี-ข้อสังเกต {brand.brand_name} สำหรับ {category_label} ตอบโจทย์มั้ยก่อนตัดสินใจซื้อ\""
-        h3 = f"\"ทดลองใช้ {brand.brand_name} ติดต่อกัน 1 สัปดาห์ ประสิทธิภาพการใช้งานจริงเป็นยังไงมาดูกัน\""
-
-        return [h1, h2, h3]
-
 
 _engine_instance: Optional[ScoringEngine] = None
+
 
 def get_scoring_engine() -> ScoringEngine:
     global _engine_instance

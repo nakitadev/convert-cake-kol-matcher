@@ -1,37 +1,119 @@
+"""
+Gemini service: embeddings + all LLM calls used by the 4-stage pipeline.
+
+- Stage 1: Brand DNA, Conversion Model classification, Scene-Translation queries,
+           Search-Grounded Thai competitor extraction (Google Search Grounding)
+- Stage 2: Bottom-up TikTok co-occurrence brand extraction (competitor Layer 2)
+- Stage 3: Batch LLM Relevance Gate (single call) + 2x2 KOL/KOC sub-style classification
+- Stage 4: Role-adaptive 3-second pitch hooks
+
+Fail-loud policy: every LLM helper raises RuntimeError when the model is unavailable or
+returns an unusable payload. Callers decide whether a failure is fatal.
+"""
 import os
-import json
-import math
 import re
+import json
 import asyncio
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional, Dict, Any
+
 import numpy as np
 
 try:
     from google import genai
     from google.genai import types
     HAS_GENAI = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_GENAI = False
 
 
-class GeminiService:
-    """
-    Gemini Service integrating:
-    1. Gemini Embedding 2 (`gemini-embedding-2`) for unified dense semantic vector embeddings
-    2. Gemini Main LLM (`gemini-3.5-flash-lite` or configurable) for Brand DNA synthesis, 5-angle search taxonomy, grounded competitor extraction, matching rationale, and archetype-tailored hooks.
-    """
+def parse_json_payload(raw: str) -> Any:
+    """Parse JSON from an LLM response, tolerating code fences, prose and trailing commas."""
+    if raw is None:
+        raise ValueError("Empty LLM response")
+    text = raw.strip()
+    fence = re.search(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)
+    if fence:
+        text = fence.group(1).strip()
+    if not text.startswith(("{", "[")):
+        starts = [i for i in (text.find("{"), text.find("[")) if i >= 0]
+        if not starts:
+            raise ValueError(f"No JSON object in LLM response: {raw[:200]}")
+        start = min(starts)
+        closer = "}" if text[start] == "{" else "]"
+        end = text.rfind(closer)
+        text = text[start:end + 1]
+    text = re.sub(r",\s*([\]}])", r"\1", text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Fallback: clean unescaped newlines/control characters and retry
+        cleaned = re.sub(r"[\x00-\x1f\x7f-\x9f]+", " ", text)
+        cleaned = re.sub(r",\s*([\]}])", r"\1", cleaned)
+        try:
+            return json.loads(cleaned)
+        except Exception:
+            import ast
+            try:
+                return ast.literal_eval(text)
+            except Exception:
+                pass
+        raise
 
+
+CONVERSION_MODEL_GUIDE = """
+4 Brand Conversion Models (choose exactly one based on how the brand makes money):
+1. ECOMMERCE_PRODUCT — buy now via TikTok Shop basket / Shopee: skincare, cosmetics, supplements, household goods, gadgets. (KOL 30% : KOC 70%)
+2. APP_DIGITAL_SERVICE — download app / sign up / SaaS: fintech & investing apps, AI platforms, software, games. (KOL 60% : KOC 40%)
+3. HIGH_TICKET_LEADGEN — consultation / form / booking: beauty & dental clinics, courses (EdTech), real estate, insurance. (KOL 70% : KOC 30%)
+4. LIFESTYLE_EXPERIENCE — visit store / premium image: hotels, malls, restaurants & cafes, luxury goods. (KOL 60% : KOC 40%)
+"""
+
+NATURAL_SEARCH_SYNTAX_GUIDE = """
+Abstract Syntax Rules for Thai TikTok Search Queries (Zero-Mock & Zero Hardcoded Examples):
+People in Thailand type plain, everyday words into TikTok's search bar to discover products.
+Do NOT use artificial slang, forced KOL/KOC tags, or copied templates.
+Generate 6-8 natural Thai search queries grounded 100% on the brand's extracted content using these 4 Abstract Syntax Rules:
+1. <brand sub-category noun> + <key benefit or primary outcome>
+2. <brand sub-category noun> + <brand origin / type / target demographic>
+3. 'รีวิว' + <brand sub-category noun> OR 'แนะนำ' + <brand sub-category noun>
+4. <brand sub-category noun> + <client brand name or competitor brand in Thailand>
+
+Syntax Constraints:
+- Short & Natural: 2 to 4 words joined, at most 18 Thai letters (tone marks and combining vowels do not count towards the letter limit).
+- Anti-Merchant Guardrail: NEVER use words like ราคาส่ง, ขายถูก, โปรโมชั่น, ตัวแทนจำหน่าย, เปิดบิล.
+- Strict Brand Grounding: Words MUST come strictly from the client's actual niche, features, and target audience.
+"""
+
+SUB_STYLE_GUIDE = """
+Convert Cake 2x2 Funnel Matrix (2 roles -> 4 sub-styles):
+KOL (Top & Middle funnel: awareness, image, trust)
+  - 'KOL - Expert / Guru': deep explanatory content analysing specs/ingredients/principles; notably high save rate (collectCount / playCount).
+  - 'KOL - Lifestyle / Aesthetic': lifestyle / travel / mood & tone content; high views, clean image; almost no yellow basket (basket_ratio < 0.20).
+KOC (Bottom funnel: purchase decision & closing)
+  - 'KOC - Hard-Sell Reviewer': direct product review, before & after, value-for-money proof; consistent yellow basket; high buyer-intent comments (comment_to_like).
+  - 'KOC - Everyday User / Vlog': relatable daily routines (office worker, student, mom); friend-to-friend real-life recommendation; natural style (Nano/Micro tier).
+"""
+
+HOOK_GUIDE = """
+3-Second Opening Hook Guidelines (Role-Adaptive & Dynamic, No Static Templates):
+- 'KOL - Expert / Guru': open with deep product knowledge, clinical/technical facts, or expert analysis.
+- 'KOL - Lifestyle / Aesthetic': open with atmosphere, mood & tone, aesthetic presentation, or lifestyle elevation.
+- 'KOC - Hard-Sell Reviewer': open with real-life usage results, before-and-after proof, or price-to-value comparison.
+- 'KOC - Everyday User / Vlog': open with relatable daily situations and natural friend-to-friend recommendation.
+"""
+
+
+class GeminiService:
     def __init__(self):
         self.api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         self.embedding_model = os.environ.get("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2")
         self.llm_model = os.environ.get("GEMINI_LLM_MODEL", "gemini-3.5-flash-lite")
         self.client = None
         self._embedding_cache: Dict[str, List[float]] = {}
-
         if HAS_GENAI and self.api_key:
             try:
                 self.client = genai.Client(api_key=self.api_key)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 print(f"[GeminiService] Failed to initialize client: {e}")
                 self.client = None
 
@@ -39,462 +121,237 @@ class GeminiService:
     def is_configured(self) -> bool:
         return self.client is not None
 
-    def get_embedding(self, text: str) -> Optional[List[float]]:
-        """
-        Generate dense embedding vector using Gemini Embedding 2.
-        Caches results in memory for fast subsequent comparisons.
-        """
-        if not text or not text.strip():
-            return None
-
-        cache_key = f"{self.embedding_model}:{text.strip()[:300]}"
-        if cache_key in self._embedding_cache:
-            return self._embedding_cache[cache_key]
-
+    def _require(self):
         if not self.is_configured:
-            return None
+            raise RuntimeError("Gemini is not configured. Set GEMINI_API_KEY in .env.")
 
-        try:
-            response = self.client.models.embed_content(
-                model=self.embedding_model,
-                contents=text.strip()[:4000],
-            )
-            if hasattr(response, "embeddings") and response.embeddings:
-                emb = response.embeddings[0]
-                values = emb.values if hasattr(emb, "values") else list(emb)
-                self._embedding_cache[cache_key] = values
-                return values
-            elif hasattr(response, "embedding") and response.embedding:
-                values = response.embedding.values if hasattr(response.embedding, "values") else list(response.embedding)
-                self._embedding_cache[cache_key] = values
-                return values
-        except Exception as e:
-            print(f"[GeminiService] Error calling {self.embedding_model}: {e}")
-            return None
-
+    # ------------------------------------------------------------------
+    # Embeddings
+    # ------------------------------------------------------------------
     async def get_embedding_async(self, text: str) -> Optional[List[float]]:
-        """
-        Asynchronously generate dense embedding vector using Gemini Embedding 2 via client.aio.
-        Caches results in memory for fast subsequent comparisons.
-        """
-        if not text or not text.strip():
+        if not text or not text.strip() or not self.is_configured:
             return None
-
-        cache_key = f"{self.embedding_model}:{text.strip()[:300]}"
-        if cache_key in self._embedding_cache:
-            return self._embedding_cache[cache_key]
-
-        if not self.is_configured:
-            return None
-
+        key = f"{self.embedding_model}:{hash(text.strip()[:2000])}"
+        if key in self._embedding_cache:
+            return self._embedding_cache[key]
         try:
-            response = await self.client.aio.models.embed_content(
-                model=self.embedding_model,
-                contents=text.strip()[:4000],
+            resp = await self.client.aio.models.embed_content(
+                model=self.embedding_model, contents=text.strip()[:4000]
             )
-            if hasattr(response, "embeddings") and response.embeddings:
-                emb = response.embeddings[0]
-                values = emb.values if hasattr(emb, "values") else list(emb)
-                self._embedding_cache[cache_key] = values
-                return values
-            elif hasattr(response, "embedding") and response.embedding:
-                values = response.embedding.values if hasattr(response.embedding, "values") else list(response.embedding)
-                self._embedding_cache[cache_key] = values
+            if getattr(resp, "embeddings", None):
+                emb = resp.embeddings[0]
+                values = list(emb.values if hasattr(emb, "values") else emb)
+                self._embedding_cache[key] = values
                 return values
         except Exception as e:
-            print(f"[GeminiService] Async error calling {self.embedding_model}: {e}")
-            return None
+            print(f"[GeminiService] Embedding error ({self.embedding_model}): {e}")
+        return None
 
-    async def get_embeddings_batch(
-        self,
-        texts: List[str],
-        max_concurrency: int = 15,
-    ) -> List[Optional[List[float]]]:
-        """
-        Concurrently batch-embed a list of texts (e.g. 50 candidate KOLs) using asyncio.gather
-        and an async semaphore to maximize throughput and avoid rate limits.
-        """
+    async def get_embeddings_batch(self, texts: List[str], max_concurrency: int = 15) -> List[Optional[List[float]]]:
         if not texts:
             return []
-
-        if not self.is_configured:
-            return [None] * len(texts)
-
         sem = asyncio.Semaphore(max_concurrency)
 
-        async def _embed_with_sem(txt: str) -> Optional[List[float]]:
+        async def _one(t: str):
             async with sem:
-                return await self.get_embedding_async(txt)
+                return await self.get_embedding_async(t)
 
-        tasks = [_embed_with_sem(t) for t in texts]
-        return await asyncio.gather(*tasks, return_exceptions=False)
+        return list(await asyncio.gather(*[_one(t) for t in texts]))
 
     @staticmethod
     def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
+        """Raw cosine similarity in [-1, 1]."""
         if not vec_a or not vec_b or len(vec_a) != len(vec_b):
             return 0.0
-        a = np.array(vec_a, dtype=np.float32)
-        b = np.array(vec_b, dtype=np.float32)
-        norm_a = np.linalg.norm(a)
-        norm_b = np.linalg.norm(b)
-        if norm_a == 0 or norm_b == 0:
+        a = np.asarray(vec_a, dtype=np.float32)
+        b = np.asarray(vec_b, dtype=np.float32)
+        na, nb = np.linalg.norm(a), np.linalg.norm(b)
+        if na == 0 or nb == 0:
             return 0.0
-        cos = float(np.dot(a, b) / (norm_a * norm_b))
-        return max(0.0, min(1.0, (cos + 1.0) / 2.0))
+        return float(np.dot(a, b) / (na * nb))
 
+    # ------------------------------------------------------------------
+    # Generic LLM call
+    # ------------------------------------------------------------------
+    async def _generate_json(self, prompt: str, temperature: float = 0.2, grounded: bool = False) -> Any:
+        self._require()
+        if grounded:
+            # Google Search grounding cannot be combined with JSON mime type -> parse from text.
+            config = types.GenerateContentConfig(
+                tools=[types.Tool(google_search=types.GoogleSearch())],
+                temperature=temperature,
+            )
+        else:
+            config = types.GenerateContentConfig(response_mime_type="application/json", temperature=temperature)
+        resp = await self.client.aio.models.generate_content(model=self.llm_model, contents=prompt, config=config)
+        text = getattr(resp, "text", None)
+        if not text:
+            raise RuntimeError(f"Gemini ({self.llm_model}) returned an empty response")
+        return parse_json_payload(text)
+
+    # ------------------------------------------------------------------
+    # Stage 1 — Brand DNA + conversion model + scene-translation queries
+    # ------------------------------------------------------------------
     async def generate_brand_dna(
         self,
-        scraped_text: str,
+        context: str,
         brand_name: str,
         website_url: str,
-        fb_url: str,
+        facebook_url: str,
         manual_competitors: Optional[List[str]] = None,
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Uses Gemini Main LLM to extract structured Brand DNA, 5-Angle Search Taxonomy, and Grounded Competitor Dictionary.
-        """
-        if not self.is_configured:
-            return None
-
-        manual_comp_str = f"Manual Competitors Provided by Agency: {', '.join(manual_competitors)}\n" if manual_competitors else ""
-
-        prompt = f"""You are an expert Chief Strategy Officer at a premier Thai digital marketing agency (Convert Cake).
-Analyze this brand's website content and Facebook information to synthesize structured Brand DNA, a 5-Angle Search Taxonomy for Thai TikTok, and a Grounded Thai Competitor Dictionary.
+    ) -> Dict[str, Any]:
+        manual = f"Competitor override from marketing team: {', '.join(manual_competitors)}\n" if manual_competitors else ""
+        prompt = f"""You are the Chief Strategy Officer of Convert Cake, a Thai performance-only marketing agency.
+Analyse the client's website + Facebook page (posts and real customer comments) and output the Brand DNA.
 
 Brand Name: {brand_name}
 Website: {website_url}
-Facebook: {fb_url}
-{manual_comp_str}Scraped Context:
-{scraped_text[:4000]}
+Facebook: {facebook_url}
+{manual}
+=== Scraped context ===
+{context[:7000]}
+=== End context ===
 
-CRITICAL DIRECTIVE FOR SERVICES, CUSTOM PRODUCTION & B2B (e.g. Screen Printing, Garment Factories, Custom Merch, Clinics, Venues):
-- NEVER generate supplier/factory-side hashtags or keywords (e.g. NEVER output '#สกรีนเสื้อ', '#รับสกรีน', '#โรงงานเสื้อ', '#เสื้อยืดราคาส่ง', '#ร้านสกรีน', '#รับผลิต') for TikTok sourcing! On TikTok, supplier-side hashtags are flooded 100% by rival factories and printing workshops advertising their machinery, resulting in zero real influencers found.
-- INSTEAD, generate Consumer & Creator Demand-Side Keywords and Hashtags:
-  1. Fashion / Streetwear / OOTD: What finished products or style aesthetic do creators showcase? (e.g. '#เสื้อยืดoversize', '#แต่งตัวสตรีท', '#ootdไทย', '#พิกัดเสื้อผ้า', '#เสื้อยืดวินเทจ')
-  2. Indie Creators & Merch Builders: Creators who design custom merch or start clothing brands (e.g. 'สร้างแบรนด์เสื้อตัวเอง', 'ทำเสื้อแบรนด์ตัวเอง', 'ออกแบบเสื้อเอง', '#สร้างแบรนด์ตัวเอง')
-  3. Student & Campus Community: Event organizers and student vloggers who order group shirts (e.g. '#เด็กมหาลัย', '#เสื้อรุ่น', '#เสื้อคณะ')
-This guarantees TikTok sourcing discovers real influential content creators, fashion stylists, and indie designers instead of rival printing shops and factories!
+{CONVERSION_MODEL_GUIDE}
+{NATURAL_SEARCH_SYNTAX_GUIDE}
 
-Respond ONLY with a valid JSON object matching this schema:
+Tasks:
+A. Classify the brand into ONE conversion model by HOW IT MAKES MONEY.
+B. Extract Thai tone of voice and REAL Thai customer questions / pain points (from Facebook comments when present).
+C. Plain & Natural Thai Search Query Extraction: produce 6 to 8 natural Thai TikTok search queries strictly adhering to the 4 Abstract Syntax Rules. Base them 100% on the brand's extracted content. Do NOT use artificial slang or hardcoded templates.
+D. 4-8 niche_keywords: Thai/English sub-niche words that a matching creator's captions or hashtags would contain (no '#').
+E. Up to 6 Thai-market competitor brands in the same category & price tier with English + Thai transliteration aliases.
+
+Return ONLY JSON:
 {{
   "brand_name": "{brand_name}",
-  "vertical": "Primary industry vertical identified from content (e.g. Beauty & Skincare, Food & Beverage, Tech & Ergonomics, Fashion & Apparel, Lifestyle, etc.)",
-  "sub_category": "Specific niche (e.g. Dermocosmetics, Specialty Coffee, Standing Desks, Streetwear)",
-  "brand_summary": "2-3 sentence strategic agency summary in English or Thai",
-  "target_audience": "Detailed target demographic and lifestyle in Thailand",
-  "target_age_range": "e.g. '18-24', '22-35', '28-45'",
-  "target_locations": ["Bangkok", "Thailand"],
-  "brand_tone": ["Authentic", "Modern"],
-  "content_style_preferences": ["Review", "Short-Form"],
-  "price_positioning": "One of: 'Budget / Mass' | 'Mid-Range / Accessible' | 'Premium / Masstige' | 'Luxury / High-End'",
+  "vertical": "industry vertical",
+  "sub_category": "specific product / service niche",
+  "brand_summary": "2-3 sentences",
+  "target_audience": "Thai target audience",
+  "target_age_range": "e.g. 22-35",
+  "brand_tone": ["Thai tone-of-voice trait", "..."],
+  "customer_pain_points": ["real Thai customer question or pain point", "..."],
+  "price_positioning": "Budget / Mass | Mid-Range | Premium | Luxury",
   "average_price_thb": 0,
-  "thai_keywords": ["5-8 direct organic consumer search terms and specific hashtags without slang (e.g. 'ไดร์เป่าผม', 'ครีมแต้มสิว', 'มอยส์เจอร์ไรเซอร์', 'เก้าอี้เพื่อสุขภาพ')"],
-  "search_taxonomy": {{
-    "niche_hashtags": ["2-4 specific niche Thai hashtags with #, e.g. '#สกินแคร์คนเป็นสิว', '#จัดโต๊ะทำงาน'"],
-    "educational_guru_queries": ["2-3 coaching, tutorial or technical knowledge phrases, e.g. 'สอนสกี', 'เทคนิคสโนว์บอร์ด', 'วิธีเล่นสกีสำหรับมือใหม่', 'วิธีเลือกเก้าอี้เพื่อสุขภาพ'"],
-    "pain_point_queries": ["2-3 solution-oriented search phrases real Thai consumers search, e.g. 'กู้หน้าพัง', 'วิธีลดสิวอุดตันด้วยตัวเอง', 'ปวดหลังเลือกเก้าอี้ยังไง'"],
-    "review_hook_queries": ["2-3 review phrases, e.g. 'รีวิวพลีชีพ', 'ซื้อซ้ำไม่ซ้ำ', 'คุ้มไหม', 'ใช้จริง'"],
-    "lifestyle_persona_queries": ["2-3 lifestyle routine queries, e.g. 'รูทีนคนนอนดึก', 'แต่งหน้าไปเรียน', '1 วันกินอะไรบ้าง'"],
-    "competitor_seed_queries": ["2-3 competitor query phrases, e.g. 'รีวิว [คู่แข่ง]'"]
-  }},
-  "grounded_competitors": [
-    {{
-      "brand_en": "Real Thai Competitor / Alternative Brand, Venue, or Academy Name",
-      "aliases": ["English Name", "Thai Name", "Common social handle or abbreviation e.g. skibkk"]
-    }}
-  ]
-}}
-"""
-        try:
-            response = self.client.models.generate_content(
-                model=self.llm_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.2,
-                ),
-            )
-            if response and response.text:
-                raw_text = response.text.strip()
-                if raw_text.startswith("```json"):
-                    raw_text = raw_text[7:]
-                if raw_text.startswith("```"):
-                    raw_text = raw_text[3:]
-                if raw_text.endswith("```"):
-                    raw_text = raw_text[:-3]
-                raw_text = raw_text.strip()
-                # Tolerate trailing commas before closing brackets/braces
-                raw_text = re.sub(r',\s*([\]}])', r'\1', raw_text)
-                return json.loads(raw_text)
-        except Exception as e:
-            print(f"[GeminiService] LLM BrandDNA generation error: {e}")
-        return None
+  "conversion_model": "ECOMMERCE_PRODUCT | APP_DIGITAL_SERVICE | HIGH_TICKET_LEADGEN | LIFESTYLE_EXPERIENCE",
+  "conversion_model_reason": "1 sentence",
+  "search_queries": [{{"query": "...", "syntax_rule": "rule_1|rule_2|rule_3|rule_4", "specificity": "direct|adjacent"}}],
+  "niche_keywords": ["..."],
+  "competitors": [{{"brand": "Competitor Name", "aliases": ["Competitor Name", "ชื่อไทย"]}}]
+}}"""
+        data = await self._generate_json(prompt, temperature=0.2)
+        if not isinstance(data, dict):
+            raise RuntimeError("Gemini Brand DNA payload is not a JSON object")
+        return data
 
-    async def generate_brand_customer_match(
+    async def repair_queries(
         self,
-        brand_name: str,
-        brand_vertical: str,
         brand_summary: str,
-        target_audience: str,
-        brand_price: int,
-        kol_name: str,
-        kol_handle: str,
-        kol_persona: str,
-        kol_styles: List[str],
-        creator_archetype: str = "Lifestyle & Vlog",
-        is_review_creator: bool = False,
-        sample_comments: Optional[List[str]] = None,
-        recent_captions: Optional[List[str]] = None,
-        median_er: float = 0.0,
-        is_spam: bool = False,
-    ) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
-        """
-        Uses Gemini Main LLM to produce deep Brand-to-Customer Matching Analysis.
-        Focuses on consumer persona overlap, buyer intent, customer pain points,
-        and commercial conversion strategy instead of generic pitch hooks.
-        """
-        if not self.is_configured or is_spam:
-            return None, None
+        conversion_model: str,
+        side_or_rejected: Any = None,
+        rejected_or_needed: Any = None,
+        needed: Optional[Dict[str, int]] = None,
+        needed_count: int = 4,
+    ) -> List[Dict[str, str]]:
+        if isinstance(side_or_rejected, list):
+            rejected = side_or_rejected
+            count = rejected_or_needed if isinstance(rejected_or_needed, int) else needed_count
+        else:
+            rejected = rejected_or_needed if isinstance(rejected_or_needed, list) else []
+            count = sum(needed.values()) if isinstance(needed, dict) else needed_count
 
-        comments_preview = ", ".join(sample_comments[:3]) if sample_comments else "N/A"
-        captions_preview = ", ".join(recent_captions[:3]) if recent_captions else "N/A"
+        prompt = f"""These Thai TikTok search queries were REJECTED (too long, sentence-like, or merchant words):
+{json.dumps(rejected, ensure_ascii=False)}
 
-        prompt = f"""You are a Lead Consumer Insights & Brand Matchmaking Strategist at Convert Cake.
-Your mission is to perform an in-depth BRAND-TO-CUSTOMER MATCHING analysis between the Client Brand and the Creator's specific audience/customer base in Thailand.
-DO NOT generate generic AI pitch hooks or script lines. Focus exclusively on audience persona fit, buyer intent, customer pain points, and commercial conversion strategy.
+Brand: {brand_summary}
+Conversion model: {conversion_model}
+{NATURAL_SEARCH_SYNTAX_GUIDE}
 
-[Client Brand]
-Brand Name: {brand_name}
-Vertical / Category: {brand_vertical}
-Brand Summary: {brand_summary}
-Target Audience / Core Demographic: {target_audience}
-Average Price: {brand_price:,} THB
+Write {max(count, 4)} replacement natural Thai TikTok search queries strictly adhering to the 4 Abstract Syntax Rules.
+Base them 100% on the brand's extracted content.
+Each MUST be 2-4 words, at most 18 Thai letters, native everyday search phrasing.
+Return ONLY JSON: [{{"query": "...", "syntax_rule": "rule_1|rule_2|rule_3|rule_4", "specificity": "direct|adjacent"}}]"""
+        data = await self._generate_json(prompt, temperature=0.3)
+        if not isinstance(data, list):
+            raise RuntimeError("Gemini query repair payload is not a JSON list")
+        return data
 
-[Creator & Audience Telemetry]
-Creator: {kol_name} (@{kol_handle})
-Creator Archetype: {creator_archetype} {('(Specializes in Product Reviews / TikTok Shop Yellow Basket)' if is_review_creator else '')}
-Persona & Aesthetic: {kol_persona}
-Content Styles: {', '.join(kol_styles)}
-Median Engagement Rate: {median_er:.1f}%
-Sample Audience Comments: {comments_preview}
-Recent Content Topics: {captions_preview}
+    async def extract_grounded_competitors(
+        self, brand_name: str, vertical: str, sub_category: str, price_positioning: str
+    ) -> List[Dict[str, Any]]:
+        """Layer 1 — Google Search grounded competitor discovery for the Thai market."""
+        prompt = f"""Use Google Search to find brands that are CURRENTLY sold in Thailand and compete directly with
+"{brand_name}" ({vertical} / {sub_category}, price tier: {price_positioning}).
+Return up to 6 competitors in the same category and price tier. For each give the English name and the
+Thai transliterations / nicknames Thai consumers use on TikTok.
+Return ONLY JSON (no prose): [{{"brand": "La Roche-Posay", "aliases": ["La Roche-Posay", "ลาโรช", "ลาโรชโพเซย์"]}}]"""
+        data = await self._generate_json(prompt, temperature=0.1, grounded=True)
+        if not isinstance(data, list):
+            raise RuntimeError("Grounded competitor payload is not a JSON list")
+        return data
 
-Analyze the Brand-to-Customer Fit:
-1. Target Customer Persona: Detail the specific customer segment among this creator's followers that matches this brand (e.g., age, lifestyle, mindset, beauty/consumer habits).
-2. Buyer Intent Fit: Explain why this audience has genuine purchasing willingness and affordability for this {brand_price:,} THB price point.
-3. Pain Points Addressed: Exactly 3 specific customer pain points this brand solves for this creator's audience.
-4. Customer Journey Stage: What stage does this audience operate in? Choose the best fit from: 'Problem Awareness & Education', 'Consideration & Comparison', or 'Decision & Direct Purchase (TikTok Shop)'.
-5. Conversion Angle: Strategic positioning advice on how to present the brand naturally to resonate with this customer mindset.
-6. Rationale: 2-3 sentence strategic brand-to-customer matching rationale in Thai.
+    # ------------------------------------------------------------------
+    # Stage 2 — Layer 2 co-occurrence
+    # ------------------------------------------------------------------
+    async def identify_cooccurring_brands(
+        self, brand_name: str, sub_category: str, frequent_terms: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        prompt = f"""Below are the most frequent hashtags / terms in TikTok clips scraped for the client brand "{brand_name}"
+(category: {sub_category}). Each item shows the term and how many distinct creators used it.
+{json.dumps(frequent_terms, ensure_ascii=False)}
 
-Return ONLY a valid JSON object:
-{{
-  "rationale": "2-3 sentence strategic brand-to-customer matching rationale in Thai",
-  "brand_customer_match": {{
-    "target_customer_persona": "Detailed customer profile in Thai",
-    "buyer_intent_fit": "Analysis of customer buying intent and price-point compatibility in Thai",
-    "pain_points_addressed": [
-      "Customer pain point 1 in Thai",
-      "Customer pain point 2 in Thai",
-      "Customer pain point 3 in Thai"
-    ],
-    "customer_journey_stage": "Consideration & Comparison",
-    "conversion_angle": "Strategic customer conversion angle in Thai"
-  }}
-}}
-"""
-        try:
-            response = self.client.models.generate_content(
-                model=self.llm_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.6,
-                ),
-            )
-            if response and response.text:
-                data = json.loads(response.text)
-                return data.get("rationale"), data.get("brand_customer_match")
-        except Exception as e:
-            print(f"[GeminiService] LLM brand-customer matching error: {e}")
-        return None, None
+Identify ONLY the terms that are commercial BRAND names competing in the same category (exclude "{brand_name}" itself,
+generic words, places, platforms like TikTok/Shopee/Lazada, and creator names).
+Return ONLY JSON: [{{"brand": "canonical name", "aliases": ["term as seen", "Thai/English variant"], "mentions": <creator count>}}]
+Return [] if none."""
+        data = await self._generate_json(prompt, temperature=0.1)
+        if not isinstance(data, list):
+            raise RuntimeError("Co-occurrence payload is not a JSON list")
+        return data
 
-    async def generate_hooks_and_rationale(
-        self,
-        brand_name: str,
-        brand_vertical: str,
-        brand_price: int,
-        kol_name: str,
-        kol_persona: str,
-        kol_styles: List[str],
-        median_er: float,
-        is_spam: bool,
-        spam_reason: str,
-        creator_archetype: str = "Lifestyle & Vlog",
-        is_review_creator: bool = False,
-    ) -> Tuple[Optional[str], Optional[List[str]]]:
-        """
-        Legacy wrapper maintained for backwards compatibility.
-        """
-        rationale, match_data = await self.generate_brand_customer_match(
-            brand_name=brand_name,
-            brand_vertical=brand_vertical,
-            brand_summary="",
-            target_audience="",
-            brand_price=brand_price,
-            kol_name=kol_name,
-            kol_handle="",
-            kol_persona=kol_persona,
-            kol_styles=kol_styles,
-            creator_archetype=creator_archetype,
-            is_review_creator=is_review_creator,
-            median_er=median_er,
-            is_spam=is_spam,
-        )
-        hooks = [match_data.get("conversion_angle")] if match_data and match_data.get("conversion_angle") else []
-        return rationale, hooks
+    # ------------------------------------------------------------------
+    # Stage 3 — Batch LLM Relevance Gate (one call)
+    # ------------------------------------------------------------------
+    async def relevance_gate(self, brand: Dict[str, Any], creators: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+        prompt = f"""You are the Creator Relevance Gate of Convert Cake (Thai TikTok).
+Check each creator against the client Brand DNA in ONE pass.
 
-    async def classify_creator_archetypes(
-        self,
-        creators: List[Dict[str, Any]],
-        batch_size: int = 20,
-    ) -> Dict[str, Dict[str, Any]]:
-        """
-        Classifies creators into 4 Core Archetypes using LLM Instructions (Zero-Hardcode Policy).
-        Evaluates creator intent, content delivery style, and audience value proposition via Gemini LLM.
-        Differentiates Educated Guru (knowledge-sharing/technique/drills) from Lifestyle & Vlog (travel/daily routine),
-        Top Reviewer (product unboxing/comparison/buying intent), and Niche Enthusiast (subculture immersion).
-        """
-        if not self.is_configured or not creators:
-            return {}
+Brand DNA:
+{json.dumps(brand, ensure_ascii=False)}
 
-        import asyncio
+{SUB_STYLE_GUIDE}
 
-        chunks = [creators[i:i + batch_size] for i in range(0, len(creators), batch_size)]
+Rules:
+- News channels, meme / comedy channels, and creators who only share a homonym word but are in a different industry
+  -> is_relevant_creator = false.
+- Otherwise is_relevant_creator = true and give:
+  * relevance_score: 0.0-1.0 fit with the brand's audience & category
+  * main_role: exactly 'KOL' or 'KOC'
+  * sub_style: exactly one of the 4 sub-styles above (use the numeric signals provided: basket_ratio,
+    save_rate, comment_to_like, avg_caption_length)
+  * why_it_fits: ONE short Thai sentence on why this creator fits this brand.
 
-        async def _classify_chunk(chunk: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-            clean_items = []
-            for c in chunk:
-                clean_items.append({
-                    "id": c.get("id") or c.get("handle"),
-                    "handle": c.get("handle", ""),
-                    "display_name": c.get("display_name", ""),
-                    "bio": c.get("bio", ""),
-                    "recent_video_captions": [str(cap)[:150] for cap in c.get("captions", []) if cap][:5],
-                    "yellow_basket_ratio": c.get("yellow_basket_ratio", 0.0),
-                    "vertical": c.get("vertical", ""),
-                })
+Creators (handle, bio, 3 latest captions, signals):
+{json.dumps(creators, ensure_ascii=False)}
 
-            prompt = f"""You are the Lead Creator Categorization & Audience Strategist for TikTok Thailand at Convert Cake.
-Your task is to classify each creator into their true Creator Archetype and recommend their campaign role based on the INSTRUCTION CRITERIA below.
+Return ONLY JSON keyed by creator id:
+{{"<id>": {{"is_relevant_creator": true, "relevance_score": 0.85, "main_role": "KOC", "sub_style": "KOC - Hard-Sell Reviewer", "why_it_fits": "..."}}}}"""
+        data = await self._generate_json(prompt, temperature=0.1)
+        if not isinstance(data, dict):
+            raise RuntimeError("Relevance gate payload is not a JSON object")
+        return data
 
-CRITICAL INSTRUCTIONS - ZERO HARDCODED KEYWORDS:
-Do NOT simply match keywords or words in bio. Understand the semantics, tone, intent, and core value proposition that each creator provides to their viewers.
-
-4 Core Creator Archetypes & Classification Guidelines:
-
-1. 'Educated Guru' (Recommended Role: 'Trust & Credibility')
-   - Core Value: Knowledge transfer, skill training, technical analysis, and educational problem-solving.
-   - Content Focus: Deep educational breakdowns, step-by-step tutorials, technique drills, correcting common mistakes/posture, explaining the science/mechanics/ingredients, medical/health/sports coaching, professional advice.
-   - STRICT EXCLUSIONS (Do NOT classify as Guru):
-     * Travel itineraries ('แจกแพลนเที่ยว', 'แนะนำที่พัก/ที่เที่ยว', 'พิกัดเดินทาง') -> MUST be 'Lifestyle & Vlog'
-     * Vacation/trip vlogs, skiing for leisure, exploring cafes/destinations -> MUST be 'Lifestyle & Vlog'
-     * Product unboxings or shopping reviews -> MUST be 'Top Reviewer'
-   - An instructor teaching technical skiing drills, balance posture, and safety mechanics IS an Educated Guru. A traveler sharing a ski trip itinerary or fun vlog is 'Lifestyle & Vlog'.
-
-2. 'Top Reviewer' (Recommended Role: 'Conversion & Sales')
-   - Core Value: Product evaluation, buying decision assistance, and commercial shoppertainment.
-   - Content Focus: Hands-on testing, unboxings, comparative testing (A vs B), honest pros/cons, shopping haul reviews, price-to-value assessment, TikTok Shop yellow basket showcases.
-   - Note on Yellow Basket: Yellow basket presence is strictly an evaluation signal that indicates affiliate review content to help classify into this 'Top Reviewer' archetype.
-
-3. 'Lifestyle & Vlog' (Recommended Role: 'Brand Awareness & Discovery')
-   - Core Value: Entertainment, aesthetic relatability, personal experiences, and travel inspiration.
-   - Content Focus: Daily life vlogs, travel itineraries ('แจกแพลนเที่ยว 3 วัน 2 คืน', 'รีวิวทริป', 'พิกัดถ่ายรูป'), holiday trips, outdoor adventures/hiking for leisure, aesthetic routines (GRWM, Day in my life), cafe hopping, food experiences, fashion/OOTD, humor, casual storytelling.
-   - Distinction: Even if they share travel tips or itineraries, this is experiential lifestyle sharing, NOT academic or professional skill coaching.
-
-4. 'Niche Enthusiast' (Recommended Role: 'Hyper-Targeted Reach')
-   - Core Value: Subculture authenticity, passionate hobby immersion, and community connection.
-   - Content Focus: Deep immersion in a specific subculture, extreme sport, dedicated hobby, or passionate community (e.g., ski/snowboard riders, mechanical keyboards, custom car tuning, pet breeding, retro gaming).
-   - Distinction: Content is deeply embedded in the specific enthusiast community and subculture rather than general mass lifestyle.
-
-Every single creator MUST be classified into exactly one of these 4 archetypes (Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast).
-
-Creators to Classify:
-{json.dumps(clean_items, ensure_ascii=False, indent=2)}
-
-Return ONLY a valid JSON object mapping each creator's 'id' to their classification:
-{{
-  "<creator_id>": {{
-    "creator_archetype": "Educated Guru" | "Top Reviewer" | "Lifestyle & Vlog" | "Niche Enthusiast",
-    "recommended_role": "Trust & Credibility" | "Conversion & Sales" | "Brand Awareness & Discovery" | "Hyper-Targeted Reach",
-    "reasoning": "A concise 1-sentence explanation in Thai explaining why their content fits this archetype based on the instructions"
-  }}
-}}
-"""
-            try:
-                response = await asyncio.to_thread(
-                    self.client.models.generate_content,
-                    model=self.llm_model,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        temperature=0.2,
-                    ),
-                )
-                if response and response.text:
-                    parsed = json.loads(response.text)
-                    if isinstance(parsed, dict):
-                        return parsed
-            except Exception as e:
-                print(f"[GeminiService] Error classifying creator batch: {e}")
-            return {}
-
-        results = await asyncio.gather(*[_classify_chunk(chunk) for chunk in chunks])
-        merged = {}
-        for r in results:
-            merged.update(r)
-        return merged
-
-    async def generate_audience_comments(
-        self, kol_name: str, handle: str, bio: str, captions: List[str], vertical: str
-    ) -> List[str]:
-        """
-        Uses Gemini to generate 4 realistic, context-specific Thai audience comments/inquiries
-        based on the creator's real video captions and content topics.
-        """
-        if not self.is_configured:
-            return []
-
-        captions_sample = [c[:120] for c in captions if c][:4] if captions else []
-        prompt = f"""You are an expert analyzing real Thai TikTok audience engagement and prospective buyers.
-Creator: {kol_name} (@{handle})
-Vertical: {vertical}
-Bio: {bio}
-Recent Video Captions/Topics: {json.dumps(captions_sample, ensure_ascii=False) if captions_sample else 'General ' + vertical + ' content'}
-
-Generate 4 distinct, authentic, natural Thai audience comments or buyer inquiries that real followers would post (e.g. asking for price/where to buy/พิกัด, asking if suitable for their use case, or sharing real feedback).
-Return ONLY a valid JSON list of 4 strings:
-["comment 1", "comment 2", "comment 3", "comment 4"]
-"""
-        try:
-            response = self.client.models.generate_content(
-                model=self.llm_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.7,
-                ),
-            )
-            if response and response.text:
-                comments = json.loads(response.text)
-                if isinstance(comments, list) and len(comments) > 0:
-                    return [str(c).strip() for c in comments[:4] if str(c).strip()]
-        except Exception as e:
-            print(f"[GeminiService] Audience comments generation error: {e}")
-        return []
+    # ------------------------------------------------------------------
+    # Stage 4 — Role-adaptive pitch hooks (BYPASSED for speed)
+    # ------------------------------------------------------------------
+    async def generate_pitch_hooks(self, brand: Dict[str, Any], creators: List[Dict[str, Any]]) -> Dict[str, str]:
+        # Bypassed per requirement to reduce pipeline latency
+        return {}
 
 
 _gemini_service_instance: Optional[GeminiService] = None
+
 
 def get_gemini_service() -> GeminiService:
     global _gemini_service_instance

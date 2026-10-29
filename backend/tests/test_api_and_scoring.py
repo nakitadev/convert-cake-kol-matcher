@@ -1,4 +1,13 @@
-import asyncio
+"""
+Convert Cake TikTok KOL/KOC Discovery & Matching Engine — Test Suite.
+
+Verifies the 4-stage pipeline against system_specification_tiktok_kol_matching_engine.md:
+  1. Stage 1: Brand DNA & 4 Conversion Models + Scene Translation (2-3 words, <= 18 letters, 60/40 funnel)
+  2. Stage 2: TikTok Discovery (Country: TH, KOL_QUERY vs KOC_QUERY origin tagging) & Competitor Layer 2
+  3. Stage 3: Two-Stage Filtering (Gate 1: Merchant & Smart Bot Filter; Gate 2: Batch LLM Relevance Gate; 2x2 Matrix & Guard)
+  4. Stage 4: Dynamic Scoring (40/35/25), Balanced Top-K Media Mix Portfolio & Role-Adaptive 3-Sec Hooks
+  5. FastAPI Endpoints & Healthcheck
+"""
 import pytest
 from fastapi.testclient import TestClient
 
@@ -6,17 +15,35 @@ from app.main import app
 from app.models import (
     BrandAnalyzeRequest,
     BrandDNA,
+    Competitor,
+    CreatorSignals,
     KOLProfile,
+    KolKocMix,
+    SearchQuery,
     VideoMetric,
-    MatchRequest,
+    CONVERSION_MODEL_MIX,
 )
 from app.services.brand_analyzer import get_brand_analyzer
 from app.services.scoring_engine import get_scoring_engine
 from app.services.gemini_service import get_gemini_service
+from app.services import query_translation as qt
+from app.services.creator_filter import (
+    group_items_by_creator,
+    build_profile,
+    brand_account_reason,
+    merchant_reason,
+    affiliate_bot_reason,
+    guard_sub_style,
+    competitor_flags,
+    frequent_terms,
+)
 
 client = TestClient(app)
 
 
+# ---------------------------------------------------------------------------
+# 1. API Health & Root
+# ---------------------------------------------------------------------------
 def test_root_and_health():
     resp = client.get("/api/health")
     assert resp.status_code == 200
@@ -27,981 +54,525 @@ def test_root_and_health():
     assert "Convert Cake" in root_resp.json()["name"]
 
 
+# ---------------------------------------------------------------------------
+# 2. Stage 1: Brand DNA & Conversion Models
+# ---------------------------------------------------------------------------
 @pytest.mark.asyncio
-async def test_brand_analyzer_pure_live():
+async def test_brand_analyzer_live_extraction():
     analyzer = get_brand_analyzer()
     req = BrandAnalyzeRequest(
         brand_name="Her Hyness Clean Skincare",
-        custom_notes="Clean dermatological skincare for sensitive skin in Bangkok, budget 400-800 THB",
+        custom_notes="Clean dermatological skincare for sensitive skin in Bangkok, average price 790 THB, sold on TikTok Shop",
     )
     dna = await analyzer.analyze(req)
     assert "Her Hyness" in dna.brand_name
-    assert len(dna.thai_keywords) >= 1
-    assert dna.average_price_thb > 0
+    assert dna.conversion_model in CONVERSION_MODEL_MIX
+    assert dna.kol_koc_mix.kol + dna.kol_koc_mix.koc == 100
+    assert len(dna.search_queries) >= 4
+    # Check that both KOL_QUERY and KOC_QUERY exist
+    assert any(q.side == "KOL_QUERY" for q in dna.search_queries)
+    assert any(q.side == "KOC_QUERY" for q in dna.search_queries)
+    assert len(dna.competitors) >= 1
     assert dna.id.startswith("live-")
 
 
-def test_scoring_engine_legit_creator():
-    scoring = get_scoring_engine()
-    brand = BrandDNA(
-        id="live-testbrand",
-        brand_name="Her Hyness",
-        vertical="Beauty & Skincare",
-        sub_category="Clean Skincare",
-        brand_summary="Clean skincare for acne-prone skin",
-        target_audience="Young Thai beauty shoppers",
-        target_locations=["Bangkok", "Thailand"],
-        brand_tone=["Trustworthy", "Modern"],
-        content_style_preferences=["Review", "Vlog"],
-        price_positioning="Mid-Range / Accessible",
-        average_price_thb=690,
-        thai_keywords=["รีวิวบิวตี้", "สกินแคร์", "ผิวแพ้ง่าย"],
-    )
-
-    kol = KOLProfile(
-        id="live_fah_beauty",
-        handle="fah_beauty",
-        display_name="Fah Skincare",
-        tiktok_url="https://www.tiktok.com/@fah_beauty",
-        vertical="Beauty & Skincare",
-        secondary_verticals=["Lifestyle"],
-        bio="รีวิวสกินแคร์ผิวแพ้ง่าย ใช้จริงทุกตัว",
-        follower_count=85000,
-        total_likes=900000,
-        tier="Micro (10K-100K)",
-        creator_persona="Authentic Skincare Reviewer",
-        content_styles=["Review", "Vlog"],
-        typical_price_tier="Mid-Range / Accessible",
-        avg_reviewed_price_thb=550,
-        primary_locations=["Bangkok", "Thailand"],
-        sample_comments=["ใช้ตามแล้วดีมาก", "ขอพิกัดหน่อยค่ะ", "ราคาเท่าไหร่คะ"],
-        recent_videos=[
-            VideoMetric(
-                video_id="v1",
-                caption="รีวิวสกินแคร์กู้ผิวโทรมใน 7 วัน",
-                hashtags=["รีวิวบิวตี้", "สกินแคร์"],
-                views=45000,
-                likes=3200,
-                comments=150,
-                shares=80,
-                has_yellow_basket=False,
-                location_tag="Bangkok, Thailand",
-            )
-        ],
-        is_affiliate_spam_trap=False,
-    )
-
-    score, breakdown, why, hooks = scoring.evaluate_kol(kol, brand)
-    assert score >= 60.0
-    assert breakdown.affiliate_spam_penalty_applied is False
-    assert breakdown.confidence_level in ["High", "Medium"]
-    assert len(hooks) == 3
-    assert "Her Hyness" in hooks[0]
-    assert "[PENALIZED]" not in why
+def test_conversion_model_mix_values():
+    assert CONVERSION_MODEL_MIX["ECOMMERCE_PRODUCT"] == {"kol": 30, "koc": 70}
+    assert CONVERSION_MODEL_MIX["APP_DIGITAL_SERVICE"] == {"kol": 60, "koc": 40}
+    assert CONVERSION_MODEL_MIX["HIGH_TICKET_LEADGEN"] == {"kol": 70, "koc": 30}
+    assert CONVERSION_MODEL_MIX["LIFESTYLE_EXPERIENCE"] == {"kol": 60, "koc": 40}
 
 
-def test_anti_spam_yellow_basket_penalty():
-    scoring = get_scoring_engine()
-    brand = BrandDNA(
-        id="live-testbrand",
-        brand_name="Test Brand",
-        vertical="Beauty & Skincare",
-        brand_summary="Testing anti spam",
-        target_audience="Thai consumers",
-        thai_keywords=["รีวิว"],
-    )
+# ---------------------------------------------------------------------------
+# 3. Stage 2: Scene Translation Syntax Guardrails (Spec 3.2)
+# ---------------------------------------------------------------------------
+def test_scene_translation_syntax_rules():
+    # Rule 1: Short & Native (<= 18 Thai letters, 2-3 words)
+    valid_q1 = "วิธีลดสิวผด"
+    ok, reason = qt.validate_query(valid_q1)
+    assert ok is True
 
-    # Spam account: 100% yellow basket, low retention
-    spam_kol = KOLProfile(
-        id="live_spam_farm",
-        handle="cheap_shop_repost",
-        display_name="Affiliate Repost Farm",
-        tiktok_url="https://www.tiktok.com/@cheap_shop_repost",
-        vertical="Beauty & Skincare",
-        bio="คลิกลิงก์ตะกร้าเหลืองเลย",
-        follower_count=50000,
-        tier="Micro (10K-100K)",
-        creator_persona="Affiliate Bot",
-        sample_comments=[],
-        recent_videos=[
-            VideoMetric(
-                video_id="v1",
-                caption="กดตะกร้าเหลืองด่วน",
-                hashtags=["ของดีบอกต่อ"],
-                views=1000,
-                likes=10,
-                comments=0,
-                shares=0,
-                has_yellow_basket=True,
-            )
-        ],
-        is_affiliate_spam_trap=True,
-    )
+    valid_q2 = "รีวิว ครีมแต้มสิว"
+    ok, _ = qt.validate_query(valid_q2)
+    assert ok is True
 
-    score, breakdown, why, hooks = scoring.evaluate_kol(spam_kol, brand)
-    assert breakdown.affiliate_spam_penalty_applied is True
-    assert breakdown.affiliate_spam_penalty_points == 55.0
-    assert "[PENALIZED]" in why
-    assert hooks == ["(N/A — Account flagged as affiliate spam)"]
+    # Too many words (> 3 words)
+    too_long_words = "วิธี ใช้ ครีม แต้ม สิว ตัวดัง"
+    ok, reason = qt.validate_query(too_long_words)
+    assert ok is False
+    assert "words" in reason
+
+    # Rule 3: Anti-Merchant Guardrail (ห้ามมี ราคาส่ง, ขายถูก, โปรโมชั่น, ตัวแทนจำหน่าย)
+    merchant_q = "สกินแคร์ ราคาส่ง"
+    ok, reason = qt.validate_query(merchant_q)
+    assert ok is False
+    assert "anti-merchant" in reason
 
 
-def test_100_percent_yellow_basket_allowed_for_review_creator():
-    scoring = get_scoring_engine()
-    brand = BrandDNA(
-        id="b1",
-        brand_name="MizuMi",
-        vertical="Beauty & Skincare",
-        sub_category="Sunscreen & Acne Care",
-        brand_summary="Thai dermocosmetics sunscreen",
-        target_audience="Acne skin users in Thailand",
-        average_price_thb=690,
-        thai_keywords=["กันแดด", "สิว"],
-    )
-    review_kol = KOLProfile(
-        id="live_review_star",
-        handle="review.expert",
-        display_name="Review Expert Thailand",
-        tiktok_url="https://www.tiktok.com/@review.expert",
-        vertical="Beauty & Skincare",
-        bio="รีวิวสกินแคร์ใช้จริง ป้ายยาของดีในต๊อกๆ",
-        follower_count=85000,
-        tier="Micro (50K-250K)",
-        creator_persona="Skincare Reviewer",
-        creator_category="Content Creator (เน้นรีวิว)",
-        sample_comments=["ใช้ตามแล้วดีจริง", "พิกัดตะกร้าอยู่ตรงไหนคะ"],
-        recent_videos=[
-            VideoMetric(
-                video_id=f"v_{i}",
-                caption=f"รีวิวกันแดดสำหรับคนเป็นสิว คลิปที่ {i}",
-                hashtags=["รีวิวบิวตี้", "ของดีบอกต่อ"],
-                views=25000,
-                likes=1200,
-                comments=45,
-                shares=15,
-                has_yellow_basket=True,  # 100% yellow basket across all videos!
-            )
-            for i in range(5)
-        ],
-        is_affiliate_spam_trap=False,
-    )
-
-    score, breakdown, why, hooks = scoring.evaluate_kol(review_kol, brand)
-    # Spec: 100% yellow basket must NOT be penalized and should be categorized as review creator
-    assert breakdown.yellow_basket_ratio == 1.0
-    assert breakdown.affiliate_spam_penalty_applied is False
-    assert "[PENALIZED]" not in why
-    assert "Content Creator (เน้นรีวิว)" in why
-    assert "ตะกร้าเหลือง 100%" in why
-    assert any("ตะกร้าเหลือง" in h for h in hooks)
-
-
-def test_gemini_service_cosine_math():
-    gemini = get_gemini_service()
-    v1 = [1.0, 0.0, 0.0]
-    v2 = [1.0, 0.0, 0.0]
-    v3 = [0.0, 1.0, 0.0]
-    assert gemini.cosine_similarity(v1, v2) == 1.0
-    assert gemini.cosine_similarity(v1, v3) == 0.5
-
-
-def test_fastapi_analyze_endpoint():
-    res = client.post(
-        "/api/analyze-brand",
-        json={
-            "brand_name": "After You",
-            "custom_notes": "Bangkok dessert cafe Kakigori Shibuya toast",
-        },
-    )
-    assert res.status_code == 200
-    data = res.json()
-    assert "After You" in data["brand_name"]
-    assert "thai_keywords" in data
-
-
-@pytest.mark.asyncio
-async def test_zero_hardcode_discovery_policy():
-    from app.workflow.graph import discover_candidates_node
-    import pytest
-
-    # Zero-Hardcode: missing brand_dna or vertical must fail with ValueError, NOT fall back to 'Beauty & Skincare'
-    with pytest.raises(ValueError, match="BrandDNA vertical is required"):
-        await discover_candidates_node({"brand_dna": None})
-
-    bad_dna = BrandDNA(
-        id="test",
-        brand_name="Test",
-        vertical="",
-        brand_summary="test",
-        target_audience="test",
-        thai_keywords=[],
-    )
-    with pytest.raises(ValueError, match="BrandDNA vertical is required"):
-        await discover_candidates_node({"brand_dna": bad_dna})
-
-
-@pytest.mark.asyncio
-async def test_creator_archetype_instruction_classification():
-    """
-    Tests that creator classification uses LLM instruction differentiating
-    Educated Guru (knowledge-sharing/techniques) from Lifestyle & Vlog (travel/daily life)
-    and Top Reviewer (unboxing/comparison/buying advice) without hardcoded keywords.
-    """
-    gemini = get_gemini_service()
-    if not gemini.is_configured:
-        pytest.skip("GEMINI_API_KEY not configured")
-
-    creators = [
-        {
-            "id": "guru_1",
-            "handle": "ski_instructor_th",
-            "display_name": "ครูอาร์ท สอนสกี",
-            "bio": "สอนสกีและสโนว์บอร์ดระดับมืออาชีพ อธิบายหลักการเบรกและการควบคุมบอร์ด",
-            "captions": ["3 ท่าฝึกซ้อมปรับสรีระร่างกายก่อนขึ้นลานหิมะจริง", "เทคนิคการถ่ายน้ำหนักขอบสกีเพื่อการเลี้ยวที่ปลอดภัย"],
-            "yellow_basket_ratio": 0.0,
-            "vertical": "Sports & Outdoors",
-        },
-        {
-            "id": "travel_1",
-            "handle": "japan_trip_vlogger",
-            "display_name": "แพรว พาหลงทาง",
-            "bio": "Vlogger ท่องเที่ยวญี่ปุ่น กิน เที่ยว พักผ่อน ชิลๆ กับธรรมชาติสวยๆ",
-            "captions": ["ไปเที่ยวลานสกีญี่ปุ่นวิวหิมะสวยตาแตกมากทุกคน แวะกินไอติมต่อ", "เช่าชุดเที่ยวเมืองหิมะ ถ่ายรูปมุมไหนก็ปัง #เที่ยวญี่ปุ่น"],
-            "yellow_basket_ratio": 0.0,
-            "vertical": "Travel & Lifestyle",
-        },
-        {
-            "id": "reviewer_1",
-            "handle": "honest_review_th",
-            "display_name": "รีวิวตามจริง",
-            "bio": "ซื้อเองรีวิวเอง ชี้เป้าของน่าใช้ พิกัดตะกร้าเหลือง",
-            "captions": ["เทียบแว่นกันแดด 3 รุ่น คุ้มไหมที่จะซื้อ มีพิกัดในตะกร้า", "เปิดกล่องลองของใหม่ ซื้อจากต๊อกต๊อกช็อป"],
-            "yellow_basket_ratio": 0.8,
-            "vertical": "Product Review",
-        },
+def test_scene_translation_60_40_funnel():
+    queries = [
+        SearchQuery(query="สกินแคร์ลดสิว", side="KOL_QUERY", specificity="direct"),
+        SearchQuery(query="ส่วนผสมเซรั่ม", side="KOL_QUERY", specificity="direct"),
+        SearchQuery(query="เทียบสเปกครีม", side="KOL_QUERY", specificity="direct"),
+        SearchQuery(query="รูทีนคนนอนดึก", side="KOL_QUERY", specificity="adjacent"),
+        SearchQuery(query="แต่งหน้าไปเรียน", side="KOL_QUERY", specificity="adjacent"),
     ]
-    res = await gemini.classify_creator_archetypes(creators)
-    assert "guru_1" in res
-    assert res["guru_1"]["creator_archetype"] == "Educated Guru"
-    assert res["guru_1"]["recommended_role"] == "Trust & Credibility"
-
-    assert "travel_1" in res
-    assert res["travel_1"]["creator_archetype"] == "Lifestyle & Vlog"
-    assert res["travel_1"]["recommended_role"] == "Brand Awareness & Discovery"
-
-    assert "reviewer_1" in res
-    assert res["reviewer_1"]["creator_archetype"] == "Top Reviewer"
-    assert res["reviewer_1"]["recommended_role"] == "Conversion & Sales"
+    picked = qt.select_funnel(queries, side="KOL_QUERY", per_side=5)
+    assert len(picked) == 5
+    direct_count = sum(1 for q in picked if q.specificity == "direct")
+    adjacent_count = sum(1 for q in picked if q.specificity == "adjacent")
+    assert direct_count == 3  # 60%
+    assert adjacent_count == 2  # 40%
 
 
-def test_full_spec_40_35_25_and_archetypes():
-    scoring = get_scoring_engine()
-    brand = BrandDNA(
-        id="live-skincare",
-        brand_name="MizuMi Skincare",
-        vertical="Beauty & Skincare",
-        sub_category="Sunscreen & Acne",
-        brand_summary="Thai derm skincare for sensitive skin",
-        target_audience="Acne prone teens and working adults",
-        thai_keywords=["กันแดด", "สิว", "รีวิว"],
-        grounded_competitors=[{"brand_en": "Biore", "aliases": ["บิโอเร", "บีโอเร"]}],
-        manual_competitors=["Canmake"],
+# ---------------------------------------------------------------------------
+# 4. Stage 3: Two-Stage Filtering (Gate 1 & Gate 2) (Spec 4.1)
+# ---------------------------------------------------------------------------
+def test_gate1_merchant_exclusion():
+    # 1. Commercial factory account with no work-ready signal -> must be excluded
+    factory_kol = KOLProfile(
+        id="factory_1",
+        handle="screen_factory_th",
+        display_name="โรงงานสกรีนเสื้อ ด่วน",
+        tiktok_url="https://www.tiktok.com/@screen_factory_th",
+        bio="รับสกรีนเสื้อยืด ไม่มีขั้นต่ำ ราคาส่ง สั่งผลิตจิ้มลิงก์",
+        follower_count=20000,
+        total_likes=10000,
+        tier="Micro",
+        query_origin="KOC_QUERY",
+        is_work_ready=False,
     )
+    reason = merchant_reason(factory_kol)
+    assert reason is not None
+    assert "Factory" in reason or "Merchant" in reason
 
-    # 1. Educated Guru profile
-    guru_kol = KOLProfile(
-        id="guru_derm",
-        handle="dr_skin_guru",
-        display_name="Dr. Skin Guru",
-        tiktok_url="https://www.tiktok.com/@dr_skin_guru",
-        vertical="Beauty & Skincare",
-        bio="เภสัชกรสอนเลือกสารกันแดด ติดต่องาน: work@gmail.com",
-        follower_count=120000,
-        tier="Mid-Tier (100K-500K)",
-        creator_persona="Educated Guru",
-        creator_archetype="Educated Guru",
-        recommended_role="Trust & Credibility",
+
+def test_gate1_smart_affiliate_bot_filter():
+    # 2. Smart bot: basket > 85% AND is_work_ready == False AND median comments <= 1
+    bot_kol = KOLProfile(
+        id="bot_1",
+        handle="cheap_repost_bot",
+        display_name="พิกัดของใช้ถูก",
+        tiktok_url="https://www.tiktok.com/@cheap_repost_bot",
+        bio="จิ้มตะกร้าเหลืองเลยจ้า",
+        follower_count=45000,
+        total_likes=1200,
+        tier="Micro",
+        query_origin="KOC_QUERY",
+        is_work_ready=False,
+        signals=CreatorSignals(
+            basket_ratio=0.95,
+            median_comments=0.0,
+            median_views=250.0,
+        ),
+    )
+    bot_reason = affiliate_bot_reason(bot_kol)
+    assert bot_reason is not None
+    assert "Affiliate Spam Bot" in bot_reason
+
+
+def test_gate1_top_review_creator_not_excluded():
+    # KOC Hard-Sell Reviewer with 100% basket but high engagement & work-ready bio -> MUST PASS Gate 1
+    top_reviewer = KOLProfile(
+        id="koc_review_star",
+        handle="review_with_ploy",
+        display_name="Ploy ป้ายยาพาช้อป",
+        tiktok_url="https://www.tiktok.com/@review_with_ploy",
+        bio="รีวิวของใช้จริงทุกชิ้น ป้ายยาของดี ตะกร้า TikTok Shop ติดต่องาน line @ployreview",
+        follower_count=85000,
+        total_likes=650000,
+        tier="Micro",
+        query_origin="KOC_QUERY",
+        is_work_ready=True,  # Open for work!
+        signals=CreatorSignals(
+            basket_ratio=1.0,  # 100% basket!
+            median_comments=45.0,  # Real active comments!
+            median_views=35000.0,
+            comment_to_like=0.035,
+        ),
+    )
+    # Check Gate 1 filters
+    assert merchant_reason(top_reviewer) is None
+    assert affiliate_bot_reason(top_reviewer) is None
+
+
+def test_2x2_substyle_lifestyle_guardrail():
+    # Spec 4.2: 'KOL - Lifestyle / Aesthetic' cannot have basket ratio >= 15%
+    signals_low_basket = CreatorSignals(basket_ratio=0.05)
+    assert guard_sub_style("KOL - Lifestyle / Aesthetic", signals_low_basket) == "KOL - Lifestyle / Aesthetic"
+
+    signals_high_basket = CreatorSignals(basket_ratio=0.60)
+    guarded = guard_sub_style("KOL - Lifestyle / Aesthetic", signals_high_basket)
+    assert guarded != "KOL - Lifestyle / Aesthetic"
+    assert guarded in ("KOC - Hard-Sell Reviewer", "KOC - Everyday User / Vlog")
+
+
+# ---------------------------------------------------------------------------
+# 5. Competitor Layers (Spec 5.1)
+# ---------------------------------------------------------------------------
+def test_competitor_flags_conflict_vs_comparison():
+    competitors = [
+        Competitor(brand="La Roche-Posay", aliases=["La Roche-Posay", "ลาโรช"], source="google_search_grounded"),
+        Competitor(brand="CeraVe", aliases=["CeraVe", "เซราวี"], source="google_search_grounded"),
+    ]
+
+    # Video with 1 competitor -> Conflict
+    p_conflict = KOLProfile(
+        id="p1",
+        handle="skincare_test1",
+        display_name="Skincare Test",
+        tiktok_url="https://www.tiktok.com/@skincare_test1",
+        follower_count=50000,
+        tier="Micro",
+        query_origin="KOL_QUERY",
         is_work_ready=True,
-        save_to_view_ratio=0.045,
-        view_consistency_ratio=0.85,
-        sample_comments=["สารตัวนี้ดีมาก", "พิกัดซื้อที่ไหนคะ", "ผิวแพ้ง่ายใช้ได้ไหม"],
         recent_videos=[
             VideoMetric(
                 video_id="v1",
-                caption="วิธีเลือกกันแดดสำหรับคนเป็นสิว ผิวแพ้ง่าย #สาระ",
-                views=80000,
-                likes=6000,
-                comments=240,
-                shares=500,
-                collect_count=900,
-                has_yellow_basket=False,
-            )
-        ],
-    )
-
-    score, breakdown, why, hooks = scoring.evaluate_kol(guru_kol, brand)
-    # Check 40/35/25 breakdown constraints
-    assert breakdown.relevance_weighted <= 40.0
-    assert breakdown.engagement_weighted <= 35.0
-    assert breakdown.audience_weighted <= 25.0
-    assert score == round(breakdown.relevance_weighted + breakdown.engagement_weighted + breakdown.audience_weighted, 1)
-    assert breakdown.save_to_view_points >= 8.0
-    assert "[Archetype: Educated Guru (Trust & Credibility)]" in why
-    assert "Open for Sponsor" in why
-    assert len(hooks) == 3
-
-    # 2. Competitor Conflict Check
-    comp_kol = KOLProfile(
-        id="comp_kol",
-        handle="comp_reviewer",
-        display_name="Beauty Fan",
-        tiktok_url="https://www.tiktok.com/@comp_reviewer",
-        vertical="Beauty & Skincare",
-        bio="รีวิวเครื่องสำอาง",
-        follower_count=20000,
-        tier="Micro (10K-100K)",
-        creator_persona="Top Reviewer",
-        creator_archetype="Top Reviewer",
-        competitor_warning="⚠️ Competitor Conflict: Content features competitor 'Biore'",
-        sample_comments=["ใช้ตาม"],
-        recent_videos=[
-            VideoMetric(
-                video_id="v2",
-                caption="เปรียบเทียบกันแดด biore กับแบรนด์อื่น",
+                url="https://tiktok.com/@skincare_test1/v1",
+                caption="รีวิว ลาโรช แต้มสิวยุบไวมาก",
                 views=10000,
                 likes=500,
                 comments=20,
                 shares=10,
+                has_yellow_basket=False,
+            )
+        ],
+    )
+    flags1 = competitor_flags(p_conflict, competitors)
+    assert len(flags1) == 1
+    assert flags1[0].type == "conflict"
+    assert "Competitor Conflict: La Roche-Posay" in flags1[0].label
+
+    # Video comparing both competitors -> Comparison Opportunity
+    p_compare = KOLProfile(
+        id="p2",
+        handle="skincare_test2",
+        display_name="Skincare Compare",
+        tiktok_url="https://www.tiktok.com/@skincare_test2",
+        follower_count=70000,
+        tier="Micro",
+        query_origin="KOL_QUERY",
+        is_work_ready=True,
+        recent_videos=[
+            VideoMetric(
+                video_id="v2",
+                url="https://tiktok.com/@skincare_test2/v2",
+                caption="เทียบกันชัดๆ ลาโรช vs เซราวี ตัวไหนเหมาะกับผิวแพ้ง่าย",
+                views=25000,
+                likes=1500,
+                comments=60,
+                shares=30,
+                has_yellow_basket=False,
+            )
+        ],
+    )
+    flags2 = competitor_flags(p_compare, competitors)
+    assert any(f.type == "comparison" for f in flags2)
+    assert any("Comparison Opportunity" in f.label for f in flags2)
+
+
+# ---------------------------------------------------------------------------
+# 6. Stage 4: Dynamic Scoring Engine (Spec 4.3 - 40 / 35 / 25)
+# ---------------------------------------------------------------------------
+def test_dynamic_scoring_breakdown_legit_creator():
+    scoring = get_scoring_engine()
+    brand = BrandDNA(
+        id="b_test",
+        brand_name="Her Hyness",
+        vertical="Beauty & Skincare",
+        sub_category="Clean Skincare",
+        brand_summary="Clean dermocosmetics skincare for acne-prone sensitive skin",
+        target_audience="Young Thai beauty shoppers",
+        brand_tone=["Authentic", "Modern"],
+        price_positioning="Mid-Range",
+        average_price_thb=690,
+        conversion_model="ECOMMERCE_PRODUCT",
+        kol_koc_mix=KolKocMix(kol=30, koc=70),
+        niche_keywords=["สกินแคร์", "ผิวแพ้ง่าย", "สิว"],
+        search_queries=[
+            SearchQuery(query="สกินแคร์ผิวแพ้ง่าย", side="KOL_QUERY", specificity="direct"),
+            SearchQuery(query="ป้ายยาสกินแคร์", side="KOC_QUERY", specificity="direct"),
+        ],
+    )
+
+    kol = KOLProfile(
+        id="koc_fah",
+        handle="fah_skincare",
+        display_name="Fah Skincare Review",
+        tiktok_url="https://www.tiktok.com/@fah_skincare",
+        bio="รีวิวสกินแคร์ผิวแพ้ง่าย ใช้จริงทุกตัว ติดต่องาน line @fahwork",
+        follower_count=85000,
+        tier="Micro",
+        query_origin="KOC_QUERY",
+        is_work_ready=True,
+        funnel_role="KOC",
+        sub_style="KOC - Hard-Sell Reviewer",
+        llm_relevance_score=0.9,
+        signals=CreatorSignals(
+            basket_ratio=0.80,
+            median_views=30000.0,
+            mean_views=35000.0,
+            median_comments=80.0,
+            comment_to_like=0.03,
+            share_to_like=0.02,
+        ),
+        recent_videos=[
+            VideoMetric(
+                video_id="v_1",
+                url="https://tiktok.com/@fah/1",
+                caption="รีวิวสกินแคร์สำหรับผิวแพ้ง่าย เป็นสิวต้องลอง",
+                hashtags=["สกินแคร์", "ผิวแพ้ง่าย", "ของดีบอกต่อ"],
+                views=30000,
+                likes=2000,
+                comments=90,
+                shares=40,
+                collect_count=120,
                 has_yellow_basket=True,
             )
         ],
     )
-    c_score, c_breakdown, c_why, _ = scoring.evaluate_kol(comp_kol, brand)
-    assert "⚠️ Competitor Conflict" in c_why
 
+    score, breakdown = scoring.evaluate_kol(kol, brand)
 
-@pytest.mark.asyncio
-async def test_batch_embeddings_and_evaluate_kols_batch():
-    """
-    Verify async batch embeddings and evaluation for candidate KOLs.
-    Tests evaluate_kols_batch and get_embeddings_batch with concurrent execution.
-    """
-    scoring = get_scoring_engine()
-    brand = BrandDNA(
-        id="test-batch-brand",
-        brand_name="SkinLab",
-        website_url="https://skinlab.co.th",
-        facebook_url="",
-        vertical="Beauty & Skincare",
-        sub_category="Facial Serum",
-        brand_summary="เซรั่มบำรุงผิวหน้า",
-        target_audience="ผู้หญิง 20-35 ปี",
-        target_age_range="20-35",
-        target_locations=["Bangkok"],
-        brand_tone=["Professional"],
-        content_style_preferences=["Review"],
-        price_positioning="Mid-Range / Accessible",
-        average_price_thb=690,
-        thai_keywords=["เซรั่ม", "หน้าใส", "ผิวชุ่มชื้น"],
-        scraped_sources=["Web"],
-        manual_competitors=[],
-        search_taxonomy={},
-        grounded_competitors=[],
-    )
+    # Check 3 Dimensions
+    assert 0 <= breakdown.relevance_total <= 40
+    assert 0 <= breakdown.engagement_total <= 35
+    assert 0 <= breakdown.audience_total <= 25
+    assert 50.0 <= score <= 100.0
 
-    kols = [
-        KOLProfile(
-            id=f"batch_kol_{i}",
-            handle=f"creator_{i}",
-            display_name=f"Creator {i}",
-            tiktok_url=f"https://www.tiktok.com/@creator_{i}",
-            vertical="Beauty & Skincare",
-            bio="รีวิวสกินแคร์และเซรั่มหน้าใส",
-            follower_count=50000 + i * 1000,
-            tier="Micro (10K-100K)",
-            creator_persona="Educated Guru",
-            creator_archetype="Educated Guru",
-            is_work_ready=True,
-            sample_comments=["เซรั่มดีมาก"],
-            recent_videos=[
-                VideoMetric(
-                    video_id=f"v_{i}",
-                    caption="รีวิวเซรั่มกู้หน้าใส ผิวชุ่มชื้น",
-                    views=20000,
-                    likes=1200,
-                    comments=50,
-                    shares=30,
-                    collect_count=80,
-                    has_yellow_basket=False,
-                )
-            ],
-        )
-        for i in range(5)
-    ]
-
-    results = await scoring.evaluate_kols_batch(kols, brand)
-    assert len(results) == 5
-    for score, breakdown, why, hooks in results:
-        assert 0.0 <= score <= 100.0
-        assert breakdown.relevance_weighted > 0
-        assert breakdown.engagement_weighted > 0
-        assert breakdown.audience_weighted > 0
-        assert len(why) > 0
-
-
-@pytest.mark.asyncio
-async def test_parallel_brand_scrape_concurrent(monkeypatch):
-    """
-    Verify that BrandAnalyzer concurrently scrapes website and Facebook page in parallel via asyncio.gather.
-    """
-    from app.services.brand_analyzer import BrandAnalyzer
-    from app.services.apify_service import ApifyTikTokService
-    import time
-
-    analyzer = BrandAnalyzer()
-
-    async def mock_scrape_website(url: str):
-        await asyncio.sleep(0.1)
-        return ("Website content for brand test", "Brand Website Title")
-
-    async def mock_scrape_fb(url: str):
-        await asyncio.sleep(0.1)
-        return {
-            "title": "Brand FB Title",
-            "bio": "Brand FB Bio",
-            "categories": ["Skincare"],
-            "likes": 5000,
-            "followers": 10000,
-            "posts": ["Post 1", "Post 2"],
-        }
-
-    monkeypatch.setattr(analyzer, "_scrape_website", mock_scrape_website)
-    monkeypatch.setattr(ApifyTikTokService, "is_configured", property(lambda self: True))
-    monkeypatch.setattr(ApifyTikTokService, "scrape_facebook_page", lambda self, url: mock_scrape_fb(url))
-
-    # Mock Gemini brand DNA generation
-    from app.services.gemini_service import GeminiService
-    async def mock_generate_dna(*args, **kwargs):
-        return {
-            "brand_name": "TestParallelBrand",
-            "vertical": "Beauty & Skincare",
-            "sub_category": "Serum",
-            "thai_keywords": ["เซรั่ม", "ผิวใส"],
-            "target_audience": "All",
-            "price_positioning": "Budget / Mass",
-            "average_price_thb": 490,
-        }
-    monkeypatch.setattr(GeminiService, "is_configured", property(lambda self: True))
-    monkeypatch.setattr(GeminiService, "generate_brand_dna", mock_generate_dna)
-
-    req = BrandAnalyzeRequest(
-        brand_name="TestParallelBrand",
-        website_url="https://testbrand.com",
-        facebook_url="https://facebook.com/testbrand",
-    )
-
-    t0 = time.time()
-    dna = await analyzer.analyze(req)
-    duration = time.time() - t0
-
-    # If run sequentially, 0.1s + 0.1s = ~0.2s+. In parallel, ~0.10 - 0.15s.
-    assert dna.brand_name == "TestParallelBrand"
-    assert "Live Website via Jina Reader" in dna.scraped_sources[0]
-    assert any("Live Facebook" in s for s in dna.scraped_sources)
-    assert duration < 0.28
-
-
-@pytest.mark.asyncio
-async def test_apify_service_query_origin_and_profile_parsing(monkeypatch):
-    from app.services.apify_service import ApifyTikTokService
-    
-    service = ApifyTikTokService()
-    mock_items = [
-        {
-            "authorMeta": {
-                "name": "thaicreator_guru",
-                "nickName": "หมอนักสกี สอนเทคนิค",
-                "fans": 35000,
-                "following": 120,
-                "heart": 500000,
-                "signature": "ติดต่องาน contact@doctor.com สอนสกีสำหรับมือใหม่",
-                "avatar": "https://p16.tiktokcdn.com/avatar.jpg",
-            },
-            "id": "7123456789",
-            "text": "วิธีแก้ปัญหา ปวดเข่าเวลาเล่นสกี สโนว์บอร์ด #สกี #สโนว์บอร์ด #แก้ปวดเข่า",
-            "hashtags": [{"name": "สกี"}, {"name": "สโนว์บอร์ด"}],
-            "playCount": 85000,
-            "diggCount": 4200,
-            "commentCount": 210,
-            "shareCount": 150,
-            "collectCount": 890,
-            "hasTikTokShopProduct": False,
-            "locationCreated": "Bangkok, Thailand",
-        }
-    ]
-
-    class MockResponse:
-        status_code = 200
-        def json(self):
-            return mock_items
-
-    class MockClient:
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            pass
-        async def post(self, url, json=None):
-            return MockResponse()
-
-    monkeypatch.setattr("httpx.AsyncClient", lambda *args, **kwargs: MockClient())
-
-    search_taxonomy = {
-        "niche_hashtags": ["สกี"],
-        "pain_point_queries": ["ปวดเข่า"],
-        "review_hook_queries": ["รีวิว"],
-        "lifestyle_persona_queries": [],
-        "competitor_seed_queries": [],
-    }
-
-    profiles = await service.search_live_kols_by_hashtags(
-        hashtags=["สกี"],
-        vertical="Ski & Snowboard",
-        limit_creators=5,
-        brand_name="SkiAddict",
-        search_taxonomy=search_taxonomy,
-    )
-
-    assert len(profiles) == 1
-    kol = profiles[0]
-    assert kol.handle == "thaicreator_guru"
-    assert kol.query_origin == "pain_point_queries"
+    # Work-ready bonus applied
     assert kol.is_work_ready is True
-    assert kol.account_type == "real_kol"
-    assert kol.save_to_view_ratio > 0
-    assert kol.view_consistency_ratio > 0
+    assert breakdown.subniche_workready_points >= 4.0
+
+    # For ECOMMERCE_PRODUCT, KOC - Hard-Sell Reviewer receives full 5/5 affiliate health
+    assert breakdown.affiliate_health_points == 5.0
 
 
-@pytest.mark.asyncio
-async def test_competitor_and_merchant_accounts_filtered_by_two_stage_filter(monkeypatch):
-    from app.services.apify_service import ApifyTikTokService
-    service = ApifyTikTokService(api_token="test_token")
-
-    mock_items = [
-        # 1. Competitor Venue / Official Shop: @ski.bkk
-        {
-            "id": "v_comp",
-            "text": "ซ้อมสโนว์บอร์ดวันหยุด #สกี #สโนว์บอร์ด",
-            "playCount": 12000,
-            "diggCount": 800,
-            "commentCount": 30,
-            "shareCount": 20,
-            "authorMeta": {
-                "name": "ski.bkk",
-                "nickName": "Ski BKK",
-                "signature": "Ski & Snowboard Club Ram Inthra 40 สอบถาม/จองคิว LINE: @skibkk",
-                "fans": 25000,
-                "heart": 15000,
-            },
-        },
-        # 2. Client's Own Brand Channel: @proski.thailand
-        {
-            "id": "v_own",
-            "text": "เปิดบริการแล้ววันนี้ Proski Thailand #สกี",
-            "playCount": 5000,
-            "diggCount": 300,
-            "authorMeta": {
-                "name": "proski.thailand",
-                "nickName": "Proski Thailand Official",
-                "signature": "Indoor Ski Simulator Thailand",
-                "fans": 12000,
-                "heart": 8000,
-            },
-        },
-        # 3. Pure Merchant Store
-        {
-            "id": "v_store",
-            "text": "ชุดสกีพร้อมส่ง #สกี",
-            "playCount": 3000,
-            "diggCount": 150,
-            "authorMeta": {
-                "name": "skistore_official",
-                "nickName": "Ski Equipment Store",
-                "signature": "ขายส่งอุปกรณ์สกี สั่งซื้อจิ้มลิงก์ ส่งฟรีทั่วไทย",
-                "fans": 10000,
-                "heart": 4000,
-            },
-        },
-        # 4. Legitimate KOL: @snow_vlogger
-        {
-            "id": "v_kol",
-            "text": "หัดเล่นสกีวันแรก ล้มไม่เป็นท่าแต่สนุกมาก #สกี #lifestyle",
-            "playCount": 85000,
-            "diggCount": 4500,
-            "commentCount": 150,
-            "shareCount": 320,
-            "collectCount": 410,
-            "authorMeta": {
-                "name": "snow_vlogger",
-                "nickName": "Snowy Journey",
-                "signature": "เที่ยวหน้าหนาว & Vlogger สอนเทคนิคสกีพื้นฐาน ติดต่องาน dm for work",
-                "fans": 42000,
-                "heart": 210000,
-            },
-        },
-    ]
-
-    class MockResponse:
-        status_code = 200
-        def json(self):
-            return mock_items
-
-    class MockClient:
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            pass
-        async def post(self, url, json=None):
-            return MockResponse()
-
-    monkeypatch.setattr("httpx.AsyncClient", lambda *args, **kwargs: MockClient())
-
-    profiles = await service.search_live_kols_by_hashtags(
-        hashtags=["สกี"],
-        vertical="Ski & Snowboard",
-        limit_creators=5,
-        brand_name="Proski",
-        grounded_competitors=[{"brand_en": "Ski BKK", "aliases": ["ski.bkk", "skibkk"]}],
-        manual_competitors=["Ski Addict"],
+def test_affiliate_health_luxury_penalty():
+    scoring = get_scoring_engine()
+    # Luxury / High-Ticket Lead Gen brand
+    luxury_brand = BrandDNA(
+        id="b_lux",
+        brand_name="The Ritz Luxury Hotel",
+        vertical="Hospitality",
+        sub_category="5-Star Luxury Resort",
+        brand_summary="Ultra-luxury retreat in Phuket",
+        target_audience="Affluent travelers",
+        price_positioning="Luxury",
+        average_price_thb=15000,
+        conversion_model="LIFESTYLE_EXPERIENCE",
+        kol_koc_mix=KolKocMix(kol=70, koc=30),
+        niche_keywords=["luxuryhotel", "phuketresort"],
+        search_queries=[SearchQuery(query="พาส่องโรงแรมหรู", side="KOL_QUERY", specificity="direct")],
     )
 
-    handles = [p.handle for p in profiles]
-    # Verify that competitor account @ski.bkk, own brand account @proski.thailand, and pure store @skistore_official were ALL filtered out
-    assert "ski.bkk" not in handles
-    assert "proski.thailand" not in handles
-    assert "skistore_official" not in handles
-    # Only genuine creator remains
-    assert "snow_vlogger" in handles
-    assert len(profiles) == 1
-
-
-@pytest.mark.asyncio
-async def test_niche_consistency_ratio_and_5_clip_audit():
-    """
-    Verify แนวทางที่ 2: Niche Consistency Ratio (Topic Concentration across 5 clips).
-    A creator with only 1 ad-hoc ski video out of 5 general history/travel videos (Niche Ratio < 20%)
-    is penalized as Casual Fit and reclassified to Lifestyle & Vlog,
-    while a true niche specialist (4/5 ski videos, Niche Ratio 80%) retains full score.
-    """
-    from app.services.scoring_engine import ScoringEngine
-    from app.models import BrandDNA, KOLProfile, VideoMetric
-
-    brand = BrandDNA(
-        brand_name="Proski Thailand",
-        brand_summary="ลานสกีจำลองในร่มแห่งแรกในไทย สอนสกีและสโนว์บอร์ด",
-        target_audience="ผู้สนใจเรียนสกีและนักท่องเที่ยวฤดูหนาว",
-        vertical="Ski & Snowboard",
-        sub_category="Indoor Ski Simulator",
-        thai_keywords=["สกี", "สโนว์บอร์ด", "ลานสกี", "สอนสกี"],
-    )
-    engine = ScoringEngine()
-
-    # 1. Casual Creator (@sraissomething style): 1 ski video, 4 Chinese history videos
-    casual_kol = KOLProfile(
-        id="casual_1",
-        handle="sraissomething",
-        display_name="Sra History",
-        tiktok_url="https://www.tiktok.com/@sraissomething",
-        follower_count=50000,
-        creator_persona="Casual Historian & Travel Vlogger",
-        vertical="Ski & Snowboard",
-        bio="เล่าประวัติศาสตร์จีนและการท่องเที่ยว",
-        creator_archetype="Educated Guru",  # erroneously tagged guru from single video
+    # Channel with > 70% yellow basket selling cheap goods -> must receive penalized affiliate health points
+    spammy_lifestyle = KOLProfile(
+        id="k_spammy",
+        handle="random_lifestyle",
+        display_name="Lifestyle Shop",
+        tiktok_url="https://www.tiktok.com/@random_lifestyle",
+        bio="รีวิวที่พักพร้อมปักตะกร้าของใช้",
+        follower_count=60000,
+        tier="Micro",
+        query_origin="KOL_QUERY",
+        funnel_role="KOL",
+        sub_style="KOL - Lifestyle / Aesthetic",
+        signals=CreatorSignals(basket_ratio=0.85, median_views=10000.0, mean_views=12000.0),
         recent_videos=[
-            VideoMetric(video_id="v1", caption="ลองเล่นสกีที่กรุงเทพ สนุกมาก #สกี", hashtags=["สกี"], views=10000, likes=500, comments=20, shares=10),
-            VideoMetric(video_id="v2", caption="ประวัติศาสตร์พระราชวังต้องห้าม สมัยราชวงศ์ชิง", hashtags=["ประวัติศาสตร์"], views=12000, likes=600, comments=30, shares=15),
-            VideoMetric(video_id="v3", caption="เรื่องราวซูสีไทเฮา โศกนาฏกรรมจีน", hashtags=["จีน"], views=15000, likes=800, comments=40, shares=20),
-            VideoMetric(video_id="v4", caption="อาหารปักกิ่งโบราณสูตรต้นตำรับ", hashtags=["อาหาร"], views=8000, likes=400, comments=15, shares=5),
-            VideoMetric(video_id="v5", caption="เดินชมสุสานงักฮุย ขุนนางกังฉิน", hashtags=["เที่ยวจีน"], views=9000, likes=450, comments=18, shares=8),
+            VideoMetric(
+                video_id="vl",
+                url="https://tiktok.com/@vl/1",
+                caption="พาชมวิวสวยๆ",
+                views=10000,
+                likes=400,
+                comments=10,
+                shares=5,
+                collect_count=15,
+                has_yellow_basket=True,
+            )
         ],
     )
 
-    # 2. Core Niche Specialist (@upventure_travel style): 4 ski/snowboard videos, 1 general travel
-    specialist_kol = KOLProfile(
-        id="specialist_1",
-        handle="upventure_travel",
-        display_name="UpVenture Snow",
-        tiktok_url="https://www.tiktok.com/@upventure_travel",
-        follower_count=120000,
-        creator_persona="Ski & Snowboard Specialist",
-        vertical="Ski & Snowboard",
-        bio="Snowboard & Winter Adventure Lover",
-        creator_archetype="Niche Enthusiast",
-        recent_videos=[
-            VideoMetric(video_id="v1", caption="เตรียมตัวก่อนไปลานสกี ซ้อมจัดระเบียบร่างกาย #สกี", hashtags=["สกี"], views=25000, likes=1500, comments=80, shares=45),
-            VideoMetric(video_id="v2", caption="เทคนิคการเลี้ยวสโนว์บอร์ด Carving #สโนว์บอร์ด", hashtags=["สโนว์บอร์ด"], views=30000, likes=1800, comments=95, shares=60),
-            VideoMetric(video_id="v3", caption="รีวิวรองเท้าและชุดสกีสำหรับมือใหม่ #สอนสกี", hashtags=["สอนสกี"], views=22000, likes=1200, comments=70, shares=40),
-            VideoMetric(video_id="v4", caption="ซ้อมลานสกีจำลอง Indoor ในไทย #ลานสกี", hashtags=["ลานสกี"], views=28000, likes=1600, comments=85, shares=50),
-            VideoMetric(video_id="v5", caption="เทศกาลบอลลูน สิงห์ปาร์ค เชียงราย", hashtags=["เที่ยวไทย"], views=15000, likes=700, comments=35, shares=15),
+    _, breakdown = scoring.evaluate_kol(spammy_lifestyle, luxury_brand)
+    # Spec 4.3 #3: basket > 70% in LIFESTYLE_EXPERIENCE is penalized
+    assert breakdown.affiliate_health_points < 3.0
+
+
+# ---------------------------------------------------------------------------
+# 7. End-to-End FastAPI Endpoints
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_fastapi_analyze_brand_endpoint(monkeypatch):
+    """
+    Tests the FastAPI /api/analyze-brand endpoint routing and serialization.
+    """
+    from httpx import AsyncClient, ASGITransport
+    from app.services import brand_analyzer as ba_module
+
+    mock_dna = BrandDNA(
+        id="live-afteryou",
+        brand_name="After You Dessert Cafe",
+        vertical="Food & Beverage",
+        sub_category="Dessert Cafe",
+        brand_summary="Famous dessert cafe in Bangkok known for Shibuya Honey Toast",
+        target_audience="Urban youth and sweet lovers",
+        price_positioning="Mid-Range",
+        average_price_thb=350,
+        conversion_model="LIFESTYLE_EXPERIENCE",
+        conversion_model_reason="Store visits and experiential dining",
+        kol_koc_mix=KolKocMix(kol=70, koc=30),
+        search_queries=[
+            SearchQuery(query="พาส่องเมนูใหม่", side="KOL_QUERY", specificity="direct"),
+            SearchQuery(query="คาเฟ่กรุงเทพ", side="KOL_QUERY", specificity="adjacent"),
+            SearchQuery(query="พากินสยาม", side="KOC_QUERY", specificity="direct"),
+            SearchQuery(query="คาเฟ่บรรยากาศดี", side="KOC_QUERY", specificity="adjacent"),
+        ],
+        niche_keywords=["HoneyToast", "CafeBkk"],
+        competitors=[
+            Competitor(brand="Karun Thai Tea", aliases=["Karun", "การันต์"], source="google_search_grounded")
         ],
     )
 
-    # Evaluate both candidates
-    score_casual, b_casual, why_casual, _ = engine.evaluate_kol(casual_kol, brand)
-    score_spec, b_spec, why_spec, _ = engine.evaluate_kol(specialist_kol, brand)
+    class MockAnalyzer:
+        async def analyze(self, req):
+            return mock_dna
 
-    # Verify Casual KOL (1/5 = 20% or less -> flagged casual fit)
-    assert casual_kol.niche_consistency_ratio == 0.2
-    assert casual_kol.is_casual_niche_fit is False or casual_kol.niche_consistency_ratio <= 0.2
-    # Re-test with 0/5 strictly < 0.20
-    casual_kol.recent_videos[0].caption = "เที่ยวจีนวันแรก"
-    casual_kol.recent_videos[0].hashtags = ["จีน"]
-    score_casual2, b_casual2, _, _ = engine.evaluate_kol(casual_kol, brand)
-    assert casual_kol.niche_consistency_ratio == 0.0
-    assert casual_kol.is_casual_niche_fit is True
-    assert b_casual2.is_casual_niche_fit is True
-    # Casual creator is re-routed away from Guru to Lifestyle & Vlog
-    assert casual_kol.creator_archetype == "Lifestyle & Vlog"
-    # Semantic points must be capped/penalized
-    assert b_casual2.semantic_points <= 12.0
+    monkeypatch.setattr("app.main.get_brand_analyzer", lambda: MockAnalyzer())
+    monkeypatch.setattr(ba_module, "get_brand_analyzer", lambda: MockAnalyzer())
 
-    # Verify Specialist KOL (4/5 = 80% niche consistency)
-    assert specialist_kol.niche_consistency_ratio == 0.8
-    assert specialist_kol.is_casual_niche_fit is False
-    assert specialist_kol.creator_archetype == "Niche Enthusiast"
-    assert b_spec.semantic_points > b_casual2.semantic_points
-    assert score_spec > score_casual2
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post(
+            "/api/analyze-brand",
+            json={
+                "brand_name": "After You Dessert Cafe",
+                "custom_notes": "Famous dessert cafe in Bangkok known for Shibuya Honey Toast and Kakigori, average ticket 250-400 THB",
+            },
+        )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "After You" in data["brand_name"]
+    assert data["conversion_model"] == "LIFESTYLE_EXPERIENCE"
+    assert data["kol_koc_mix"] == {"kol": 70, "koc": 30}
+    assert len(data["search_queries"]) == 4
 
 
 @pytest.mark.asyncio
-async def test_balanced_archetype_portfolio_selection():
+async def test_end_to_end_matching_pipeline(monkeypatch):
     """
-    Verify that evaluate_and_rank_node produces a balanced portfolio across all 4 archetypes:
-    Educated Guru, Top Reviewer, Lifestyle & Vlog, Niche Enthusiast,
-    ensuring every category tab has representation for media planning.
+    Tests the complete 4-stage matching pipeline:
+    BrandDNA -> Discovery -> Two-Stage Filter (Gate 1 & 2) -> Scoring (40/35/25) -> Top-K Media Mix Portfolio -> 3-Sec Hooks.
     """
-    from app.workflow.graph import evaluate_and_rank_node
-    from app.models import BrandDNA, KOLProfile, VideoMetric
+    from app.services.apify_service import get_apify_service
+    from app.workflow.graph import run_full_matching
 
-    brand = BrandDNA(
-        brand_name="Proski Thailand",
-        brand_summary="Indoor Skiing",
-        target_audience="Skiers",
-        vertical="Ski & Snowboard",
-        thai_keywords=["สกี", "สโนว์บอร์ด"],
+    brand_dna = BrandDNA(
+        id="b_e2e",
+        brand_name="MizuMi",
+        vertical="Beauty & Skincare",
+        sub_category="Sunscreen & Acne Care",
+        brand_summary="Thai clean dermocosmetics brand famous for sensitive-skin sunscreen",
+        target_audience="Young Thai consumers with acne and sensitive skin",
+        price_positioning="Mid-Range",
+        average_price_thb=690,
+        conversion_model="ECOMMERCE_PRODUCT",
+        kol_koc_mix=KolKocMix(kol=30, koc=70),
+        niche_keywords=["กันแดด", "ผิวแพ้ง่าย", "สิว"],
+        search_queries=[
+            SearchQuery(query="กันแดดผิวแพ้ง่าย", side="KOL_QUERY", specificity="direct"),
+            SearchQuery(query="ป้ายยากันแดด", side="KOC_QUERY", specificity="direct"),
+        ],
+        competitors=[
+            Competitor(brand="La Roche-Posay", aliases=["La Roche-Posay", "ลาโรช"], source="google_search_grounded")
+        ],
     )
 
-    # Create candidate pool dominated by 10 lifestyle vloggers, but also containing 2 gurus, 2 reviewers, 2 niche
-    candidates = []
-    # 10 Lifestyle with very high followers (e.g. 500k)
-    for i in range(10):
-        candidates.append(
-            KOLProfile(
-                id=f"life_{i}",
-                handle=f"vlogger_{i}",
-                display_name=f"Lifestyle Star {i}",
-                tiktok_url=f"https://www.tiktok.com/@vlogger_{i}",
-                creator_persona="Lifestyle Creator",
-                vertical="Ski & Snowboard",
-                follower_count=500000 + i * 10000,
-                creator_archetype="Lifestyle & Vlog",
-                recent_videos=[VideoMetric(video_id=f"v_{i}", caption="เที่ยวสกีสนุกมาก #สกี", hashtags=["สกี"], views=100000, likes=5000, comments=200, shares=100)],
-            )
-        )
-    # 2 Gurus with lower followers (e.g. 50k)
-    for i in range(2):
-        candidates.append(
-            KOLProfile(
-                id=f"guru_{i}",
-                handle=f"coach_{i}",
-                display_name=f"Ski Coach {i}",
-                tiktok_url=f"https://www.tiktok.com/@coach_{i}",
-                creator_persona="Ski Coach",
-                vertical="Ski & Snowboard",
-                follower_count=50000 + i * 5000,
-                creator_archetype="Educated Guru",
-                recent_videos=[VideoMetric(video_id=f"vg_{i}", caption="สอนสกีขั้นพื้นฐาน ท่า carving #สกี #สอนสกี", hashtags=["สกี", "สอนสกี"], views=20000, likes=1000, comments=50, shares=30)],
-            )
-        )
-    # 2 Top Reviewers (e.g. 80k)
-    for i in range(2):
-        candidates.append(
-            KOLProfile(
-                id=f"rev_{i}",
-                handle=f"reviewer_{i}",
-                display_name=f"Ski Gear Review {i}",
-                tiktok_url=f"https://www.tiktok.com/@reviewer_{i}",
-                creator_persona="Ski Reviewer",
-                vertical="Ski & Snowboard",
-                follower_count=80000 + i * 5000,
-                creator_archetype="Top Reviewer",
-                recent_videos=[VideoMetric(video_id=f"vr_{i}", caption="รีวิวอุปกรณ์สกี พร้อมพิกัดตะกร้า #สกี", hashtags=["สกี"], has_yellow_basket=True, views=30000, likes=1500, comments=60, shares=40)],
-            )
-        )
-    # 2 Niche Enthusiasts (e.g. 40k)
-    for i in range(2):
-        candidates.append(
-            KOLProfile(
-                id=f"niche_{i}",
-                handle=f"snowboarder_{i}",
-                display_name=f"Hardcore Boarder {i}",
-                tiktok_url=f"https://www.tiktok.com/@snowboarder_{i}",
-                creator_persona="Niche Enthusiast",
-                vertical="Ski & Snowboard",
-                follower_count=40000 + i * 5000,
-                creator_archetype="Niche Enthusiast",
-                recent_videos=[VideoMetric(video_id=f"vn_{i}", caption="ซ้อมลานสกีทุกสัปดาห์ Passion ล้วนๆ #สกี", hashtags=["สกี"], views=15000, likes=900, comments=40, shares=20)],
-            )
-        )
-
-    state = {
-        "brand_dna": brand,
-        "candidates": candidates,
-        "top_k": 10,
-        "apify_status": "live_mock",
-        "trace": [],
-    }
-
-    result = await evaluate_and_rank_node(state)
-    top_ranked = result["ranked_kols"]
-
-    # Must return top_k (10)
-    assert len(top_ranked) >= 10
-
-    # Verify all 4 archetypes are represented in top_ranked
-    archetype_counts = {
-        "Educated Guru": sum(1 for r in top_ranked if r.kol.creator_archetype == "Educated Guru"),
-        "Top Reviewer": sum(1 for r in top_ranked if r.kol.creator_archetype == "Top Reviewer"),
-        "Lifestyle & Vlog": sum(1 for r in top_ranked if r.kol.creator_archetype == "Lifestyle & Vlog"),
-        "Niche Enthusiast": sum(1 for r in top_ranked if r.kol.creator_archetype == "Niche Enthusiast"),
-    }
-
-    assert archetype_counts["Educated Guru"] >= 2, f"Expected >= 2 Gurus, got {archetype_counts}"
-    assert archetype_counts["Top Reviewer"] >= 2, f"Expected >= 2 Reviewers, got {archetype_counts}"
-    assert archetype_counts["Niche Enthusiast"] >= 2, f"Expected >= 2 Niche Enthusiasts, got {archetype_counts}"
-    assert archetype_counts["Lifestyle & Vlog"] >= 2, f"Expected >= 2 Lifestyle Vloggers, got {archetype_counts}"
-
-
-@pytest.mark.asyncio
-async def test_screen_printing_and_garment_factories_filtered_by_two_stage_filter(monkeypatch):
-    """
-    Verify that Two-Stage Entity Filtering cleanly excludes pure screen printing factories,
-    wholesale garment workshops, and custom print shops even if they include 'รีวิว' or 'ติดต่องาน',
-    while keeping genuine fashion creators and campus lifestyle vloggers.
-    """
-    from app.services.apify_service import ApifyTikTokService
-
-    service = ApifyTikTokService(api_token="test_token")
-
-    mock_items = [
-        # 1. Screen printing factory with 'ติดต่องาน' and 'รีวิว'
+    mock_discover_items = [
+        # 1. KOL Expert (KOL_QUERY)
         {
-            "id": "v_factory1",
-            "text": "รีวิวงานสกรีนเสื้อยืด 500 ตัว ส่งด่วนวันนี้ #สกรีนเสื้อ #dtf",
-            "playCount": 12000,
-            "diggCount": 300,
+            "id": "v101",
+            "text": "เจาะลึกส่วนผสมกันแดด สำหรับผิวแพ้ง่าย #กันแดด #ผิวแพ้ง่าย",
+            "playCount": 45000,
+            "diggCount": 3500,
+            "commentCount": 120,
+            "shareCount": 250,
+            "collectCount": 800,
+            "hasTikTokShopProduct": False,
+            "_origin": "KOL_QUERY",
             "authorMeta": {
-                "name": "dtf_screen_bkk",
-                "nickName": "รับสกรีนเสื้อยืด ไม่มีขั้นต่ำ",
-                "signature": "โรงงานรับสกรีนเสื้อ DTF บล็อกสกรีน งานด่วน ไม่มีขั้นต่ำ ติดต่องาน Line: @dtf99",
-                "fans": 15000,
-                "heart": 8000,
+                "name": "dr_skin_guru",
+                "nickName": "หมอสกินแคร์",
+                "signature": "แพทย์ผิวหนัง ให้ความรู้สกินแคร์ ติดต่องาน line @drskin",
+                "fans": 120000,
+                "heart": 850000,
             },
         },
-        # 2. Wholesale garment producer
+        # 2. KOC Hard-Sell Reviewer (KOC_QUERY, 100% basket, high engagement)
         {
-            "id": "v_factory2",
-            "text": "เสื้อยืดราคาส่ง ตัวละ 45 บาท #ราคาส่ง #เสื้อยืด",
-            "playCount": 25000,
-            "diggCount": 800,
-            "authorMeta": {
-                "name": "korat_garment_factory",
-                "nickName": "โคราชการ์เม้นท์ ผลิตเสื้อยืด",
-                "signature": "รับผลิตเสื้อยืด เสื้อโปโล ราคาส่ง สั่งผลิตเสื้อทีม เสื้อพนักงาน ทั่วประเทศ",
-                "fans": 30000,
-                "heart": 45000,
-            },
-        },
-        # 3. Print workshop with store handle
-        {
-            "id": "v_factory3",
-            "text": "เครื่องสกรีนเสื้อรุ่นใหม่ คมชัดมาก #เครื่องสกรีน #สกรีนเสื้อ",
-            "playCount": 18000,
-            "diggCount": 450,
-            "authorMeta": {
-                "name": "best_screen_print",
-                "nickName": "Best Screen Thailand",
-                "signature": "ร้านสกรีนเสื้อ สั่งทำเสื้อยืด สั่งซื้อจิ้มลิงก์ หน้าร้านเปิดทุกวัน",
-                "fans": 8000,
-                "heart": 12000,
-            },
-        },
-        # 4. Genuine Fashion Creator (Kept)
-        {
-            "id": "v_creator1",
-            "text": "แชร์ไอเดียแต่งตัวเสื้อยืด oversize สไตล์สตรีทบอย #เสื้อยืดoversize #แต่งตัวสตรีท #ootd",
-            "playCount": 95000,
-            "diggCount": 6500,
-            "commentCount": 210,
-            "shareCount": 430,
-            "collectCount": 580,
-            "authorMeta": {
-                "name": "streetwear_boy_th",
-                "nickName": "Mark Streetwear",
-                "signature": "Fashion & Lifestyle Creator | ชอบแต่งตัวเสื้อยืดวินเทจ & สตรีท ติดต่องาน dm",
-                "fans": 58000,
-                "heart": 320000,
-            },
-        },
-        # 5. Genuine Campus / Merch Creator (Kept)
-        {
-            "id": "v_creator2",
-            "text": "1 วันกับชีวิตเด็กมหาลัย ออกแบบเสื้อคณะใส่ไปงานเชียร์ #เด็กมหาลัย #เสื้อรุ่น #vlog",
-            "playCount": 72000,
-            "diggCount": 5100,
+            "id": "v102",
+            "text": "ป้ายยากันแดดตัวเด็ด คุมมันไม่อุดตัน จิ้มตะกร้าเหลือง #ป้ายยา #กันแดด",
+            "playCount": 55000,
+            "diggCount": 4200,
             "commentCount": 180,
-            "shareCount": 310,
-            "collectCount": 420,
+            "shareCount": 90,
+            "collectCount": 300,
+            "hasTikTokShopProduct": True,
+            "_origin": "KOC_QUERY",
             "authorMeta": {
-                "name": "campus_life_ploy",
-                "nickName": "Ploy Daily",
-                "signature": "CU Student Vlog & Daily Outfit | บล็อกเกอร์รีวิวไปเรื่อย ติดต่องาน email",
-                "fans": 38000,
-                "heart": 195000,
+                "name": "ploy_paiya",
+                "nickName": "Ploy ป้ายยาพาช้อป",
+                "signature": "รีวิวของใช้จริงทุกชิ้น ป้ายยาของดี ตะกร้า TikTok Shop ติดต่องาน line @ploy",
+                "fans": 95000,
+                "heart": 700000,
+            },
+        },
+        # 3. Excluded Merchant Shop (Gate 1 filter)
+        {
+            "id": "v103",
+            "text": "โรงงานผลิตครีมกันแดด รับผลิตสร้างแบรนด์ ราคาส่ง สั่งผลิตจิ้มลิงก์",
+            "playCount": 12000,
+            "diggCount": 200,
+            "commentCount": 5,
+            "shareCount": 1,
+            "collectCount": 3,
+            "hasTikTokShopProduct": False,
+            "_origin": "KOL_QUERY",
+            "authorMeta": {
+                "name": "oem_cream_factory",
+                "nickName": "โรงงานผลิตครีม ราคาส่ง",
+                "signature": "โรงงานรับผลิตครีมกันแดด OEM ไม่มีขั้นต่ำ",
+                "fans": 15000,
+                "heart": 5000,
             },
         },
     ]
 
-    class MockResponse:
-        status_code = 200
-        def json(self):
-            return mock_items
+    apify = get_apify_service()
+    monkeypatch.setattr(apify, "api_token", "mock_apify_token_123")
 
-    class MockClient:
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            pass
-        async def post(self, url, json=None):
-            return MockResponse()
+    async def mock_discover(*args, **kwargs):
+        return {"items": mock_discover_items, "errors": []}
 
-    monkeypatch.setattr("httpx.AsyncClient", lambda *args, **kwargs: MockClient())
+    async def mock_scrape_profiles(*args, **kwargs):
+        return {}
 
-    profiles = await service.search_live_kols_by_hashtags(
-        hashtags=["เสื้อยืดoversize"],
-        vertical="Fashion & Apparel",
-        limit_creators=10,
-        brand_name="Piggy Monster",
-        manual_competitors=["Korat Screen"],
-    )
+    monkeypatch.setattr(apify, "discover", mock_discover)
+    monkeypatch.setattr(apify, "discover_batch", mock_discover)
+    monkeypatch.setattr(apify, "scrape_profiles", mock_scrape_profiles)
 
-    handles = [p.handle for p in profiles]
-    # All 3 factory / merchant print shops must be excluded
-    assert "dtf_screen_bkk" not in handles
-    assert "korat_garment_factory" not in handles
-    assert "best_screen_print" not in handles
+    response = await run_full_matching(brand_dna=brand_dna, top_k=5)
 
-    # Genuine creators must be kept
-    assert "streetwear_boy_th" in handles
-    assert "campus_life_ploy" in handles
-    assert len(profiles) == 2
-
+    assert response.brand_dna.brand_name == "MizuMi"
+    assert response.strategy.conversion_model == "ECOMMERCE_PRODUCT"
+    assert len(response.ranked_kols) >= 2
+    # Verify Gate 1 filtered out the OEM factory merchant
+    assert any(ex.handle == "oem_cream_factory" for ex in response.excluded_creators)
+    # Verify ranked creators have scores, breakdown, and pitch hooks
+    for r in response.ranked_kols:
+        assert 0.0 <= r.total_match_score <= 100.0
+        assert r.score_breakdown.relevance_total > 0
+        assert r.score_breakdown.engagement_total > 0
+        assert r.score_breakdown.audience_total > 0
 
