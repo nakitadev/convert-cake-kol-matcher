@@ -20,7 +20,11 @@ from app.models import (
 )
 from app.services.gemini_service import get_gemini_service
 from app.services.apify_service import get_apify_service
+from app.services.scraper_cache import get_scraper_cache, TTL_WEBSITE
 from app.services import query_translation as qt
+import logging
+
+logger = logging.getLogger(__name__)
 
 QUERIES_PER_SIDE = 5
 MIN_QUERIES_PER_SIDE = 2
@@ -226,8 +230,19 @@ class BrandAnalyzer:
         return valid[:8]
 
     async def _scrape_website(self, url: str) -> Tuple[str, str, str]:
-        """Jina Reader (r.jina.ai) primary, httpx + BeautifulSoup fallback (Spec 2.1)."""
+        """Jina Reader (r.jina.ai) primary, httpx + BeautifulSoup fallback (Spec 2.1) with SQLite cache."""
         clean_url = url if url.startswith("http") else f"https://{url}"
+        cache = get_scraper_cache()
+        cache_key = cache.hash_key("website", clean_url)
+        cached = cache.get(cache_key)
+        if cached and isinstance(cached, dict):
+            logger.info("ScraperCache HIT for website: %s", clean_url)
+            return (
+                cached.get("text", "")[:5000],
+                cached.get("title", ""),
+                f"{cached.get('engine', 'Jina Reader')} (SQLite Cached)",
+            )
+
         try:
             headers = {"Accept": "text/plain", "User-Agent": "ConvertCake-KOL-Matcher/2.0", "X-Timeout": "15"}
             if os.environ.get("JINA_API_KEY"):
@@ -239,7 +254,16 @@ class BrandAnalyzer:
                 m = re.search(r"^Title:\s*(.+)$", raw, re.MULTILINE)
                 md = re.sub(r"^(Title|URL Source|Markdown Content|Published Time):\s*.*$", "", raw, flags=re.MULTILINE)
                 md = re.sub(r"\n{3,}", "\n\n", md).strip()
-                return md[:5000], (m.group(1).strip() if m else ""), "Jina Reader"
+                title = m.group(1).strip() if m else ""
+                text = md[:5000]
+                cache.set(
+                    cache_key,
+                    {"text": text, "title": title, "engine": "Jina Reader"},
+                    cache_type="jina_reader",
+                    ttl_seconds=TTL_WEBSITE,
+                    url_or_query=clean_url,
+                )
+                return text, title, "Jina Reader"
         except Exception as e:
             print(f"[BrandAnalyzer] Jina Reader failed for {clean_url}: {e}")
 
@@ -255,7 +279,15 @@ class BrandAnalyzer:
         meta = soup.find("meta", attrs={"name": "description"}) or soup.find("meta", attrs={"property": "og:description"})
         desc = meta["content"].strip() if meta and meta.get("content") else ""
         body = re.sub(r"\s+", " ", soup.get_text(" ")).strip()
-        return f"{title}. {desc}. {body}"[:5000], title, "httpx + BeautifulSoup"
+        text = f"{title}. {desc}. {body}"[:5000]
+        cache.set(
+            cache_key,
+            {"text": text, "title": title, "engine": "httpx + BeautifulSoup"},
+            cache_type="website_fallback",
+            ttl_seconds=TTL_WEBSITE,
+            url_or_query=clean_url,
+        )
+        return text, title, "httpx + BeautifulSoup"
 
 
 _analyzer_instance: Optional[BrandAnalyzer] = None

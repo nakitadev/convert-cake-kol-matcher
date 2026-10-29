@@ -17,6 +17,13 @@ from typing import Optional, Dict, Any, List, Tuple
 import httpx
 
 from app.models import VideoMetric
+from app.services.scraper_cache import (
+    get_scraper_cache,
+    TTL_FACEBOOK,
+    TTL_TIKTOK_SEARCH,
+    TTL_TIKTOK_PROFILE,
+    TTL_TIKTOK_COMMENTS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -125,14 +132,21 @@ class ApifyTikTokService:
         return items
 
     async def discover_batch(self, queries: List[str], results_per_query: int = 8) -> Dict[str, Any]:
-        """Run all natural search queries in a SINGLE Apify actor job (Spec 6.1) with 15-minute in-memory caching."""
+        """Run all natural search queries in a SINGLE Apify actor job (Spec 6.1) with SQLite + in-memory caching."""
         if not queries:
             return {"items": [], "errors": []}
         clean_queries = list(dict.fromkeys([q.strip() for q in queries if q.strip()]))
+        cache = get_scraper_cache()
+        sqlite_key = cache.hash_key("tiktok_search", sorted(clean_queries), results_per_query)
+        cached_sqlite = cache.get(sqlite_key)
+        if cached_sqlite and isinstance(cached_sqlite, dict):
+            logger.info("ScraperCache HIT for TikTok search (%d queries)", len(clean_queries))
+            return cached_sqlite
+
         cache_key = f"batch_{'_'.join(sorted(clean_queries))}_{results_per_query}"
         now = time.time()
         if cache_key in self._cache and (now - self._cache[cache_key][0]) < 900:
-            logger.info("Returning cached live TikTok discovery batch results")
+            logger.info("Returning in-memory cached live TikTok discovery batch results")
             return self._cache[cache_key][1]
 
         payload = {
@@ -151,6 +165,13 @@ class ApifyTikTokService:
         result = {"items": items, "errors": []}
         if items:
             self._cache[cache_key] = (now, result)
+            cache.set(
+                sqlite_key,
+                result,
+                cache_type="tiktok_search",
+                ttl_seconds=TTL_TIKTOK_SEARCH,
+                url_or_query=", ".join(clean_queries)[:400],
+            )
         return result
 
     async def discover(self, kol_queries: List[str], koc_queries: List[str], results_per_query: int = 8) -> Dict[str, Any]:
@@ -159,11 +180,19 @@ class ApifyTikTokService:
         return await self.discover_batch(all_queries, results_per_query)
 
     async def scrape_profiles(self, handles: List[str], per_profile: int = 4) -> Dict[str, List[Dict[str, Any]]]:
-        """Fetch the latest clips for candidate creators in a single actor run."""
+        """Fetch the latest clips for candidate creators in a single actor run (backed by SQLite cache)."""
         if not handles:
             return {}
+        target_handles = [h.strip().lower().lstrip("@") for h in handles[:8] if h.strip()]
+        cache = get_scraper_cache()
+        sqlite_key = cache.hash_key("tiktok_profiles", sorted(target_handles), per_profile)
+        cached_sqlite = cache.get(sqlite_key)
+        if cached_sqlite and isinstance(cached_sqlite, dict):
+            logger.info("ScraperCache HIT for TikTok profiles (%d handles)", len(target_handles))
+            return cached_sqlite
+
         payload = {
-            "profiles": handles[:8],
+            "profiles": target_handles,
             "resultsPerPage": per_profile,
             "profileScrapeSections": ["videos"],
             "profileSorting": "latest",
@@ -174,9 +203,18 @@ class ApifyTikTokService:
         items = await self._run_tiktok(payload, timeout_s=60)
         out: Dict[str, List[Dict[str, Any]]] = {}
         for it in items:
-            name = str((it.get("authorMeta") or {}).get("name") or "").strip()
+            name = str((it.get("authorMeta") or {}).get("name") or "").strip().lower()
             if name:
-                out.setdefault(name.lower(), []).append(it)
+                out.setdefault(name, []).append(it)
+
+        if out:
+            cache.set(
+                sqlite_key,
+                out,
+                cache_type="tiktok_profiles",
+                ttl_seconds=TTL_TIKTOK_PROFILE,
+                url_or_query=", ".join(target_handles)[:400],
+            )
         return out
 
     # ------------------------------------------------------------------
@@ -186,6 +224,13 @@ class ApifyTikTokService:
         urls = [u for u in video_urls[:4] if u]
         if not urls:
             return {}
+        cache = get_scraper_cache()
+        sqlite_key = cache.hash_key("tiktok_comments", sorted(urls), per_post)
+        cached_sqlite = cache.get(sqlite_key)
+        if cached_sqlite and isinstance(cached_sqlite, dict):
+            logger.info("ScraperCache HIT for TikTok comments (%d urls)", len(urls))
+            return cached_sqlite
+
         payload = {"postURLs": urls, "commentsPerPost": per_post, "maxRepliesPerComment": 0}
         items = await self._run_actor(self.comments_actor_id, payload, timeout_s=45)
         out: Dict[str, List[str]] = {}
@@ -194,6 +239,14 @@ class ApifyTikTokService:
             src = str(it.get("videoWebUrl") or it.get("postUrl") or it.get("submittedVideoUrl") or "")
             if text and src:
                 out.setdefault(src, []).append(text)
+        if out:
+            cache.set(
+                sqlite_key,
+                out,
+                cache_type="tiktok_comments",
+                ttl_seconds=TTL_TIKTOK_COMMENTS,
+                url_or_query=", ".join(urls)[:400],
+            )
         return out
 
     # ------------------------------------------------------------------
@@ -201,6 +254,13 @@ class ApifyTikTokService:
     # ------------------------------------------------------------------
     async def scrape_facebook_page(self, facebook_url: str) -> Dict[str, Any]:
         clean = facebook_url if facebook_url.startswith("http") else f"https://{facebook_url}"
+        cache = get_scraper_cache()
+        sqlite_key = cache.hash_key("facebook", clean)
+        cached_sqlite = cache.get(sqlite_key)
+        if cached_sqlite and isinstance(cached_sqlite, dict):
+            logger.info("ScraperCache HIT for Facebook page: %s", clean)
+            return cached_sqlite
+
         page_res, posts_res = await asyncio.gather(
             self._run_actor(self.fb_pages_actor, {"startUrls": [{"url": clean}]}, timeout_s=90),
             self._run_actor(self.fb_posts_actor, {"startUrls": [{"url": clean}], "resultsLimit": 10}, timeout_s=90),
@@ -235,6 +295,14 @@ class ApifyTikTokService:
         if not result.get("title") and not result["posts"]:
             errs = [str(r) for r in (page_res, posts_res) if isinstance(r, Exception)]
             raise RuntimeError("Facebook scrape returned no data" + (f": {' | '.join(errs)}" if errs else ""))
+
+        cache.set(
+            sqlite_key,
+            result,
+            cache_type="facebook_page",
+            ttl_seconds=TTL_FACEBOOK,
+            url_or_query=clean,
+        )
         return result
 
 

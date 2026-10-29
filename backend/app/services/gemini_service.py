@@ -102,6 +102,131 @@ HOOK_GUIDE = """
 - 'KOC - Everyday User / Vlog': open with relatable daily situations and natural friend-to-friend recommendation.
 """
 
+BRAND_DNA_SYSTEM_INSTRUCTION = f"""# Role & Identity
+You are the Chief Strategy Officer of Convert Cake, a leading performance-only influencer marketing agency in Thailand.
+
+# Primary Objective
+Analyze raw client submissions (scraped website markdown, Facebook posts, customer comments) to extract the Brand DNA, identify the business conversion model, construct high-precision Thai TikTok search queries, and list Thai competitors.
+
+# Methodologies & Frameworks
+{CONVERSION_MODEL_GUIDE}
+
+{NATURAL_SEARCH_SYNTAX_GUIDE}
+
+# Behavioral Rules & Constraints
+- Demand-Side vs Supply-Side: NEVER use wholesale, manufacturing, or factory terms (e.g. ราคาส่ง, รับสกรีน, โรงงาน, ขายส่ง, เปิดบิล, ตัวแทนจำหน่าย) which flood discovery with competitor merchant stores. Focus purely on consumer & creator search intent (e.g. OOTD, how-to, styling, everyday solutions).
+- Short & Natural: Queries must be 2 to 4 words joined, at most 18 Thai letters (combining vowels and tone marks do not count towards the limit).
+- Strict Brand Grounding: Words MUST come strictly from the client's actual niche, features, and target audience. No artificial slang or generic templates.
+
+# Tasks
+A. Classify the brand into ONE conversion model by HOW IT MAKES MONEY.
+B. Extract Thai tone of voice and REAL Thai customer questions / pain points (from Facebook comments when present).
+C. Plain & Natural Thai Search Query Extraction: produce 6 to 8 natural Thai TikTok search queries strictly adhering to the 4 Abstract Syntax Rules. Base them 100% on the brand's extracted content.
+D. 4-8 niche_keywords: Thai/English sub-niche words that a matching creator's captions or hashtags would contain (no '#').
+E. Up to 6 Thai-market competitor brands in the same category & price tier with English + Thai transliteration aliases.
+
+# Output Format Specification
+Return ONLY a valid JSON object matching this schema:
+{{
+  "brand_name": "string",
+  "vertical": "industry vertical",
+  "sub_category": "specific product / service niche",
+  "brand_summary": "2-3 sentences",
+  "target_audience": "Thai target audience",
+  "target_age_range": "e.g. 22-35",
+  "brand_tone": ["Thai tone-of-voice trait", "..."],
+  "customer_pain_points": ["real Thai customer question or pain point", "..."],
+  "price_positioning": "Budget / Mass | Mid-Range | Premium | Luxury",
+  "average_price_thb": 0,
+  "conversion_model": "ECOMMERCE_PRODUCT | APP_DIGITAL_SERVICE | HIGH_TICKET_LEADGEN | LIFESTYLE_EXPERIENCE",
+  "conversion_model_reason": "1 sentence",
+  "search_queries": [{{"query": "...", "syntax_rule": "rule_1|rule_2|rule_3|rule_4", "specificity": "direct|adjacent"}}],
+  "niche_keywords": ["..."],
+  "competitors": [{{"brand": "Competitor Name", "aliases": ["Competitor Name", "ชื่อไทย"]}}]
+}}"""
+
+QUERY_REPAIR_SYSTEM_INSTRUCTION = f"""# Role & Identity
+You are the Natural Thai Search Query Optimization Specialist for TikTok Discovery at Convert Cake.
+
+# Primary Objective
+Replace rejected candidate queries with compliant, high-performing Thai search queries adhering strictly to the 4 Abstract Syntax Rules.
+
+# Syntax Rules & Guardrails
+{NATURAL_SEARCH_SYNTAX_GUIDE}
+- Length: 2 to 4 words, at most 18 Thai letters.
+- Native Phrasing: Everyday conversational search intent (how Thai consumers actually search on TikTok).
+- Demand-Side Guardrail: STRICTLY FORBIDDEN words: ราคาส่ง, ขายส่ง, โรงงาน, รับทำ, ผลิต, โปรโมชั่น, ตัวแทนจำหน่าย.
+- Grounding: Must reflect the provided brand summary and conversion model.
+
+# Output Format Specification
+Return ONLY a valid JSON list:
+[
+  {{"query": "คำค้นหา", "syntax_rule": "rule_1|rule_2|rule_3|rule_4", "specificity": "direct|adjacent"}}
+]"""
+
+GROUNDED_COMPETITORS_SYSTEM_INSTRUCTION = """# Role & Identity
+You are a Thai Market Competitive Intelligence Analyst specialized in social commerce and retail.
+
+# Primary Objective
+Use Google Search Grounding to find brands currently active and sold in Thailand that compete directly with the target brand in the same category and price tier.
+
+# Guidelines
+- Return up to 6 direct competitors currently sold in Thailand.
+- For each competitor, provide its English canonical name and the Thai transliterations / colloquial nicknames Thai consumers use on TikTok.
+- Exclude the target brand itself.
+
+# Output Format Specification
+Return ONLY a valid JSON list (no conversational prose):
+[
+  {"brand": "Canonical Name", "aliases": ["Canonical Name", "ชื่อภาษาไทย"]}
+]"""
+
+COOCCURRENCE_SYSTEM_INSTRUCTION = """# Role & Identity
+You are a Brand Entity Disambiguation Specialist for Thai TikTok.
+
+# Primary Objective
+Identify and isolate commercial competitor brand names from a frequency list of terms and hashtags scraped from TikTok clips.
+
+# Filtering Rules
+- Include ONLY genuine commercial brand names competing in the specified category.
+- STRICTLY EXCLUDE: the client brand itself, generic words/adjectives, locations/places, social platforms (TikTok, Shopee, Lazada, IG), and creator usernames/handles.
+
+# Output Format Specification
+Return ONLY a valid JSON list (or [] if none):
+[
+  {"brand": "canonical name", "aliases": ["term as seen", "Thai/English variant"], "mentions": 1}
+]"""
+
+RELEVANCE_GATE_SYSTEM_INSTRUCTION = f"""# Role & Identity
+You are the Creator Relevance Gate & Persona Classifier of Convert Cake (Thai TikTok Influencer Engine).
+
+# Primary Objective
+Evaluate candidate creators against the client Brand DNA in a single batch pass, assessing topical relevance and classifying into the 2x2 Funnel Matrix.
+
+# 2x2 Funnel Matrix Classification Guide
+{SUB_STYLE_GUIDE}
+
+# Rules & Constraints
+- News channels, meme / comedy channels, and creators who only share a homonym word but are in a different industry
+  -> is_relevant_creator = false.
+- Otherwise is_relevant_creator = true and provide:
+  * relevance_score: 0.0-1.0 fit with the brand's audience & category
+  * main_role: exactly 'KOL' or 'KOC'
+  * sub_style: exactly one of the 4 sub-styles above (use the numeric signals provided: basket_ratio, save_rate, comment_to_like, avg_caption_length)
+  * why_it_fits: ONE short Thai sentence on why this creator fits this brand.
+
+# Output Format Specification
+Return ONLY a valid JSON object keyed by creator id:
+{{
+  "<id>": {{
+    "is_relevant_creator": true,
+    "relevance_score": 0.85,
+    "main_role": "KOC",
+    "sub_style": "KOC - Hard-Sell Reviewer",
+    "why_it_fits": "..."
+  }}
+}}"""
+
 
 class GeminiService:
     def __init__(self):
@@ -173,16 +298,23 @@ class GeminiService:
     # ------------------------------------------------------------------
     # Generic LLM call
     # ------------------------------------------------------------------
-    async def _generate_json(self, prompt: str, temperature: float = 0.2, grounded: bool = False) -> Any:
+    async def _generate_json(
+        self,
+        prompt: str,
+        temperature: float = 0.2,
+        grounded: bool = False,
+        system_instruction: Optional[str] = None,
+    ) -> Any:
         self._require()
+        config_kwargs: Dict[str, Any] = {"temperature": temperature}
+        if system_instruction:
+            config_kwargs["system_instruction"] = system_instruction.strip()
         if grounded:
             # Google Search grounding cannot be combined with JSON mime type -> parse from text.
-            config = types.GenerateContentConfig(
-                tools=[types.Tool(google_search=types.GoogleSearch())],
-                temperature=temperature,
-            )
+            config_kwargs["tools"] = [types.Tool(google_search=types.GoogleSearch())]
         else:
-            config = types.GenerateContentConfig(response_mime_type="application/json", temperature=temperature)
+            config_kwargs["response_mime_type"] = "application/json"
+        config = types.GenerateContentConfig(**config_kwargs)
         resp = await self.client.aio.models.generate_content(model=self.llm_model, contents=prompt, config=config)
         text = getattr(resp, "text", None)
         if not text:
@@ -200,47 +332,23 @@ class GeminiService:
         facebook_url: str,
         manual_competitors: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-        manual = f"Competitor override from marketing team: {', '.join(manual_competitors)}\n" if manual_competitors else ""
-        prompt = f"""You are the Chief Strategy Officer of Convert Cake, a Thai performance-only marketing agency.
-Analyse the client's website + Facebook page (posts and real customer comments) and output the Brand DNA.
+        manual_xml = f"  <competitor_override>{', '.join(manual_competitors)}</competitor_override>\n" if manual_competitors else ""
+        user_prompt = f"""<client_submission>
+  <brand_name>{brand_name}</brand_name>
+  <website_url>{website_url or 'N/A'}</website_url>
+  <facebook_url>{facebook_url or 'N/A'}</facebook_url>
+{manual_xml}</client_submission>
 
-Brand Name: {brand_name}
-Website: {website_url}
-Facebook: {facebook_url}
-{manual}
-=== Scraped context ===
+<scraped_context>
 {context[:7000]}
-=== End context ===
+</scraped_context>
 
-{CONVERSION_MODEL_GUIDE}
-{NATURAL_SEARCH_SYNTAX_GUIDE}
-
-Tasks:
-A. Classify the brand into ONE conversion model by HOW IT MAKES MONEY.
-B. Extract Thai tone of voice and REAL Thai customer questions / pain points (from Facebook comments when present).
-C. Plain & Natural Thai Search Query Extraction: produce 6 to 8 natural Thai TikTok search queries strictly adhering to the 4 Abstract Syntax Rules. Base them 100% on the brand's extracted content. Do NOT use artificial slang or hardcoded templates.
-D. 4-8 niche_keywords: Thai/English sub-niche words that a matching creator's captions or hashtags would contain (no '#').
-E. Up to 6 Thai-market competitor brands in the same category & price tier with English + Thai transliteration aliases.
-
-Return ONLY JSON:
-{{
-  "brand_name": "{brand_name}",
-  "vertical": "industry vertical",
-  "sub_category": "specific product / service niche",
-  "brand_summary": "2-3 sentences",
-  "target_audience": "Thai target audience",
-  "target_age_range": "e.g. 22-35",
-  "brand_tone": ["Thai tone-of-voice trait", "..."],
-  "customer_pain_points": ["real Thai customer question or pain point", "..."],
-  "price_positioning": "Budget / Mass | Mid-Range | Premium | Luxury",
-  "average_price_thb": 0,
-  "conversion_model": "ECOMMERCE_PRODUCT | APP_DIGITAL_SERVICE | HIGH_TICKET_LEADGEN | LIFESTYLE_EXPERIENCE",
-  "conversion_model_reason": "1 sentence",
-  "search_queries": [{{"query": "...", "syntax_rule": "rule_1|rule_2|rule_3|rule_4", "specificity": "direct|adjacent"}}],
-  "niche_keywords": ["..."],
-  "competitors": [{{"brand": "Competitor Name", "aliases": ["Competitor Name", "ชื่อไทย"]}}]
-}}"""
-        data = await self._generate_json(prompt, temperature=0.2)
+Please extract the Brand DNA, conversion model, 6-8 natural Thai search queries, and Thai competitors strictly adhering to your system instructions."""
+        data = await self._generate_json(
+            user_prompt,
+            system_instruction=BRAND_DNA_SYSTEM_INSTRUCTION,
+            temperature=0.2,
+        )
         if not isinstance(data, dict):
             raise RuntimeError("Gemini Brand DNA payload is not a JSON object")
         return data
@@ -261,18 +369,21 @@ Return ONLY JSON:
             rejected = rejected_or_needed if isinstance(rejected_or_needed, list) else []
             count = sum(needed.values()) if isinstance(needed, dict) else needed_count
 
-        prompt = f"""These Thai TikTok search queries were REJECTED (too long, sentence-like, or merchant words):
+        user_prompt = f"""<brand_context>
+  <brand_summary>{brand_summary}</brand_summary>
+  <conversion_model>{conversion_model}</conversion_model>
+</brand_context>
+
+<rejected_queries>
 {json.dumps(rejected, ensure_ascii=False)}
+</rejected_queries>
 
-Brand: {brand_summary}
-Conversion model: {conversion_model}
-{NATURAL_SEARCH_SYNTAX_GUIDE}
-
-Write {max(count, 4)} replacement natural Thai TikTok search queries strictly adhering to the 4 Abstract Syntax Rules.
-Base them 100% on the brand's extracted content.
-Each MUST be 2-4 words, at most 18 Thai letters, native everyday search phrasing.
-Return ONLY JSON: [{{"query": "...", "syntax_rule": "rule_1|rule_2|rule_3|rule_4", "specificity": "direct|adjacent"}}]"""
-        data = await self._generate_json(prompt, temperature=0.3)
+Please generate {max(count, 4)} replacement natural Thai TikTok search queries strictly following the 4 Abstract Syntax Rules in your system instructions."""
+        data = await self._generate_json(
+            user_prompt,
+            system_instruction=QUERY_REPAIR_SYSTEM_INSTRUCTION,
+            temperature=0.3,
+        )
         if not isinstance(data, list):
             raise RuntimeError("Gemini query repair payload is not a JSON list")
         return data
@@ -281,12 +392,20 @@ Return ONLY JSON: [{{"query": "...", "syntax_rule": "rule_1|rule_2|rule_3|rule_4
         self, brand_name: str, vertical: str, sub_category: str, price_positioning: str
     ) -> List[Dict[str, Any]]:
         """Layer 1 — Google Search grounded competitor discovery for the Thai market."""
-        prompt = f"""Use Google Search to find brands that are CURRENTLY sold in Thailand and compete directly with
-"{brand_name}" ({vertical} / {sub_category}, price tier: {price_positioning}).
-Return up to 6 competitors in the same category and price tier. For each give the English name and the
-Thai transliterations / nicknames Thai consumers use on TikTok.
-Return ONLY JSON (no prose): [{{"brand": "La Roche-Posay", "aliases": ["La Roche-Posay", "ลาโรช", "ลาโรชโพเซย์"]}}]"""
-        data = await self._generate_json(prompt, temperature=0.1, grounded=True)
+        user_prompt = f"""<target_brand>
+  <name>{brand_name}</name>
+  <vertical>{vertical}</vertical>
+  <sub_category>{sub_category}</sub_category>
+  <price_positioning>{price_positioning}</price_positioning>
+</target_brand>
+
+Using Google Search, find direct competitor brands currently active and sold in Thailand for this target brand."""
+        data = await self._generate_json(
+            user_prompt,
+            system_instruction=GROUNDED_COMPETITORS_SYSTEM_INSTRUCTION,
+            temperature=0.1,
+            grounded=True,
+        )
         if not isinstance(data, list):
             raise RuntimeError("Grounded competitor payload is not a JSON list")
         return data
@@ -297,15 +416,21 @@ Return ONLY JSON (no prose): [{{"brand": "La Roche-Posay", "aliases": ["La Roche
     async def identify_cooccurring_brands(
         self, brand_name: str, sub_category: str, frequent_terms: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
-        prompt = f"""Below are the most frequent hashtags / terms in TikTok clips scraped for the client brand "{brand_name}"
-(category: {sub_category}). Each item shows the term and how many distinct creators used it.
-{json.dumps(frequent_terms, ensure_ascii=False)}
+        user_prompt = f"""<client_brand>
+  <name>{brand_name}</name>
+  <sub_category>{sub_category}</sub_category>
+</client_brand>
 
-Identify ONLY the terms that are commercial BRAND names competing in the same category (exclude "{brand_name}" itself,
-generic words, places, platforms like TikTok/Shopee/Lazada, and creator names).
-Return ONLY JSON: [{{"brand": "canonical name", "aliases": ["term as seen", "Thai/English variant"], "mentions": <creator count>}}]
-Return [] if none."""
-        data = await self._generate_json(prompt, temperature=0.1)
+<frequent_terms>
+{json.dumps(frequent_terms, ensure_ascii=False)}
+</frequent_terms>
+
+Identify commercial competitor brands from these terms according to your system instructions."""
+        data = await self._generate_json(
+            user_prompt,
+            system_instruction=COOCCURRENCE_SYSTEM_INSTRUCTION,
+            temperature=0.1,
+        )
         if not isinstance(data, list):
             raise RuntimeError("Co-occurrence payload is not a JSON list")
         return data
@@ -314,30 +439,20 @@ Return [] if none."""
     # Stage 3 — Batch LLM Relevance Gate (one call)
     # ------------------------------------------------------------------
     async def relevance_gate(self, brand: Dict[str, Any], creators: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-        prompt = f"""You are the Creator Relevance Gate of Convert Cake (Thai TikTok).
-Check each creator against the client Brand DNA in ONE pass.
-
-Brand DNA:
+        user_prompt = f"""<brand_dna>
 {json.dumps(brand, ensure_ascii=False)}
+</brand_dna>
 
-{SUB_STYLE_GUIDE}
-
-Rules:
-- News channels, meme / comedy channels, and creators who only share a homonym word but are in a different industry
-  -> is_relevant_creator = false.
-- Otherwise is_relevant_creator = true and give:
-  * relevance_score: 0.0-1.0 fit with the brand's audience & category
-  * main_role: exactly 'KOL' or 'KOC'
-  * sub_style: exactly one of the 4 sub-styles above (use the numeric signals provided: basket_ratio,
-    save_rate, comment_to_like, avg_caption_length)
-  * why_it_fits: ONE short Thai sentence on why this creator fits this brand.
-
-Creators (handle, bio, 3 latest captions, signals):
+<candidate_creators>
 {json.dumps(creators, ensure_ascii=False)}
+</candidate_creators>
 
-Return ONLY JSON keyed by creator id:
-{{"<id>": {{"is_relevant_creator": true, "relevance_score": 0.85, "main_role": "KOC", "sub_style": "KOC - Hard-Sell Reviewer", "why_it_fits": "..."}}}}"""
-        data = await self._generate_json(prompt, temperature=0.1)
+Evaluate each creator against the Brand DNA and return the classification JSON according to your system instructions."""
+        data = await self._generate_json(
+            user_prompt,
+            system_instruction=RELEVANCE_GATE_SYSTEM_INSTRUCTION,
+            temperature=0.1,
+        )
         if not isinstance(data, dict):
             raise RuntimeError("Relevance gate payload is not a JSON object")
         return data
