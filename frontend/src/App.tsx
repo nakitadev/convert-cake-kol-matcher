@@ -1508,6 +1508,67 @@ export default function HomePage() {
                 </button>
               </div>
 
+              {/* Educational Role Explanation Banner (อธิบายคำเต็มและความหมายของ KOL และ KOC ใน UI) */}
+              {activeTab !== 'excluded' && (
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-xs leading-relaxed">
+                  {roleFilter === 'KOL' ? (
+                    <div className="flex items-start space-x-2.5 text-slate-700">
+                      <span className="text-base leading-none mt-0.5 shrink-0">🧠</span>
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-[#0536d2] text-xs">
+                          KOL = Key Opinion Leader (ผู้นำทางความคิด / ผู้เชี่ยวชาญเฉพาะทาง)
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-normal">
+                          ครีเอเตอร์ที่มีชื่อเสียง มีผู้ติดตามจำนวนมาก และมีความเชี่ยวชาญเฉพาะด้าน เน้นทำการตลาดช่วง{' '}
+                          <strong className="text-slate-900 font-semibold">Top & Middle Funnel (Awareness & Consideration)</strong>{' '}
+                          เพื่อสร้างการรับรู้ในวงกว้าง ยกระดับภาพลักษณ์แบรนด์ และให้ความรู้เชิงลึก (ประกอบด้วย 2 สไตล์: 🎓 <em>Expert / Guru</em> และ ✨ <em>Lifestyle / Aesthetic</em>)
+                        </p>
+                      </div>
+                    </div>
+                  ) : roleFilter === 'KOC' ? (
+                    <div className="flex items-start space-x-2.5 text-slate-700">
+                      <span className="text-base leading-none mt-0.5 shrink-0">🛍️</span>
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-emerald-800 text-xs">
+                          KOC = Key Opinion Consumer (ผู้บริโภคตัวจริง / เสียงจากผู้ใช้)
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-normal">
+                          ผู้บริโภคทั่วไปหรือครีเอเตอร์ระดับ Micro/Nano ที่สร้างคอนเทนต์จากมุมมอง{' '}
+                          <strong className="text-slate-900 font-semibold">"คนซื้อมาใช้เองจริง ๆ"</strong> เน้นทำการตลาดช่วง{' '}
+                          <strong className="text-slate-900 font-semibold">Bottom Funnel (Conversion & Sales)</strong>{' '}
+                          มีความ Real และเป็นธรรมชาติสูง ป้ายยาจริงใจ ผูกตะกร้า TikTok Shop เพื่อปิดการขายได้ทันที (ประกอบด้วย 2 สไตล์: 🛍️ <em>Hard-Sell Reviewer</em> และ 🤳 <em>Everyday Vlog</em>)
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-slate-600">
+                      <div className="flex items-start space-x-2.5 bg-blue-50/70 p-2.5 rounded-xl border border-blue-100">
+                        <span className="text-base mt-0.5 shrink-0">🧠</span>
+                        <div>
+                          <span className="font-bold text-[#0536d2] block text-[11px]">
+                            KOL: Key Opinion Leader (ผู้นำทางความคิด)
+                          </span>
+                          <span className="text-[10.5px] text-slate-600 block mt-0.5 leading-normal">
+                            เน้น <strong>Brand Awareness & ความน่าเชื่อถือ</strong> เหมาะสำหรับยกระดับภาพลักษณ์แบรนด์ (🎓 Expert / Guru & ✨ Lifestyle)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-2.5 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-100">
+                        <span className="text-base mt-0.5 shrink-0">🛍️</span>
+                        <div>
+                          <span className="font-bold text-emerald-900 block text-[11px]">
+                            KOC: Key Opinion Consumer (ผู้บริโภคตัวจริง)
+                          </span>
+                          <span className="text-[10.5px] text-slate-600 block mt-0.5 leading-normal">
+                            เน้น <strong>ความ Real & ยอดขายในตะกร้า</strong> รีวิวจริงใจกระตุ้น Conversion ได้รวดเร็ว (🛍️ Hard-Sell Reviewer & 🤳 Everyday Vlog)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Level 2: Contextual Sub-Style Filter Pills (แสดงเฉพาะสไตล์ที่สัมพันธ์กับ Role ที่เลือก ไม่ซ้ำซ้อน ไม่ตีกัน) */}
               {activeTab !== 'excluded' && (
                 <div className="flex items-center space-x-1.5 border-b border-slate-100 pb-2.5 overflow-x-auto text-xs font-semibold">
@@ -1777,12 +1838,19 @@ export default function HomePage() {
                             {/* Badge row: Role, Sub-Style, Work-Ready, Tier */}
                             <div className="flex items-center space-x-2 text-xs text-slate-500 mt-2 flex-wrap gap-y-1">
                               {/* Main Role badge (Spec 6.2) */}
-                              <span className={`inline-flex items-center space-x-1 font-bold text-[11px] px-2.5 py-0.5 rounded-lg border ${
-                                item.kol.funnel_role === 'KOL'
-                                  ? 'bg-blue-100 text-[#0536d2] border-blue-300'
-                                  : 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                              }`}>
-                                <span>{item.kol.funnel_role === 'KOL' ? '🧠 KOL' : '🛍️ KOC'}</span>
+                              <span
+                                className={`inline-flex items-center space-x-1 font-bold text-[11px] px-2.5 py-0.5 rounded-lg border ${
+                                  item.kol.funnel_role === 'KOL'
+                                    ? 'bg-blue-100 text-[#0536d2] border-blue-300'
+                                    : 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                                }`}
+                                title={
+                                  item.kol.funnel_role === 'KOL'
+                                    ? 'KOL = Key Opinion Leader (ผู้นำทางความคิด / ผู้เชี่ยวชาญ — เน้น Awareness & ภาพลักษณ์)'
+                                    : 'KOC = Key Opinion Consumer (ผู้บริโภคตัวจริง / เสียงจากผู้ใช้ — เน้นความ Real & ปิดการขายในตะกร้า)'
+                                }
+                              >
+                                <span>{item.kol.funnel_role === 'KOL' ? '🧠 KOL (Key Opinion Leader)' : '🛍️ KOC (Key Opinion Consumer)'}</span>
                               </span>
 
                               {/* Sub-style badge */}
