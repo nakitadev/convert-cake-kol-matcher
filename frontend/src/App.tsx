@@ -237,6 +237,82 @@ const MODEL_DETAILS: Record<string, { label: string; icon: string; desc: string;
   },
 };
 
+// Golden Evaluation Dataset: 6 Representative Test Cases Across 6 Industries
+const INDUSTRY_TEST_CASES = [
+  {
+    id: 'b2b-manufacturing',
+    industry: 'B2B Manufacturing',
+    label: 'Piggy Monster',
+    icon: '🏭',
+    badge: 'Demand-Side Query Gate',
+    name: 'Piggy Monster',
+    url: 'https://piggymonster-th.com/',
+    fb: 'https://www.facebook.com/p/Piggy-Monster-%E0%B9%80%E0%B8%AA%E0%B8%B7%E0%B9%89%E0%B8%AD%E0%B8%AA%E0%B8%81%E0%B8%A3%E0%B8%B5%E0%B8%99-%E0%B8%A3%E0%B8%B2%E0%B8%84%E0%B8%B2%E0%B8%96%E0%B8%B9%E0%B8%81-61554003789059/',
+    notes: 'บริการสกรีนเสื้อยืด เสื้อโปโล เสื้อรุ่น เสื้อคณะ สกรีน DTF และบล็อกสกรีน ไม่มีขั้นต่ำ ลายคมชัด สำหรับแบรนด์แฟชั่นและกิจกรรมมหาลัย',
+    competitors: 'Korat Screen, Screen BKK',
+  },
+  {
+    id: 'beauty-clinic',
+    industry: 'Beauty Clinic',
+    label: 'Emma Clinic',
+    icon: '💉',
+    badge: 'Competitor Venue Gate',
+    name: 'Emma Clinic',
+    url: 'https://emmaclinicthailand.com',
+    fb: 'https://www.facebook.com/emmaclinicthailand',
+    notes: 'คลินิกศัลยกรรมเสริมจมูก เสริมคาง ปรับรูปหน้า และดูแลผิวพรรณ เน้นทรงธรรมชาติ สไตล์เกาหลี ปลอดภัยโดยแพทย์เฉพาะทาง',
+    competitors: 'Sowon Clinic, SLC Clinic, Apex Medical Center',
+  },
+  {
+    id: 'skincare-beauty',
+    industry: 'Skincare & Beauty',
+    label: 'Dr.PONG',
+    icon: '🧴',
+    badge: 'Balanced Portfolio Gate',
+    name: 'Dr.PONG',
+    url: 'https://drpongshop.com',
+    fb: 'https://www.facebook.com/drpongshop',
+    notes: 'เวชสำอางและสกินแคร์คลีนบิวตี้สูตรคุณหมอ เซรั่มลดสิว ครีมกันแดดเนื้อบางเบา และอาหารเสริมผิว ตอบโจทย์คนเป็นสิวผิวแพ้ง่าย',
+    competitors: 'Her Hyness, Gravich, MizuMi',
+  },
+  {
+    id: 'sports-outdoor',
+    industry: 'Sports & Outdoor',
+    label: 'Proski Thailand',
+    icon: '🎿',
+    badge: 'Niche Consistency Gate',
+    name: 'Proski Thailand',
+    url: 'https://proski.co/',
+    fb: 'https://www.facebook.com/p/Proski-Thailand-61594629305420/',
+    notes: 'คลับฝึกซ้อมสกีและสโนว์บอร์ดในร่มแห่งแรกในไทย จำลองเนินหิมะอินดอร์ พร้อมคอร์สเรียนก่อนไปทริปเล่นสกีต่างประเทศ',
+    competitors: 'Ski365, The Snow Town',
+  },
+  {
+    id: 'fashion-streetwear',
+    industry: 'Fashion & Streetwear',
+    label: 'Merge Official',
+    icon: '👖',
+    badge: 'Entity & Spam Gate',
+    name: 'Merge Official',
+    url: 'https://mergeofficial.com',
+    fb: 'https://www.facebook.com/mergeofficialth',
+    notes: 'แบรนด์แฟชั่นเสื้อผ้าสตรีทแวร์และกางเกงยีนส์ OOTD ยอดฮิตสำหรับคนรุ่นใหม่ ดีไซน์โก้เก๋ แมตช์ง่าย ใส่ได้ทุกวัน',
+    competitors: 'Gentlewoman, Stylist Shop, Mitr',
+  },
+  {
+    id: 'fnb-cafe',
+    industry: 'F&B & Cafe',
+    label: 'Bearhouse',
+    icon: '🧋',
+    badge: 'Experience & Niche Gate',
+    name: 'Bearhouse',
+    url: 'https://bearhouse.co.th',
+    fb: 'https://www.facebook.com/bearhouse.thailand',
+    notes: 'แบรนด์ชานมไข่มุกและเครื่องดื่มไลฟ์สไตล์ จุดเด่นคือไข่มุกโมจิทำสดหนึบหนับ เค้กโรล และเมนูชาพรีเมียม ขวัญใจวัยรุ่นและสายคาเฟ่',
+    competitors: 'After You, Nose Tea, Fire Tiger, ChaTraMue',
+  },
+];
+
 export default function HomePage() {
   // Brand Input State
   const [brandName, setBrandName] = useState('');
@@ -244,6 +320,29 @@ export default function HomePage() {
   const [facebookUrl, setFacebookUrl] = useState('');
   const [customNotes, setCustomNotes] = useState('');
   const [manualCompetitors, setManualCompetitors] = useState('');
+  const [selectedTestCase, setSelectedTestCase] = useState<string | null>(null);
+
+  const handleSelectTestCase = (tc: typeof INDUSTRY_TEST_CASES[0]) => {
+    setSelectedTestCase(tc.id);
+    setBrandName(tc.name);
+    setWebsiteUrl(tc.url);
+    setFacebookUrl(tc.fb);
+    setCustomNotes(tc.notes);
+    setManualCompetitors(tc.competitors);
+    setBrandDNA(null);
+    setMatchResponse(null);
+  };
+
+  const handleClearInputs = () => {
+    setSelectedTestCase(null);
+    setBrandName('');
+    setWebsiteUrl('');
+    setFacebookUrl('');
+    setCustomNotes('');
+    setManualCompetitors('');
+    setBrandDNA(null);
+    setMatchResponse(null);
+  };
 
   // Extracted Brand DNA State
   const [brandDNA, setBrandDNA] = useState<BrandDNA | null>(null);
@@ -793,6 +892,60 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-3.5 pt-1">
+                {/* 6 Industry Test Cases Selection */}
+                <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-800">
+                      <Sparkles className="w-3.5 h-3.5 text-[#0536d2]" />
+                      <span>ชุดทดสอบ 6 Industry (Quick Test Cases)</span>
+                    </div>
+                    {selectedTestCase && (
+                      <button
+                        type="button"
+                        onClick={handleClearInputs}
+                        className="text-[11px] font-semibold text-slate-500 hover:text-rose-600 transition cursor-pointer"
+                      >
+                        ล้างข้อมูล
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {INDUSTRY_TEST_CASES.map(tc => {
+                      const isSelected = selectedTestCase === tc.id;
+                      return (
+                        <button
+                          key={tc.id}
+                          type="button"
+                          onClick={() => handleSelectTestCase(tc)}
+                          className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'bg-blue-50/90 border-[#0536d2] ring-2 ring-[#0536d2]/20 shadow-xs'
+                              : 'bg-white hover:bg-slate-100/80 border-slate-200 hover:border-slate-300 text-slate-700'
+                          }`}
+                          title={`${tc.industry} — ${tc.name}`}
+                        >
+                          <div className="flex items-center space-x-1.5 mb-1">
+                            <span className="text-sm">{tc.icon}</span>
+                            <span
+                              className={`text-[10px] font-bold uppercase tracking-wider truncate ${
+                                isSelected ? 'text-[#0536d2]' : 'text-slate-500'
+                              }`}
+                            >
+                              {tc.industry}
+                            </span>
+                          </div>
+                          <div className="text-xs font-bold text-slate-900 truncate">
+                            {tc.label}
+                          </div>
+                          <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                            {tc.badge}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-800 mb-1.5">
                     Brand Name <span className="text-rose-500">*</span>
