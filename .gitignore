@@ -7,7 +7,9 @@ node_modules/
 .agents/
 *.sqlite
 *.sqlite3
+*.sqlite*
 backend/cache/
+backend/app/cache/
 .env
 .env.local
 frontend/test-results/

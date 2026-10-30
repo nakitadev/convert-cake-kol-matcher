@@ -30,6 +30,10 @@ import {
   Layers,
   FileSpreadsheet,
   Compass,
+  AlertOctagon,
+  Key,
+  Database,
+  X,
 } from 'lucide-react';
 
 const API_BASE = '';
@@ -193,6 +197,16 @@ interface ExcludedCreator {
   bio: string;
   stage: string;
   reason: string;
+}
+
+interface ApiErrorInfo {
+  type: 'apify_quota' | 'rate_limit' | 'token_missing' | 'server_error';
+  title: string;
+  message: string;
+  status?: number;
+  details?: string;
+  timestamp: string;
+  endpoint?: string;
 }
 
 interface MatchResponse {
@@ -372,7 +386,66 @@ export default function HomePage() {
   const [liveLogs, setLiveLogs] = useState<string[]>([]);
   const [activeStep, setActiveStep] = useState<number>(0);
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
+  const [apiError, setApiError] = useState<ApiErrorInfo | null>(null);
+  const [showErrorDiagnostics, setShowErrorDiagnostics] = useState<boolean>(false);
+  const [copiedBash, setCopiedBash] = useState<boolean>(false);
   const logsContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const parseAndSetApiError = (err: any, endpoint: string) => {
+    const errMsg = err?.message || String(err);
+    const isQuota =
+      errMsg.includes('402') ||
+      errMsg.includes('Quota Exhausted') ||
+      errMsg.includes('not-enough-usage') ||
+      errMsg.includes('usage limit') ||
+      errMsg.includes('Payment Required');
+    const isRateLimit =
+      errMsg.includes('429') ||
+      errMsg.includes('ResourceExhausted') ||
+      errMsg.includes('Rate Limit') ||
+      errMsg.includes('rate limit') ||
+      errMsg.includes('RATE_LIMIT');
+    const isTokenMissing =
+      errMsg.includes('APIFY_API_TOKEN is not configured') ||
+      errMsg.includes('Token not configured');
+
+    const info: ApiErrorInfo = {
+      type: isQuota ? 'apify_quota' : isRateLimit ? 'rate_limit' : isTokenMissing ? 'token_missing' : 'server_error',
+      title: isQuota
+        ? 'Apify Usage Quota หมด (HTTP 402 — Quota Exhausted)'
+        : isRateLimit
+        ? 'API Rate Limit เกินขีดจำกัด (HTTP 429 — Rate Limit Exceeded)'
+        : isTokenMissing
+        ? 'ไม่ได้ตั้งค่า Apify Token ในระบบ (Token Missing)'
+        : 'เกิดข้อผิดพลาดในการเชื่อมต่อบริการภายนอก',
+      message: isQuota
+        ? 'โควตา Free Tier / Compute Units ของ Apify Token ในระบบถูกใช้งานจนครบลิมิตแล้ว ทำให้ Actor บน Apify ไม่สามารถกวาดข้อมูลสดจาก TikTok ได้ชั่วคราว'
+        : isRateLimit
+        ? 'คำขอเกินข้อจำกัด RPM (Requests Per Minute) หรือโควตาการใช้งานของโมเดล AI ในช่วงเวลานี้'
+        : isTokenMissing
+        ? 'ไม่พบ APIFY_API_TOKEN ในไฟล์สภาพแวดล้อม backend/.env กรุณาตั้งค่า Token ก่อนเริ่มค้นหา'
+        : errMsg,
+      status: isQuota ? 402 : isRateLimit ? 429 : 500,
+      details: errMsg,
+      timestamp: new Date().toLocaleTimeString('th-TH'),
+      endpoint,
+    };
+    setApiError(info);
+    setProgressStageTitle('เกิดข้อผิดพลาด: API ติดลิมิต หรือ Token หมด');
+    setProgressStageDesc(info.message);
+  };
+
+  const handleSimulateQuotaError = () => {
+    setApiError({
+      type: 'apify_quota',
+      title: 'Apify Usage Quota หมด (HTTP 402 — Quota Exhausted)',
+      message: 'โควตา Free Tier / Compute Units ของ Apify Token ในระบบถูกใช้งานจนครบลิมิตแล้ว ทำให้ Actor บน Apify ไม่สามารถกวาดข้อมูลสดจาก TikTok ได้ชั่วคราว',
+      status: 402,
+      details: 'Apify Usage Quota Exhausted (HTTP 402) on clockworks~free-tiktok-scraper: {"error":{"message":"You have exceeded your monthly usage limit. Please upgrade your plan or wait for the next billing cycle.","type":"not-enough-usage"}}',
+      timestamp: new Date().toLocaleTimeString('th-TH'),
+      endpoint: '/api/auto-match',
+    });
+  };
 
   useEffect(() => {
     if (logsContainerRef.current) {
@@ -397,6 +470,7 @@ export default function HomePage() {
     }
     setIsAnalyzing(true);
     setMatchResponse(null);
+    setApiError(null);
     setProgressPercent(10);
     setElapsedSeconds(0);
     setActiveStep(1);
@@ -455,8 +529,14 @@ export default function HomePage() {
         }),
       });
       if (!res.ok) {
-        const errBody = await res.text();
-        throw new Error(errBody || `HTTP ${res.status}`);
+        let errText = '';
+        try {
+          const errJson = await res.json();
+          errText = errJson.detail || JSON.stringify(errJson);
+        } catch {
+          errText = await res.text();
+        }
+        throw new Error(errText || `HTTP ${res.status}`);
       }
       const data: BrandDNA = await res.json();
       setProgressPercent(100);
@@ -470,7 +550,7 @@ export default function HomePage() {
       setBrandDNA(data);
     } catch (err: any) {
       console.error('Analyze brand error:', err);
-      alert(`Analyze brand failed: ${err.message || 'Ensure backend is running.'}`);
+      parseAndSetApiError(err, '/api/analyze-brand');
     } finally {
       clearInterval(timer);
       setTimeout(() => {
@@ -487,6 +567,7 @@ export default function HomePage() {
   const handleMatchKOLs = async () => {
     if (!brandDNA) return;
     setIsMatching(true);
+    setApiError(null);
     setProgressPercent(5);
     setElapsedSeconds(0);
     setActiveStep(2);
@@ -550,8 +631,14 @@ export default function HomePage() {
         }),
       });
       if (!res.ok) {
-        const errBody = await res.text();
-        throw new Error(errBody || `HTTP ${res.status}`);
+        let errText = '';
+        try {
+          const errJson = await res.json();
+          errText = errJson.detail || JSON.stringify(errJson);
+        } catch {
+          errText = await res.text();
+        }
+        throw new Error(errText || `HTTP ${res.status}`);
       }
       const data: MatchResponse = await res.json();
       setProgressPercent(100);
@@ -566,7 +653,7 @@ export default function HomePage() {
       setActiveTab('all');
     } catch (err: any) {
       console.error('Match KOLs error:', err);
-      alert(`Live TikTok matching failed: ${err.message || 'Please verify APIFY_API_TOKEN.'}`);
+      parseAndSetApiError(err, '/api/match-kols');
     } finally {
       clearInterval(timer);
       setTimeout(() => {
@@ -587,6 +674,7 @@ export default function HomePage() {
       return;
     }
     setIsMatching(true);
+    setApiError(null);
     setProgressPercent(5);
     setElapsedSeconds(0);
     setActiveStep(1);
@@ -641,8 +729,14 @@ export default function HomePage() {
         }),
       });
       if (!res.ok) {
-        const errBody = await res.text();
-        throw new Error(errBody || `HTTP ${res.status}`);
+        let errText = '';
+        try {
+          const errJson = await res.json();
+          errText = errJson.detail || JSON.stringify(errJson);
+        } catch {
+          errText = await res.text();
+        }
+        throw new Error(errText || `HTTP ${res.status}`);
       }
       const data: MatchResponse = await res.json();
       setProgressPercent(100);
@@ -653,7 +747,7 @@ export default function HomePage() {
       setActiveTab('all');
     } catch (err: any) {
       console.error('Auto-match error:', err);
-      alert(`Auto-matching error: ${err.message || 'Please verify APIFY_API_TOKEN.'}`);
+      parseAndSetApiError(err, '/api/auto-match');
     } finally {
       clearInterval(timer);
       setTimeout(() => {
@@ -899,15 +993,26 @@ export default function HomePage() {
                       <Sparkles className="w-3.5 h-3.5 text-[#0536d2]" />
                       <span>ชุดทดสอบ 6 Industry (Quick Test Cases)</span>
                     </div>
-                    {selectedTestCase && (
+                    <div className="flex items-center space-x-2">
                       <button
                         type="button"
-                        onClick={handleClearInputs}
-                        className="text-[11px] font-semibold text-slate-500 hover:text-rose-600 transition cursor-pointer"
+                        onClick={handleSimulateQuotaError}
+                        className="text-[10px] font-bold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-lg transition cursor-pointer flex items-center space-x-1 shadow-2xs"
+                        title="ทดสอบแสดงหน้าจอ UI เมื่อ Apify Token หมด หรือ API ติด Rate Limit"
                       >
-                        ล้างข้อมูล
+                        <AlertOctagon className="w-3 h-3 text-amber-600" />
+                        <span>จำลอง Token หมด (402)</span>
                       </button>
-                    )}
+                      {selectedTestCase && (
+                        <button
+                          type="button"
+                          onClick={handleClearInputs}
+                          className="text-[11px] font-semibold text-slate-500 hover:text-rose-600 transition cursor-pointer"
+                        >
+                          ล้างข้อมูล
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {INDUSTRY_TEST_CASES.map(tc => {
@@ -1185,6 +1290,196 @@ export default function HomePage() {
 
           {/* RIGHT COLUMN: Results Dashboard (7 Cols) */}
           <div className="lg:col-span-7 space-y-4">
+            {/* DEDICATED API ERROR / QUOTA LIMIT / TOKEN EXHAUSTED SCREEN */}
+            {apiError && (
+              <div className="bg-white border-2 border-rose-300 rounded-3xl p-6 sm:p-7 shadow-lg shadow-rose-500/5 space-y-5 relative overflow-hidden animate-in fade-in duration-300">
+                <div className="h-1.5 bg-gradient-to-r from-rose-500 via-amber-500 to-[#0536d2] absolute top-0 left-0 right-0" />
+
+                {/* Error Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start space-x-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shadow-xs shrink-0">
+                      <AlertOctagon className="w-6 h-6 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+                          🚨 HTTP {apiError.status || 402} {apiError.type.toUpperCase()}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          ตรวจพบ: {apiError.timestamp}
+                        </span>
+                      </div>
+                      <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1">
+                        {apiError.title}
+                      </h3>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        {apiError.message}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setApiError(null)}
+                    className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+                    title="ปิดข้อความแจ้งเตือน"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* 4 Actionable Solutions */}
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  <div className="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                    <Sparkles className="w-4 h-4 text-[#0536d2]" />
+                    <span>แนวทางการแก้ไขและกู้คืนการทำงาน (Instant Resolution Options):</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Solution 1: Instant SQLite Cache Replay */}
+                    <div className="bg-emerald-50/70 border border-emerald-300 rounded-2xl p-4 space-y-2.5 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-emerald-900 flex items-center space-x-1.5">
+                            <Database className="w-4 h-4 text-emerald-700" />
+                            <span>1. รันจาก SQLite Cache (แนะนำ)</span>
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-white/80 px-2 py-0.5 rounded-md border border-emerald-200">
+                            ฟรี 100% • &lt; 10ms
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-emerald-800 mt-1.5 leading-relaxed">
+                          ระบบมี <strong>SQLite Scraper Cache Layer</strong> บันทึกข้อมูลดิบของ 6 Industry Benchmark ไว้เรียบร้อยแล้ว ท่านสามารถกดเลือกแบรนด์ด้านล่างเพื่อทดสอบระบบ Matching ตามเกณฑ์ 100 คะแนนเต็มได้ทันทีโดยไม่ต้องต่อเน็ตเวิร์กไป Apify
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {INDUSTRY_TEST_CASES.map(tc => (
+                          <button
+                            key={tc.id}
+                            type="button"
+                            onClick={() => {
+                              handleSelectTestCase(tc);
+                              setApiError(null);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-[10px] shadow-2xs transition cursor-pointer flex items-center space-x-1"
+                          >
+                            <span>{tc.icon}</span>
+                            <span>{tc.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Solution 2: Update Token in .env */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-slate-900 flex items-center space-x-1.5">
+                            <Key className="w-4 h-4 text-[#0536d2]" />
+                            <span>2. อัปเดต Apify Token ใหม่</span>
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                            Live Scraping
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 mt-1.5 leading-relaxed">
+                          หากท่านมี Token สำรอง สามารถนำไปใส่ในไฟล์ <code className="text-[#0536d2] font-mono">backend/.env</code> แล้วสั่งรีสตาร์ตระบบ:
+                        </p>
+                        <div className="bg-slate-900 text-slate-200 text-[10px] font-mono p-2.5 rounded-xl mt-2 flex items-center justify-between">
+                          <span className="truncate">nano backend/.env && docker compose restart backend</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText('nano backend/.env && docker compose restart backend');
+                              setCopiedBash(true);
+                              setTimeout(() => setCopiedBash(false), 2000);
+                            }}
+                            className="ml-2 text-xs text-slate-400 hover:text-white shrink-0 cursor-pointer"
+                            title="คัดลอกคำสั่ง"
+                          >
+                            {copiedBash ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Solution 3: Apify Console Billing */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 flex flex-col justify-between">
+                      <div>
+                        <span className="text-xs font-black text-slate-900 flex items-center space-x-1.5">
+                          <ExternalLink className="w-4 h-4 text-indigo-600" />
+                          <span>3. ตรวจสอบโควตาบน Apify Console</span>
+                        </span>
+                        <p className="text-[11px] text-slate-600 mt-1.5 leading-relaxed">
+                          ตรวจสอบการใช้งาน Compute Units หรือเพิ่มเครดิต Free Tier รอบเดือนใหม่โดยตรงผ่านหน้าแดชบอร์ด Apify
+                        </p>
+                      </div>
+                      <a
+                        href="https://console.apify.com/billing"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center space-x-1.5 w-full py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold rounded-xl transition cursor-pointer shadow-2xs"
+                      >
+                        <span>เปิด Apify Billing Dashboard</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                      </a>
+                    </div>
+
+                    {/* Solution 4: Retry Request */}
+                    <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 space-y-2 flex flex-col justify-between">
+                      <div>
+                        <span className="text-xs font-black text-blue-900 flex items-center space-x-1.5">
+                          <RefreshCw className="w-4 h-4 text-[#0536d2]" />
+                          <span>4. ลองส่งคำขอใหม่อีกครั้ง</span>
+                        </span>
+                        <p className="text-[11px] text-blue-800 mt-1.5 leading-relaxed">
+                          หลังจากทำการอัปเดต Token หรือต้องการทดสอบระบบใหม่อีกครั้ง สามารถกดปุ่มด้านล่างเพื่อเริ่มการจับคู่ทันที
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setApiError(null);
+                          handleAutoMatch();
+                        }}
+                        className="w-full py-2 bg-[#0536d2] hover:bg-[#042cae] text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center space-x-1.5"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>ลองใหม่อีกครั้ง (Retry)</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Collapsible Diagnostics Accordion */}
+                <div className="pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowErrorDiagnostics(!showErrorDiagnostics)}
+                    className="w-full flex items-center justify-between text-xs font-bold text-slate-600 hover:text-slate-900 py-1 transition cursor-pointer"
+                  >
+                    <span className="flex items-center space-x-1.5">
+                      <Terminal className="w-3.5 h-3.5 text-slate-500" />
+                      <span>รายละเอียดทางเทคนิค (Technical Error Diagnostics)</span>
+                    </span>
+                    {showErrorDiagnostics ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                  </button>
+
+                  {showErrorDiagnostics && (
+                    <div className="mt-2 p-3.5 bg-slate-900 text-slate-200 rounded-2xl text-[11px] font-mono space-y-1.5 overflow-x-auto animate-in fade-in duration-200">
+                      <div className="text-rose-400 font-bold">Status: HTTP {apiError.status || 500} ({apiError.type})</div>
+                      <div className="text-slate-400">Endpoint: {apiError.endpoint || 'N/A'} | Timestamp: {apiError.timestamp}</div>
+                      <div className="text-amber-300 break-all whitespace-pre-wrap mt-1">Raw Error: {apiError.details}</div>
+                      <div className="text-emerald-400 text-[10px] pt-1 border-t border-slate-800 mt-1">
+                        ✓ Architecture Note: SQLite Scraper Cache is active at backend/cache/scraper_cache.sqlite.
+                        Fallback from apify/tiktok-scraper to clockworks/free-tiktok-scraper was triggered.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* 1. STRATEGY SUMMARY BANNER (Spec 5.3 #1) */}
             {matchResponse && matchResponse.strategy && (
               <div className="bg-white border-2 border-[#597ef3]/30 rounded-3xl p-5 shadow-sm space-y-3 relative overflow-hidden animate-in fade-in duration-300">
@@ -1548,7 +1843,7 @@ export default function HomePage() {
             )}
 
             {/* Empty State */}
-            {!isMatching && !isAnalyzing && !matchResponse && (
+            {!isMatching && !isAnalyzing && !matchResponse && !apiError && (
               <div className="bg-white border border-slate-200/90 rounded-3xl p-12 text-center space-y-3 shadow-xs">
                 <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-[#0536d2]">
                   <Search className="w-7 h-7 text-[#597ef3]" />

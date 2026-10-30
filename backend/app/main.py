@@ -82,6 +82,11 @@ async def analyze_brand(req: BrandAnalyzeRequest):
         brand_dna = await analyzer.analyze(req)
         return brand_dna
     except Exception as e:
+        err_msg = str(e)
+        if any(keyword in err_msg for keyword in ["HTTP 402", "HTTP 403", "Quota Exhausted", "hard limit exceeded", "usage limit", "APIFY_API_TOKEN is not configured"]):
+            raise HTTPException(status_code=402, detail=f"Apify Usage Quota Exhausted: {err_msg}")
+        if any(keyword in err_msg for keyword in ["429", "ResourceExhausted", "RATE_LIMIT_EXCEEDED", "rate limit"]):
+            raise HTTPException(status_code=429, detail=f"AI/LLM Rate Limit Exceeded (HTTP 429): {err_msg}")
         raise HTTPException(status_code=500, detail=f"Failed to analyze brand: {str(e)}")
 
 
@@ -99,8 +104,10 @@ async def match_kols(req: MatchRequest):
         return response
     except Exception as e:
         err_msg = str(e)
-        if any(keyword in err_msg for keyword in ["HTTP 402", "HTTP 403", "Quota Exhausted", "hard limit exceeded", "usage limit"]):
+        if any(keyword in err_msg for keyword in ["HTTP 402", "HTTP 403", "Quota Exhausted", "hard limit exceeded", "usage limit", "APIFY_API_TOKEN is not configured"]):
             raise HTTPException(status_code=402, detail=f"Apify Usage Quota Exhausted: {err_msg}")
+        if any(keyword in err_msg for keyword in ["429", "ResourceExhausted", "RATE_LIMIT_EXCEEDED", "rate limit"]):
+            raise HTTPException(status_code=429, detail=f"AI/LLM Rate Limit Exceeded (HTTP 429): {err_msg}")
         raise HTTPException(status_code=500, detail=f"KOL matching failed: {err_msg}")
 
 
@@ -125,8 +132,10 @@ async def auto_match(req: AutoMatchRequest):
         return response
     except Exception as e:
         err_msg = str(e)
-        if any(keyword in err_msg for keyword in ["HTTP 402", "HTTP 403", "Quota Exhausted", "hard limit exceeded", "usage limit"]):
+        if any(keyword in err_msg for keyword in ["HTTP 402", "HTTP 403", "Quota Exhausted", "hard limit exceeded", "usage limit", "APIFY_API_TOKEN is not configured"]):
             raise HTTPException(status_code=402, detail=f"Apify Usage Quota Exhausted: {err_msg}")
+        if any(keyword in err_msg for keyword in ["429", "ResourceExhausted", "RATE_LIMIT_EXCEEDED", "rate limit"]):
+            raise HTTPException(status_code=429, detail=f"AI/LLM Rate Limit Exceeded (HTTP 429): {err_msg}")
         raise HTTPException(status_code=500, detail=f"Auto matching failed: {err_msg}")
 
 
