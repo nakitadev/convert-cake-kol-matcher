@@ -430,8 +430,8 @@ export default function HomePage() {
         ] : prev);
       } else {
         setActiveStep(1);
-        setProgressStageTitle('Stage 1: Scene Translation & Search-Grounded Thai Competitors');
-        setProgressStageDesc('แปลงประเภทธุรกิจเป็นคำค้นหา TikTok (KOL_QUERY & KOC_QUERY) และสกัดคู่แข่งในไทย...');
+        setProgressStageTitle('ขั้นตอนที่ 1: วิเคราะห์จุดขายแบรนด์ & สกัดคำค้นหาตามพฤติกรรมลูกค้า');
+        setProgressStageDesc('อ่านเว็บไซต์/เพจจริงเพื่อวิเคราะห์วิธีทำเงิน (Conversion Model), ระบุคู่แข่งในไทย และสร้างคำค้นหาภาษาไทยสั้นกระชับ (Demand-Side Search Intent) เพื่อหาครีเอเตอร์ที่ลูกค้าดูจริง...');
         setProgressPercent(Math.min(95, Math.round(70 + (elapsed - 9) * 3)));
         setLiveLogs(prev => !prev.some(l => l.includes('Scene Translation')) ? [
           ...prev,
@@ -490,11 +490,11 @@ export default function HomePage() {
     setProgressPercent(5);
     setElapsedSeconds(0);
     setActiveStep(2);
-    setProgressStageTitle('Stage 2: TikTok Discovery via Apify (KOL_QUERY & KOC_QUERY)');
-    setProgressStageDesc('กวาดคลิปสดบน TikTok ประเทศไทย (proxyCountryCode: TH) แยกฝั่งคำค้นหา KOL และ KOC...');
+    setProgressStageTitle('ขั้นตอนที่ 2: ค้นหาครีเอเตอร์สดบน TikTok & ตรวจสอบประวัติคลิป');
+    setProgressStageDesc('กวาดคลิปสดบน TikTok ประเทศไทยตามคำค้นหาเฉพาะของแบรนด์ และดึงคลิปย้อนหลังมาตรวจสอบความเชี่ยวชาญจริง (5-Clip Niche Consistency Audit)...');
     setLiveLogs([
-      `[Pipeline] Launching 4-Stage TikTok Matching Engine for '${brandDNA.brand_name}'...`,
-      `[Apify Discovery] Querying TikTok with origin tags: KOL_QUERY vs KOC_QUERY...`,
+      `[Pipeline] เริ่มค้นหาและประมวลผลครีเอเตอร์สำหรับ '${brandDNA.brand_name}'...`,
+      `[Apify Discovery] ค้นหาคลิปสดบน TikTok ประเทศไทย (Proxy: TH)...`,
     ]);
 
     const startTime = Date.now();
@@ -506,8 +506,8 @@ export default function HomePage() {
         setProgressPercent(Math.min(30, Math.round(5 + elapsed * 3.2)));
       } else if (elapsed < 20) {
         setActiveStep(2);
-        setProgressStageTitle('Stage 2: Profile Video Enrichment & Competitor Co-occurrence');
-        setProgressStageDesc('ดึงคลิปย้อนหลังตรวจสอบ Niche และคำนวณศัพท์คู่แข่งซ้ำ (Layer 2 Co-occurrence)...');
+        setProgressStageTitle('ขั้นตอนที่ 2: ตรวจสอบความสม่ำเสมอของเนื้อหา (Niche Consistency)');
+        setProgressStageDesc('ดึงคลิปย้อนหลัง 5 คลิปล่าสุด เพื่อตรวจวัดความเชี่ยวชาญเฉพาะทาง และคำนวณการพูดถึงคู่แข่ง...');
         setProgressPercent(Math.min(55, Math.round(30 + (elapsed - 8) * 2.1)));
         setLiveLogs(prev => !prev.some(l => l.includes('Co-occurrence')) ? [
           ...prev,
@@ -516,25 +516,25 @@ export default function HomePage() {
         ] : prev);
       } else if (elapsed < 32) {
         setActiveStep(3);
-        setProgressStageTitle('Stage 3: Two-Stage Filtering & 2x2 Matrix Classification');
-        setProgressStageDesc('ด่าน 1: กรองร้านค้าและ Smart Bot Filter -> ด่าน 2: Batch LLM Relevance Gate...');
+        setProgressStageTitle('ขั้นตอนที่ 3: ระบบคัดกรอง 2 ด่าน & จำแนก 4 สไตล์ครีเอเตอร์ (2x2 Matrix)');
+        setProgressStageDesc('ด่านที่ 1 ตัดร้านค้า บัญชี Official และบอทสแปมตะกร้าทิ้ง -> ด่านที่ 2 AI วิเคราะห์ความเข้ากันได้ และจำแนกเป็น 2 บทบาทหลัก (KOL / KOC) ครอบคลุม 4 สไตล์ย่อย...');
         setProgressPercent(Math.min(80, Math.round(55 + (elapsed - 20) * 2.0)));
         setLiveLogs(prev => !prev.some(l => l.includes('Relevance Gate')) ? [
           ...prev,
           `[Gate 1] Purging Official Shops & Smart Affiliate Spam Bots (Basket >85% + Zero comments)...`,
-          `[Gate 2] Gemini 3.5 Batch Relevance Gate evaluating creators in 1 API call...`,
+          `[Gate 2] Gemini Batch Relevance Gate evaluating creators in 1 API call...`,
           `[2x2 Matrix] Classifying 2 Roles (KOL/KOC) into 4 Sub-Styles...`
         ] : prev);
       } else {
         setActiveStep(4);
-        setProgressStageTitle('Stage 4: Dynamic Scoring (40/35/25) & Role-Adaptive Pitch Hooks');
-        setProgressStageDesc('คำนวณคะแนนตาม Conversion Model, จัดอันดับ Top-K ตาม Media Mix, และสร้าง 3-Sec Hooks...');
+        setProgressStageTitle('ขั้นตอนที่ 4: ประเมินคะแนนความเข้ากันได้ & จัดพอร์ตโฟลิโอตาม Media Mix');
+        setProgressStageDesc('คำนวณคะแนนตาม Conversion Model (Relevance 40 + Engagement 35 + Commercial Proxy 25) และจัดอันดับ Top-K ให้ได้สัดส่วน KOL:KOC ตามเป้าหมาย...');
         setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 32) * 0.8)));
         setLiveLogs(prev => !prev.some(l => l.includes('Scoring')) ? [
           ...prev,
           `[Scoring] Relevance (40) + Engagement Quality & Utility (35) + Audience Proxy (25)...`,
           `[Media Mix Top-K] Enforcing ${brandDNA.kol_koc_mix.kol}% KOL : ${brandDNA.kol_koc_mix.koc}% KOC portfolio...`,
-          `[Stage 4 Hooks] Generating 3-second Thai opening hooks adapted to sub-styles...`
+          `[Brand-Customer Fit] Evaluating persona overlap and conversion drivers...`
         ] : prev);
       }
     }, 400);
@@ -866,7 +866,7 @@ export default function HomePage() {
                 Convert Cake TikTok KOL/KOC Matching Engine
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                สถาปัตยกรรม 4 ขั้นตอน: <strong>1. Brand DNA & 4 Conversion Models</strong> (กำหนดสัดส่วน KOL : KOC) → <strong>2. Scene Translation</strong> (แปลงเป็นซีนในคลิป) → <strong>3. Two-Stage Filtering & 2x2 Matrix</strong> (คัดกรองร้านค้า/บอท และแยก 4 สไตล์ย่อย) → <strong>4. Dynamic Scoring & 3-Sec Pitch Hooks</strong>
+                ระบบค้นหาและจับคู่ครีเอเตอร์ TikTok แบบ Live 100% สำหรับแบรนด์ไทย — วิเคราะห์จุดขายและ Business Model จากเว็บไซต์จริง เพื่อกำหนดสัดส่วน KOL และ KOC ที่ช่วยสร้างยอดขายได้จริง พร้อมระบบตัดร้านค้า/บอทสแปมตะกร้า และประเมินความสม่ำเสมอของเนื้อหา (Niche Consistency)
               </p>
             </div>
           </div>
@@ -1255,147 +1255,192 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* 2. 2-LEVEL FILTER BAR (Spec 6.2: Main Role & Sub-Style Filters) */}
+            {/* 2. FILTER BAR (Spec 6.2: Clean Non-Overlapping Role & Sub-Style Filters) */}
             <div className="bg-white border border-slate-200/90 rounded-3xl p-4 shadow-xs space-y-3">
-              {/* Level 1: 3-Way Main Role Filter (Spec 6.2: All / 🧠 KOL / 🛍️ KOC) */}
-              <div className="flex items-center space-x-2 pb-2 border-b border-slate-100 flex-wrap gap-y-1 text-xs">
-                <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider mr-1">Main Role:</span>
+              {/* Level 1: Primary Role Tabs (ทั้งหมด / 🧠 KOL / 🛍️ KOC / 🚫 กรองออก) */}
+              <div className="flex items-center space-x-2 pb-2 border-b border-slate-100 flex-wrap gap-y-1.5 text-xs">
+                <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider mr-1">บทบาทหลัก:</span>
                 <button
-                  onClick={() => setRoleFilter('All')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold ${
-                    roleFilter === 'All'
+                  type="button"
+                  onClick={() => {
+                    setRoleFilter('All');
+                    if (activeTab === 'excluded') setActiveTab('all');
+                  }}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
+                    roleFilter === 'All' && activeTab !== 'excluded'
                       ? 'bg-slate-900 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  All Roles
+                  <span>ทั้งหมด (All Matches)</span>
+                  {matchResponse && (
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      roleFilter === 'All' && activeTab !== 'excluded' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
+                    }`}>
+                      {matchResponse.ranked_kols.length}
+                    </span>
+                  )}
                 </button>
                 <button
-                  onClick={() => setRoleFilter('KOL')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1 ${
-                    roleFilter === 'KOL'
+                  type="button"
+                  onClick={() => {
+                    setRoleFilter('KOL');
+                    if (activeTab === 'hardsell' || activeTab === 'everyday' || activeTab === 'excluded') {
+                      setActiveTab('all');
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
+                    roleFilter === 'KOL' && activeTab !== 'excluded'
                       ? 'bg-[#0536d2] text-white shadow-xs'
                       : 'bg-blue-50 text-[#0536d2] border border-blue-200 hover:bg-blue-100'
                   }`}
                 >
                   <span>🧠 KOL (Key Opinion Leader)</span>
                   {matchResponse && (
-                    <span className="ml-1 text-[10px] opacity-80">
-                      ({matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOL').length})
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      roleFilter === 'KOL' && activeTab !== 'excluded' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#0536d2]'
+                    }`}>
+                      {matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOL').length}
                     </span>
                   )}
                 </button>
                 <button
-                  onClick={() => setRoleFilter('KOC')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1 ${
-                    roleFilter === 'KOC'
+                  type="button"
+                  onClick={() => {
+                    setRoleFilter('KOC');
+                    if (activeTab === 'guru' || activeTab === 'lifestyle' || activeTab === 'excluded') {
+                      setActiveTab('all');
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
+                    roleFilter === 'KOC' && activeTab !== 'excluded'
                       ? 'bg-emerald-700 text-white shadow-xs'
                       : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
                   }`}
                 >
                   <span>🛍️ KOC (Key Opinion Consumer)</span>
                   {matchResponse && (
-                    <span className="ml-1 text-[10px] opacity-80">
-                      ({matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOC').length})
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      roleFilter === 'KOC' && activeTab !== 'excluded' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'
+                    }`}>
+                      {matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOC').length}
                     </span>
                   )}
                 </button>
-              </div>
-
-              {/* Level 2: Sub-Style Tabs */}
-              <div className="flex items-center space-x-1.5 border-b border-slate-100 pb-2.5 overflow-x-auto text-xs font-semibold">
                 <button
-                  onClick={() => setActiveTab('all')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                    activeTab === 'all'
-                      ? 'bg-[#0536d2] text-white font-bold shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 bg-slate-100'
-                  }`}
-                >
-                  <span>All Matches</span>
-                  {matchResponse && (
-                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 text-white font-bold">
-                      {matchResponse.ranked_kols.length}
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('guru')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                    activeTab === 'guru'
-                      ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                      : 'text-indigo-900 bg-indigo-50 border border-indigo-200'
-                  }`}
-                >
-                  <span>🧠 KOL: Expert Guru</span>
-                  {matchResponse && (
-                    <span className="ml-1 text-[10px] opacity-80">
-                      ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Expert / Guru').length})
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('lifestyle')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                    activeTab === 'lifestyle'
-                      ? 'bg-teal-600 text-white font-bold shadow-xs'
-                      : 'text-teal-900 bg-teal-50 border border-teal-200'
-                  }`}
-                >
-                  <span>✨ KOL: Lifestyle</span>
-                  {matchResponse && (
-                    <span className="ml-1 text-[10px] opacity-80">
-                      ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Lifestyle / Aesthetic').length})
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('hardsell')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                    activeTab === 'hardsell'
-                      ? 'bg-purple-600 text-white font-bold shadow-xs'
-                      : 'text-purple-900 bg-purple-50 border border-purple-200'
-                  }`}
-                >
-                  <span>🛍️ KOC: Hard-Sell Reviewer</span>
-                  {matchResponse && (
-                    <span className="ml-1 text-[10px] opacity-80">
-                      ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Hard-Sell Reviewer').length})
-                    </span>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('everyday')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                    activeTab === 'everyday'
-                      ? 'bg-amber-600 text-white font-bold shadow-xs'
-                      : 'text-amber-900 bg-amber-50 border border-amber-200'
-                  }`}
-                >
-                  <span>🤳 KOC: Everyday Vlog</span>
-                  {matchResponse && (
-                    <span className="ml-1 text-[10px] opacity-80">
-                      ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Everyday User / Vlog').length})
-                    </span>
-                  )}
-                </button>
-
-                <button
+                  type="button"
                   onClick={() => setActiveTab('excluded')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ml-auto ${
                     activeTab === 'excluded'
-                      ? 'bg-rose-600 text-white font-bold shadow-xs'
-                      : 'text-rose-900 bg-rose-50 border border-rose-200'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
                   }`}
                 >
                   <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>Filtered ({matchResponse?.excluded_creators?.length || 0})</span>
+                  <span>กรองออก (Filtered Out)</span>
+                  {matchResponse && (
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      activeTab === 'excluded' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-800'
+                    }`}>
+                      {matchResponse.excluded_creators?.length || 0}
+                    </span>
+                  )}
                 </button>
               </div>
+
+              {/* Level 2: Contextual Sub-Style Filter Pills (แสดงเฉพาะสไตล์ที่สัมพันธ์กับ Role ที่เลือก ไม่ซ้ำซ้อน ไม่ตีกัน) */}
+              {activeTab !== 'excluded' && (
+                <div className="flex items-center space-x-1.5 border-b border-slate-100 pb-2.5 overflow-x-auto text-xs font-semibold">
+                  <span className="text-slate-500 font-medium text-[11px] mr-1 whitespace-nowrap">สไตล์คอนเทนต์:</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('all')}
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                      activeTab === 'all'
+                        ? 'bg-slate-800 text-white shadow-2xs font-bold'
+                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>{roleFilter === 'All' ? 'ทุกสไตล์' : roleFilter === 'KOL' ? 'ทุกสไตล์ KOL' : 'ทุกสไตล์ KOC'}</span>
+                  </button>
+
+                  {(roleFilter === 'All' || roleFilter === 'KOL') && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('guru')}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                          activeTab === 'guru'
+                            ? 'bg-indigo-600 text-white shadow-2xs font-bold'
+                            : 'text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80'
+                        }`}
+                      >
+                        <span>🎓 KOL: Expert / Guru</span>
+                        {matchResponse && (
+                          <span className="ml-1 text-[10px] opacity-80">
+                            ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Expert / Guru').length})
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('lifestyle')}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                          activeTab === 'lifestyle'
+                            ? 'bg-teal-600 text-white shadow-2xs font-bold'
+                            : 'text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200/80'
+                        }`}
+                      >
+                        <span>✨ KOL: Lifestyle</span>
+                        {matchResponse && (
+                          <span className="ml-1 text-[10px] opacity-80">
+                            ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Lifestyle / Aesthetic').length})
+                          </span>
+                        )}
+                      </button>
+                    </>
+                  )}
+
+                  {(roleFilter === 'All' || roleFilter === 'KOC') && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('hardsell')}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                          activeTab === 'hardsell'
+                            ? 'bg-purple-600 text-white shadow-2xs font-bold'
+                            : 'text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200/80'
+                        }`}
+                      >
+                        <span>🛍️ KOC: Hard-Sell Reviewer</span>
+                        {matchResponse && (
+                          <span className="ml-1 text-[10px] opacity-80">
+                            ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Hard-Sell Reviewer').length})
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('everyday')}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
+                          activeTab === 'everyday'
+                            ? 'bg-amber-600 text-white shadow-2xs font-bold'
+                            : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80'
+                        }`}
+                      >
+                        <span>🤳 KOC: Everyday Vlog</span>
+                        {matchResponse && (
+                          <span className="ml-1 text-[10px] opacity-80">
+                            ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Everyday User / Vlog').length})
+                          </span>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Level 2: Search, Tier, Sort, Top-K & Export CSV */}
               <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
@@ -1508,9 +1553,9 @@ export default function HomePage() {
                 <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto text-[#0536d2]">
                   <Search className="w-7 h-7 text-[#597ef3]" />
                 </div>
-                <h4 className="text-base font-bold text-slate-900">พร้อมสำหรับการค้นหาครีเอเตอร์</h4>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                  ระบุชื่อแบรนด์, เว็บไซต์ หรือ Facebook Page ทางด้านซ้าย แล้วกดปุ่มเพื่อเริ่มค้นหา TikTok ครีเอเตอร์สดตามสเปก 4 ขั้นตอน
+                <h4 className="text-base font-bold text-slate-900">พร้อมค้นหาครีเอเตอร์ที่สร้างยอดขายได้จริง</h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                  เลือกแบรนด์ตัวอย่างจากชุด 6 Industry ด้านบน หรือกรอกข้อมูลแบรนด์ของคุณทางซ้าย แล้วกดปุ่ม <strong>"1-Click Auto Match"</strong> เพื่อเริ่มวิเคราะห์และค้นหาครีเอเตอร์สดทันที
                 </p>
               </div>
             )}
