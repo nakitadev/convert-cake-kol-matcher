@@ -46,17 +46,22 @@ def parse_json_payload(raw: str) -> Any:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # Fallback: clean unescaped newlines/control characters and retry
+        # Fallback: clean unescaped newlines/control characters, quote unquoted keys and retry
         cleaned = re.sub(r"[\x00-\x1f\x7f-\x9f]+", " ", text)
         cleaned = re.sub(r",\s*([\]}])", r"\1", cleaned)
         try:
             return json.loads(cleaned)
         except Exception:
-            import ast
+            # Fix unquoted JSON keys (e.g. aliases: [ ... ] -> "aliases": [ ... ])
+            quoted = re.sub(r'([{,]\s*)([a-zA-Z_][a-zA-Z0-9_-]*)\s*:', r'\1"\2":', cleaned)
             try:
-                return ast.literal_eval(text)
+                return json.loads(quoted)
             except Exception:
-                pass
+                import ast
+                try:
+                    return ast.literal_eval(text)
+                except Exception:
+                    pass
         raise
 
 
