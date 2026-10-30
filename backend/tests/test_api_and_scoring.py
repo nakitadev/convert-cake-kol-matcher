@@ -576,3 +576,78 @@ async def test_end_to_end_matching_pipeline(monkeypatch):
         assert r.score_breakdown.engagement_total > 0
         assert r.score_breakdown.audience_total > 0
 
+
+@pytest.mark.asyncio
+async def test_scraper_cache_sqlite_ttl_and_operations(tmp_path):
+    from app.services.scraper_cache import ScraperCache
+    import time
+
+    test_db = tmp_path / "test_cache.sqlite"
+    cache = ScraperCache(db_path=str(test_db))
+
+    # 1. Key Hashing
+    k1 = cache.hash_key("jina", "https://convertcake.com")
+    k2 = cache.hash_key("jina", "https://convertcake.com")
+    k3 = cache.hash_key("jina", "https://other.com")
+    assert k1 == k2
+    assert k1 != k3
+
+    # 2. Set & Get
+    sample_payload = {"markdown": "# Convert Cake Test", "items": [1, 2, 3]}
+    cache.set(k1, "jina", sample_payload, ttl=10)
+    cached_val = cache.get(k1)
+    assert cached_val == sample_payload
+
+    # 3. Stats verification
+    stats = cache.stats()
+    assert stats["total_entries"] == 1
+    assert stats["active_entries"] == 1
+    assert stats["expired_entries"] == 0
+
+    # 4. Immediate Expiration test
+    k_expired = cache.hash_key("test", "expired")
+    cache.set(k_expired, "test", {"old": True}, ttl=0)
+    time.sleep(0.01)
+    assert cache.get(k_expired) is None
+
+    # 5. Delete
+    deleted = cache.delete(k1)
+    assert deleted is True
+    assert cache.get(k1) is None
+
+
+@pytest.mark.asyncio
+async def test_gemini_system_instruction_decoupling(monkeypatch):
+    from app.services.gemini_service import get_gemini_service, BRAND_DNA_SYSTEM_INSTRUCTION
+    from unittest.mock import AsyncMock, MagicMock
+
+    gemini = get_gemini_service()
+    gemini.client = MagicMock()
+    gemini.client.aio = MagicMock()
+    gemini.client.aio.models = MagicMock()
+
+    captured_call = {}
+
+    async def mock_generate_content(model, contents, config):
+        captured_call["model"] = model
+        captured_call["contents"] = contents
+        captured_call["config"] = config
+        mock_resp = MagicMock()
+        mock_resp.text = '{"brand_name": "Test", "conversion_model": "ECOMMERCE_PRODUCT"}'
+        return mock_resp
+
+    gemini.client.aio.models.generate_content = AsyncMock(side_effect=mock_generate_content)
+
+    res = await gemini.generate_brand_dna(
+        context="Brand website markdown data",
+        brand_name="TestBrand",
+        website_url="https://test.com",
+        facebook_url="",
+    )
+
+    assert res["brand_name"] == "Test"
+    # System Instruction must be passed inside config, NOT polluted in contents
+    assert captured_call["config"].system_instruction.strip() == BRAND_DNA_SYSTEM_INSTRUCTION.strip()
+    assert "<brand_name>TestBrand</brand_name>" in captured_call["contents"]
+    assert "# Role & Identity" not in captured_call["contents"]
+

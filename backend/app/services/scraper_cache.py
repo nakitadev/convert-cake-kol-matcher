@@ -104,14 +104,27 @@ class ScraperCache:
         self,
         key: str,
         data: Any,
-        cache_type: str,
-        ttl_seconds: int = 86400,
+        cache_type: Optional[Any] = None,
+        ttl_seconds: Optional[int] = None,
         url_or_query: str = "",
+        ttl: Optional[int] = None,
+        **kwargs: Any,
     ) -> bool:
-        if not self.enabled or data is None:
+        if not self.enabled:
             return False
         try:
-            payload_json = json.dumps(data, ensure_ascii=False)
+            effective_ttl = ttl if ttl is not None else (ttl_seconds if ttl_seconds is not None else 86400)
+            if isinstance(data, str) and cache_type is not None and not isinstance(cache_type, str):
+                actual_type = data
+                actual_data = cache_type
+            else:
+                actual_data = data
+                actual_type = str(cache_type or kwargs.get("cache_type") or "default")
+
+            if actual_data is None:
+                return False
+
+            payload_json = json.dumps(actual_data, ensure_ascii=False)
             now = time.time()
             with self._get_connection() as conn:
                 conn.execute(
@@ -124,7 +137,7 @@ class ScraperCache:
                         ttl_seconds = excluded.ttl_seconds,
                         url_or_query = excluded.url_or_query;
                     """,
-                    (key, cache_type, str(url_or_query)[:500], payload_json, now, ttl_seconds),
+                    (key, actual_type, str(url_or_query)[:500], payload_json, now, effective_ttl),
                 )
                 conn.commit()
             return True
@@ -170,7 +183,7 @@ class ScraperCache:
 
     def stats(self) -> Dict[str, Any]:
         if not self.db_path.exists():
-            return {"enabled": self.enabled, "total_entries": 0, "db_size_kb": 0, "by_type": {}}
+            return {"enabled": self.enabled, "total_entries": 0, "active_entries": 0, "expired_entries": 0, "db_size_kb": 0, "by_type": {}}
         try:
             size_kb = round(self.db_path.stat().st_size / 1024, 2)
             now = time.time()
@@ -183,7 +196,14 @@ class ScraperCache:
                     "SELECT cache_type, COUNT(*) FROM scraper_cache GROUP BY cache_type"
                 ).fetchall()
                 by_type = {r[0]: r[1] for r in rows}
-            return {"enabled": self.enabled, "total_entries": total, "active_entries": active, "db_size_kb": size_kb, "by_type": by_type}
+            return {
+                "enabled": self.enabled,
+                "total_entries": total,
+                "active_entries": active,
+                "expired_entries": max(0, total - active),
+                "db_size_kb": size_kb,
+                "by_type": by_type,
+            }
         except Exception as e:
             return {"enabled": self.enabled, "error": str(e)}
 
