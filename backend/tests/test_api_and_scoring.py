@@ -651,3 +651,31 @@ async def test_gemini_system_instruction_decoupling(monkeypatch):
     assert "<brand_name>TestBrand</brand_name>" in captured_call["contents"]
     assert "# Role & Identity" not in captured_call["contents"]
 
+
+@pytest.mark.asyncio
+async def test_langfuse_tracing_optional_behavior(monkeypatch):
+    from app.services.tracing import (
+        is_langfuse_enabled,
+        get_langfuse_callback_handler,
+        flush_langfuse_handler,
+        get_trace_url_from_handler,
+    )
+
+    # 1. When keys are not set, tracing is disabled and returns None gracefully
+    monkeypatch.delenv("LANGFUSE_PUBLIC_KEY", raising=False)
+    monkeypatch.delenv("LANGFUSE_SECRET_KEY", raising=False)
+    assert is_langfuse_enabled() is False
+    assert get_langfuse_callback_handler() is None
+    # flush on None should be safe no-op
+    flush_langfuse_handler(None)
+    assert get_trace_url_from_handler(None) is None
+
+    # 2. When keys are configured, handler is instantiated
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-lf-test-key")
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-test-key")
+    assert is_langfuse_enabled() is True
+    handler = get_langfuse_callback_handler()
+    assert handler is not None
+    # flush should not raise
+    flush_langfuse_handler(handler)
+

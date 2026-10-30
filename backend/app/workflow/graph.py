@@ -41,6 +41,11 @@ from app.services.creator_filter import (
     frequent_terms,
     competitor_flags,
 )
+from app.services.tracing import (
+    get_langfuse_callback_handler,
+    flush_langfuse_handler,
+    get_trace_url_from_handler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -563,7 +568,28 @@ async def run_full_matching(
         "warnings": [],
     }
 
-    final_state = await graph.ainvoke(initial_state)
+    # Optional Langfuse Tracing
+    lf_handler = get_langfuse_callback_handler()
+    config: Dict[str, Any] = {}
+    if lf_handler:
+        brand_label = (
+            (brand_dna.brand_name if brand_dna else None)
+            or (brand_request.brand_name if brand_request else None)
+            or "Thai_KOL_Matcher"
+        )
+        config["callbacks"] = [lf_handler]
+        config["run_name"] = f"kol_matching_{brand_label}"
+        config["tags"] = ["convert-cake", "kol-matcher"]
+        config["metadata"] = {
+            "brand_name": brand_label,
+            "top_k": top_k,
+        }
+        logger.info("Langfuse tracing enabled for workflow: %s", config["run_name"])
+
+    try:
+        final_state = await graph.ainvoke(initial_state, config=config if config else None)
+    finally:
+        flush_langfuse_handler(lf_handler)
 
     brand_result = final_state.get("brand_dna")
     strategy_result = final_state.get("strategy") or StrategySummary(
@@ -573,6 +599,13 @@ async def run_full_matching(
     )
     filter_stats = final_state.get("filter_stats") or FilterStats()
 
+    workflow_trace = final_state.get("trace", [])
+    trace_url = get_trace_url_from_handler(lf_handler)
+    if trace_url:
+        workflow_trace.append(f"Langfuse Trace: {trace_url}")
+    elif lf_handler and getattr(lf_handler, "last_trace_id", None):
+        workflow_trace.append(f"Langfuse Trace ID: {lf_handler.last_trace_id}")
+
     return MatchResponse(
         brand_dna=brand_result,
         strategy=strategy_result,
@@ -580,5 +613,6 @@ async def run_full_matching(
         ranked_kols=final_state.get("ranked_kols", []),
         excluded_creators=final_state.get("excluded_creators", []),
         warnings=final_state.get("warnings", []),
-        workflow_trace=final_state.get("trace", []),
+        workflow_trace=workflow_trace,
+        langfuse_trace_url=trace_url,
     )

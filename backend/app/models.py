@@ -285,3 +285,4 @@ class MatchResponse(BaseModel):
     excluded_creators: List[ExcludedCreator] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list, description="Non-fatal live API issues surfaced to UI")
     workflow_trace: List[str] = Field(default_factory=list)
+    langfuse_trace_url: Optional[str] = Field(default=None, description="Optional Langfuse trace URL if tracing was enabled")

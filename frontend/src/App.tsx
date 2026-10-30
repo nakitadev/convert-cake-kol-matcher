@@ -215,6 +215,7 @@ interface MatchResponse {
   excluded_creators: ExcludedCreator[];
   warnings: string[];
   workflow_trace: string[];
+  langfuse_trace_url?: string;
 }
 
 // Conversion model meta info for strategy summary banner
@@ -1542,6 +1543,19 @@ export default function HomePage() {
                     <span className="text-rose-600">Filtered: {matchResponse.filter_stats.removed_merchants} Merchants, {matchResponse.filter_stats.removed_affiliate_bots} Spam Bots</span>
                     <span>•</span>
                     <span className="text-emerald-700 font-semibold">{matchResponse.filter_stats.scored} Qualified</span>
+                    {matchResponse.langfuse_trace_url && (
+                      <>
+                        <span>•</span>
+                        <a
+                          href={matchResponse.langfuse_trace_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-semibold hover:underline bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200/60"
+                        >
+                          <span>🔭 View Langfuse Trace</span>
+                        </a>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
