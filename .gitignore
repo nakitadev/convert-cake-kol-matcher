@@ -4,6 +4,10 @@ __pycache__/
 .pytest_cache/
 node_modules/
 .next/
+.agents/
+*.sqlite
+*.sqlite3
+backend/cache/
 .env
 .env.local
 frontend/test-results/

@@ -55,17 +55,6 @@ interface Competitor {
   mentions?: number;
 }
 
-interface DemoPreset {
-  id: string;
-  brand_name: string;
-  vertical: string;
-  sub_category: string;
-  conversion_model: string;
-  website_url: string;
-  facebook_url: string;
-  description: string;
-}
-
 interface BrandDNA {
   id?: string;
   brand_name: string;
@@ -272,11 +261,7 @@ export default function HomePage() {
   const [tierFilter, setTierFilter] = useState('All');
   const [sortBy, setSortBy] = useState<'score' | 'er' | 'followers'>('score');
   const [topK, setTopK] = useState(10);
-
-  // Demo Cache & Presets State
-  const [demoPresets, setDemoPresets] = useState<DemoPreset[]>([]);
   const [forceRefresh, setForceRefresh] = useState(false);
-  const [isDemoCacheHit, setIsDemoCacheHit] = useState(false);
 
   // Loading & Diagnostics
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -301,25 +286,7 @@ export default function HomePage() {
       .then(res => res.json())
       .then(() => setApiOnline(true))
       .catch(() => setApiOnline(false));
-
-    fetch(`${API_BASE}/api/demo-presets`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setDemoPresets(data);
-      })
-      .catch(() => {});
   }, []);
-
-  const handleApplyPreset = (preset: DemoPreset) => {
-    setBrandName(preset.brand_name);
-    setWebsiteUrl(preset.website_url);
-    setFacebookUrl(preset.facebook_url);
-    setCustomNotes('');
-    setManualCompetitors('');
-    setBrandDNA(null);
-    setMatchResponse(null);
-    setIsDemoCacheHit(false);
-  };
 
   // --------------------------------------------------------------------------
   // Analyze Brand (Stage 1)
@@ -393,10 +360,6 @@ export default function HomePage() {
         throw new Error(errBody || `HTTP ${res.status}`);
       }
       const data: BrandDNA = await res.json();
-      setIsDemoCacheHit(
-        (data.scraped_sources || []).some(s => s.toLowerCase().includes('demo cache')) ||
-        !forceRefresh
-      );
       setProgressPercent(100);
       setProgressStageTitle('สกัด Brand DNA & Scene Translation สำเร็จ 100%!');
       setProgressStageDesc(`จำแนกแบรนด์เป็น ${data.conversion_model} (สัดส่วนแนะนำ: KOL ${data.kol_koc_mix.kol}% : KOC ${data.kol_koc_mix.koc}%)`);
@@ -492,10 +455,6 @@ export default function HomePage() {
         throw new Error(errBody || `HTTP ${res.status}`);
       }
       const data: MatchResponse = await res.json();
-      setIsDemoCacheHit(
-        (data.workflow_trace || []).some(t => t.includes('Demo Cache')) ||
-        !forceRefresh
-      );
       setProgressPercent(100);
       setProgressStageTitle('ประมวลผลเสร็จสมบูรณ์ 100%!');
       setProgressStageDesc(`จัดอันดับครีเอเตอร์ ${data.ranked_kols.length} รายการ ตรงตามกลยุทธ์ ${data.strategy?.conversion_model}`);
@@ -587,10 +546,6 @@ export default function HomePage() {
         throw new Error(errBody || `HTTP ${res.status}`);
       }
       const data: MatchResponse = await res.json();
-      setIsDemoCacheHit(
-        (data.workflow_trace || []).some(t => t.includes('Demo Cache')) ||
-        !forceRefresh
-      );
       setProgressPercent(100);
       setProgressStageTitle('จัดอันดับและประมวลผลเสร็จสมบูรณ์ 100%!');
       setProgressStageDesc(`พบครีเอเตอร์ ${data.ranked_kols.length} รายการ ตรงตามกลยุทธ์ ${data.strategy?.conversion_model}`);
