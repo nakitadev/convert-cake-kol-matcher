@@ -23,7 +23,6 @@ import {
   Globe,
   BarChart3,
   Radio,
-  Zap,
   Award,
   Clock,
   Terminal,
@@ -1153,40 +1152,22 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2.5 pt-2">
+              {/* Action Button: Guided 2-Step Workflow */}
+              <div className="pt-2">
                 <button
                   onClick={handleAnalyzeBrand}
                   disabled={isMatching || isAnalyzing}
-                  className="flex-1 py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] text-white font-bold text-xs shadow-md shadow-blue-600/20 transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
                 >
                   {isAnalyzing ? (
                     <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#0536d2]" />
-                      <span>Analyzing Brand DNA...</span>
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      <span>กำลังวิเคราะห์ Brand DNA...</span>
                     </>
                   ) : (
                     <>
-                      <Layers className="w-3.5 h-3.5 text-[#0536d2]" />
-                      <span>Step 1: Extract Brand DNA</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={handleAutoMatch}
-                  disabled={isMatching || isAnalyzing}
-                  className="flex-1 py-3 rounded-2xl bg-[#0536d2] hover:bg-[#042cae] text-white font-bold text-xs shadow-md shadow-blue-600/20 transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
-                >
-                  {isMatching ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
-                      <span>Matching TikTok...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-3.5 h-3.5 text-[#03e78b]" />
-                      <span>1-Click Auto Match</span>
+                      <Layers className="w-4 h-4 text-[#03e78b]" />
+                      <span>Step 1: วิเคราะห์และสกัด Brand DNA</span>
                     </>
                   )}
                 </button>
@@ -1276,25 +1257,19 @@ export default function HomePage() {
                     )}
                   </div>
 
-                  {/* Plain & Natural Thai Search Queries (Spec 3.2) */}
+                  {/* Natural Thai Search Queries on TikTok */}
                   <div>
-                    <span className="text-slate-600 font-bold block mb-1.5 flex items-center justify-between">
-                      <span>Plain & Natural Thai Search Queries ({brandDNA.search_queries?.length || 0}):</span>
-                      <span className="text-[10px] text-slate-400 font-normal">2-4 words / ≤18 letters / Zero Hardcoded Templates</span>
+                    <span className="text-slate-700 font-bold text-xs block mb-1.5">
+                      คำค้นหาบน TikTok ({brandDNA.search_queries?.length || 0} คำ):
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {brandDNA.search_queries?.map((q, i) => (
                         <span
                           key={i}
-                          className="px-2.5 py-1 rounded-xl bg-indigo-50/80 border border-indigo-200 text-indigo-950 text-xs font-medium flex items-center space-x-1.5"
+                          className="px-2.5 py-1 rounded-xl bg-indigo-50/80 border border-indigo-200 text-indigo-950 text-xs font-medium flex items-center space-x-1.5 shadow-2xs"
                         >
                           <span className="text-indigo-600 font-bold font-mono">#</span>
                           <span>{q.query}</span>
-                          {q.syntax_rule && (
-                            <span className="text-[9px] uppercase px-1.5 py-0.2 rounded-md bg-white text-indigo-700 border border-indigo-100 font-mono">
-                              {q.syntax_rule.replace('_', ' ')}
-                            </span>
-                          )}
                           {isEditingDNA && (
                             <button
                               type="button"
@@ -1487,12 +1462,10 @@ export default function HomePage() {
                     type="button"
                     onClick={() => {
                       setApiError(null);
-                      if (apiError.endpoint === '/api/analyze-brand') {
-                        handleAnalyzeBrand();
-                      } else if (apiError.endpoint === '/api/match-kols' && brandDNA) {
+                      if (apiError.endpoint === '/api/match-kols' && brandDNA) {
                         handleMatchKOLs();
                       } else {
-                        handleAutoMatch();
+                        handleAnalyzeBrand();
                       }
                     }}
                     className="px-5 py-2.5 rounded-xl bg-[#0536d2] hover:bg-[#042cae] text-white font-bold text-xs shadow-md shadow-blue-600/20 transition flex items-center space-x-2 cursor-pointer"
@@ -1926,7 +1899,7 @@ export default function HomePage() {
                 </div>
                 <h4 className="text-base font-bold text-slate-900">พร้อมค้นหาครีเอเตอร์ที่สร้างยอดขายได้จริง</h4>
                 <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                  เลือกแบรนด์ตัวอย่างจากชุด 6 Industry ด้านบน หรือกรอกข้อมูลแบรนด์ของคุณทางซ้าย แล้วกดปุ่ม <strong>"1-Click Auto Match"</strong> เพื่อเริ่มวิเคราะห์และค้นหาครีเอเตอร์สดทันที
+                  เลือกแบรนด์ตัวอย่างจากชุด 6 Industry ด้านบน หรือกรอกข้อมูลแบรนด์ของคุณทางซ้าย แล้วกดปุ่ม <strong>"Step 1: วิเคราะห์และสกัด Brand DNA"</strong> เพื่อเริ่มตรวจสอบและปรับแต่งก่อนค้นหาครีเอเตอร์
                 </p>
               </div>
             )}
