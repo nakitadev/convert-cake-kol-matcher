@@ -32,6 +32,7 @@ import {
   Compass,
   AlertOctagon,
   X,
+  Plus,
 } from 'lucide-react';
 
 const API_BASE = '';
@@ -359,6 +360,66 @@ export default function HomePage() {
   // Extracted Brand DNA State
   const [brandDNA, setBrandDNA] = useState<BrandDNA | null>(null);
   const [isEditingDNA, setIsEditingDNA] = useState(false);
+  const [newSearchQuery, setNewSearchQuery] = useState('');
+  const [newCompetitorName, setNewCompetitorName] = useState('');
+
+  // Handlers for editing Brand DNA fields
+  const handleAddSearchQuery = () => {
+    if (!newSearchQuery.trim() || !brandDNA) return;
+    const newQ: SearchQuery = {
+      query: newSearchQuery.trim(),
+      side: 'KOC_QUERY',
+      specificity: 'direct',
+    };
+    setBrandDNA({
+      ...brandDNA,
+      search_queries: [...(brandDNA.search_queries || []), newQ],
+    });
+    setNewSearchQuery('');
+  };
+
+  const handleRemoveSearchQuery = (indexToRemove: number) => {
+    if (!brandDNA) return;
+    setBrandDNA({
+      ...brandDNA,
+      search_queries: brandDNA.search_queries.filter((_, idx) => idx !== indexToRemove),
+    });
+  };
+
+  const handleAddCompetitor = () => {
+    if (!newCompetitorName.trim() || !brandDNA) return;
+    const newC: Competitor = {
+      brand: newCompetitorName.trim(),
+      aliases: [newCompetitorName.trim()],
+      source: 'manual_user_input',
+    };
+    setBrandDNA({
+      ...brandDNA,
+      competitors: [...(brandDNA.competitors || []), newC],
+    });
+    setNewCompetitorName('');
+  };
+
+  const handleRemoveCompetitor = (indexToRemove: number) => {
+    if (!brandDNA) return;
+    setBrandDNA({
+      ...brandDNA,
+      competitors: brandDNA.competitors.filter((_, idx) => idx !== indexToRemove),
+    });
+  };
+
+  const handleModelChange = (model: 'ECOMMERCE_PRODUCT' | 'APP_DIGITAL_SERVICE' | 'HIGH_TICKET_LEADGEN' | 'LIFESTYLE_EXPERIENCE') => {
+    if (!brandDNA) return;
+    let mix = { kol: 30, koc: 70 };
+    if (model === 'APP_DIGITAL_SERVICE') mix = { kol: 60, koc: 40 };
+    else if (model === 'HIGH_TICKET_LEADGEN') mix = { kol: 70, koc: 30 };
+    else if (model === 'LIFESTYLE_EXPERIENCE') mix = { kol: 60, koc: 40 };
+    setBrandDNA({
+      ...brandDNA,
+      conversion_model: model,
+      kol_koc_mix: mix,
+    });
+  };
 
   // Match State
   const [matchResponse, setMatchResponse] = useState<MatchResponse | null>(null);
@@ -1151,7 +1212,7 @@ export default function HomePage() {
 
                 <div className="space-y-3.5 text-xs">
                   {/* Conversion Model Badge */}
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/60 border border-blue-200/90 space-y-1">
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50/60 border border-blue-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-[#0536d2] uppercase tracking-wider">
                         Conversion Model (วิธีทำเงิน)
@@ -1160,6 +1221,32 @@ export default function HomePage() {
                         {brandDNA.conversion_model}
                       </span>
                     </div>
+                    {isEditingDNA && (
+                      <div className="pt-1.5 space-y-1.5 border-t border-blue-100">
+                        <span className="text-slate-700 text-[11px] font-semibold block">เลือกโมเดลคอนเวอร์ชัน (KOL : KOC):</span>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {[
+                            { id: 'ECOMMERCE_PRODUCT', label: 'E-Commerce (30:70)' },
+                            { id: 'APP_DIGITAL_SERVICE', label: 'App / Service (60:40)' },
+                            { id: 'HIGH_TICKET_LEADGEN', label: 'High-Ticket (70:30)' },
+                            { id: 'LIFESTYLE_EXPERIENCE', label: 'Lifestyle (60:40)' },
+                          ].map(m => (
+                            <button
+                              key={m.id}
+                              type="button"
+                              onClick={() => handleModelChange(m.id as any)}
+                              className={`px-2 py-1.5 rounded-xl text-[11px] font-semibold transition border text-left ${
+                                brandDNA.conversion_model === m.id
+                                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                              }`}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between pt-1 text-[11px]">
                       <span className="text-slate-600">สัดส่วนที่แนะนำ (Media Mix):</span>
                       <span className="font-extrabold text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 font-mono">
@@ -1180,7 +1267,7 @@ export default function HomePage() {
                         rows={2}
                         value={brandDNA.target_audience}
                         onChange={e => setBrandDNA({ ...brandDNA, target_audience: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-[#0536d2]"
                       />
                     ) : (
                       <p className="text-slate-800 bg-slate-50 p-3 rounded-2xl border border-slate-200 leading-relaxed">
@@ -1208,35 +1295,107 @@ export default function HomePage() {
                               {q.syntax_rule.replace('_', ' ')}
                             </span>
                           )}
+                          {isEditingDNA && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSearchQuery(i)}
+                              className="text-rose-500 hover:text-rose-700 hover:bg-rose-100 rounded-full p-0.5 ml-1 transition cursor-pointer"
+                              title="ลบคำค้นหานี้"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
                         </span>
                       ))}
                     </div>
+                    {isEditingDNA && (
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <input
+                          type="text"
+                          value={newSearchQuery}
+                          onChange={e => setNewSearchQuery(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddSearchQuery();
+                            }
+                          }}
+                          placeholder="พิมพ์คำค้นหาภาษาไทย เช่น รีวิวสกี, ชุดไปหิมะ..."
+                          className="flex-1 bg-white border border-indigo-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddSearchQuery}
+                          className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl flex items-center space-x-1 cursor-pointer transition shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>เพิ่มคำค้นหา</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Grounded Thai Competitor Dictionary (Spec 5.1) */}
-                  {brandDNA.competitors && brandDNA.competitors.length > 0 && (
-                    <div>
-                      <span className="text-slate-600 font-bold block mb-1.5">
-                        Grounded Thai Competitors ({brandDNA.competitors.length}):
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {brandDNA.competitors.map((c, i) => (
+                  <div>
+                    <span className="text-slate-600 font-bold block mb-1.5">
+                      Grounded Thai Competitors ({brandDNA.competitors?.length || 0}):
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {brandDNA.competitors && brandDNA.competitors.length > 0 ? (
+                        brandDNA.competitors.map((c, i) => (
                           <span
                             key={i}
-                            className="px-2.5 py-1 rounded-xl bg-slate-50 text-slate-800 text-[11px] border border-slate-200 font-medium"
+                            className="px-2.5 py-1 rounded-xl bg-slate-50 text-slate-800 text-[11px] border border-slate-200 font-medium flex items-center space-x-1"
                             title={`Source: ${c.source}`}
                           >
                             <span>{c.brand}</span>
                             {c.aliases && c.aliases.length > 1 && (
-                              <span className="text-slate-400 text-[10px] ml-1">
+                              <span className="text-slate-400 text-[10px] ml-0.5">
                                 ({c.aliases.filter(a => a !== c.brand).slice(0, 1).join(', ')})
                               </span>
                             )}
+                            {isEditingDNA && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveCompetitor(i)}
+                                className="text-rose-500 hover:text-rose-700 hover:bg-rose-100 rounded-full p-0.5 ml-1 transition cursor-pointer"
+                                title="ลบคู่แข่งนี้"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
                           </span>
-                        ))}
-                      </div>
+                        ))
+                      ) : (
+                        <span className="text-slate-400 text-[11px] italic">ยังไม่มีคู่แข่งที่ระบุ</span>
+                      )}
                     </div>
-                  )}
+                    {isEditingDNA && (
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <input
+                          type="text"
+                          value={newCompetitorName}
+                          onChange={e => setNewCompetitorName(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddCompetitor();
+                            }
+                          }}
+                          placeholder="ชื่อแบรนด์คู่แข่ง เช่น คู่แข่ง A..."
+                          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#0536d2]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddCompetitor}
+                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-xl flex items-center space-x-1 cursor-pointer transition shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>เพิ่มคู่แข่ง</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Match Button if DNA exists */}
@@ -1415,19 +1574,21 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* 2. FILTER BAR (Spec 6.2: Clean Non-Overlapping Role & Sub-Style Filters) */}
+            {/* 2. FILTER BAR (Approach A: Unified Segmented Pills with Responsive Wrap) */}
             <div className="bg-white border border-slate-200/90 rounded-3xl p-4 shadow-xs space-y-3">
-              {/* Level 1: Primary Role Tabs (ทั้งหมด / 🧠 KOL / 🛍️ KOC / 🚫 กรองออก) */}
-              <div className="flex items-center space-x-2 pb-2 border-b border-slate-100 flex-wrap gap-y-1.5 text-xs">
-                <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider mr-1">บทบาทหลัก:</span>
+              {/* Filter Pills Container - flex-wrap allows natural line-breaks without horizontal scroll */}
+              <div className="flex flex-wrap items-center gap-2 pb-2.5 border-b border-slate-100 text-xs">
+                <span className="text-slate-500 font-bold text-[11px] uppercase tracking-wider mr-0.5">ตัวกรอง:</span>
+
+                {/* 1. All Matches */}
                 <button
                   type="button"
                   onClick={() => {
                     setRoleFilter('All');
-                    if (activeTab === 'excluded') setActiveTab('all');
+                    setActiveTab('all');
                   }}
                   className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
-                    roleFilter === 'All' && activeTab !== 'excluded'
+                    roleFilter === 'All' && activeTab === 'all'
                       ? 'bg-slate-900 text-white shadow-xs'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
@@ -1435,62 +1596,148 @@ export default function HomePage() {
                   <span>ทั้งหมด (All Matches)</span>
                   {matchResponse && (
                     <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      roleFilter === 'All' && activeTab !== 'excluded' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
+                      roleFilter === 'All' && activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
                     }`}>
                       {matchResponse.ranked_kols.length}
                     </span>
                   )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRoleFilter('KOL');
-                    if (activeTab === 'hardsell' || activeTab === 'everyday' || activeTab === 'excluded') {
+
+                {/* KOL Group */}
+                <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-blue-50/60 border border-blue-200/60">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRoleFilter('KOL');
                       setActiveTab('all');
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
-                    roleFilter === 'KOL' && activeTab !== 'excluded'
-                      ? 'bg-[#0536d2] text-white shadow-xs'
-                      : 'bg-blue-50 text-[#0536d2] border border-blue-200 hover:bg-blue-100'
-                  }`}
-                >
-                  <span>🧠 KOL (Key Opinion Leader)</span>
-                  {matchResponse && (
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      roleFilter === 'KOL' && activeTab !== 'excluded' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#0536d2]'
-                    }`}>
-                      {matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOL').length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRoleFilter('KOC');
-                    if (activeTab === 'guru' || activeTab === 'lifestyle' || activeTab === 'excluded') {
+                    }}
+                    className={`px-2.5 py-1 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
+                      roleFilter === 'KOL' && activeTab === 'all'
+                        ? 'bg-[#0536d2] text-white shadow-xs'
+                        : 'text-[#0536d2] hover:bg-blue-100/70'
+                    }`}
+                  >
+                    <span>🧠 KOL ทั้งหมด</span>
+                    {matchResponse && (
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                        roleFilter === 'KOL' && activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#0536d2]'
+                      }`}>
+                        {matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOL').length}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRoleFilter('KOL');
+                      setActiveTab('guru');
+                    }}
+                    className={`px-2.5 py-1 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1 ${
+                      activeTab === 'guru'
+                        ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                        : 'text-indigo-900 bg-white hover:bg-indigo-50 border border-indigo-200/70'
+                    }`}
+                  >
+                    <span>🎓 Expert / Guru</span>
+                    {matchResponse && (
+                      <span className="ml-0.5 text-[10px] opacity-80 font-bold">
+                        ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Expert / Guru').length})
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRoleFilter('KOL');
+                      setActiveTab('lifestyle');
+                    }}
+                    className={`px-2.5 py-1 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1 ${
+                      activeTab === 'lifestyle'
+                        ? 'bg-teal-600 text-white shadow-xs font-bold'
+                        : 'text-teal-900 bg-white hover:bg-teal-50 border border-teal-200/70'
+                    }`}
+                  >
+                    <span>✨ Lifestyle</span>
+                    {matchResponse && (
+                      <span className="ml-0.5 text-[10px] opacity-80 font-bold">
+                        ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Lifestyle / Aesthetic').length})
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* KOC Group */}
+                <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-emerald-50/60 border border-emerald-200/60">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRoleFilter('KOC');
                       setActiveTab('all');
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
-                    roleFilter === 'KOC' && activeTab !== 'excluded'
-                      ? 'bg-emerald-700 text-white shadow-xs'
-                      : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
-                  }`}
-                >
-                  <span>🛍️ KOC (Key Opinion Consumer)</span>
-                  {matchResponse && (
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      roleFilter === 'KOC' && activeTab !== 'excluded' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'
-                    }`}>
-                      {matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOC').length}
-                    </span>
-                  )}
-                </button>
+                    }}
+                    className={`px-2.5 py-1 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
+                      roleFilter === 'KOC' && activeTab === 'all'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-emerald-900 hover:bg-emerald-100/70'
+                    }`}
+                  >
+                    <span>🛍️ KOC ทั้งหมด</span>
+                    {matchResponse && (
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                        roleFilter === 'KOC' && activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'
+                      }`}>
+                        {matchResponse.ranked_kols.filter(k => k.kol.funnel_role === 'KOC').length}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRoleFilter('KOC');
+                      setActiveTab('hardsell');
+                    }}
+                    className={`px-2.5 py-1 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1 ${
+                      activeTab === 'hardsell'
+                        ? 'bg-purple-600 text-white shadow-xs font-bold'
+                        : 'text-purple-900 bg-white hover:bg-purple-50 border border-purple-200/70'
+                    }`}
+                  >
+                    <span>🛍️ Hard-Sell Reviewer</span>
+                    {matchResponse && (
+                      <span className="ml-0.5 text-[10px] opacity-80 font-bold">
+                        ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Hard-Sell Reviewer').length})
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRoleFilter('KOC');
+                      setActiveTab('everyday');
+                    }}
+                    className={`px-2.5 py-1 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1 ${
+                      activeTab === 'everyday'
+                        ? 'bg-amber-600 text-white shadow-xs font-bold'
+                        : 'text-amber-900 bg-white hover:bg-amber-50 border border-amber-200/70'
+                    }`}
+                  >
+                    <span>🤳 Everyday Vlog</span>
+                    {matchResponse && (
+                      <span className="ml-0.5 text-[10px] opacity-80 font-bold">
+                        ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Everyday User / Vlog').length})
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Filtered Out Button */}
                 <button
                   type="button"
                   onClick={() => setActiveTab('excluded')}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ml-auto ${
+                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer font-semibold flex items-center space-x-1.5 ${
                     activeTab === 'excluded'
                       ? 'bg-rose-600 text-white shadow-xs'
                       : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
@@ -1569,100 +1816,6 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Level 2: Contextual Sub-Style Filter Pills (แสดงเฉพาะสไตล์ที่สัมพันธ์กับ Role ที่เลือก ไม่ซ้ำซ้อน ไม่ตีกัน) */}
-              {activeTab !== 'excluded' && (
-                <div className="flex items-center space-x-1.5 border-b border-slate-100 pb-2.5 overflow-x-auto text-xs font-semibold">
-                  <span className="text-slate-500 font-medium text-[11px] mr-1 whitespace-nowrap">สไตล์คอนเทนต์:</span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('all')}
-                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                      activeTab === 'all'
-                        ? 'bg-slate-800 text-white shadow-2xs font-bold'
-                        : 'text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200'
-                    }`}
-                  >
-                    <span>{roleFilter === 'All' ? 'ทุกสไตล์' : roleFilter === 'KOL' ? 'ทุกสไตล์ KOL' : 'ทุกสไตล์ KOC'}</span>
-                  </button>
-
-                  {(roleFilter === 'All' || roleFilter === 'KOL') && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('guru')}
-                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                          activeTab === 'guru'
-                            ? 'bg-indigo-600 text-white shadow-2xs font-bold'
-                            : 'text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80'
-                        }`}
-                      >
-                        <span>🎓 KOL: Expert / Guru</span>
-                        {matchResponse && (
-                          <span className="ml-1 text-[10px] opacity-80">
-                            ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Expert / Guru').length})
-                          </span>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('lifestyle')}
-                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                          activeTab === 'lifestyle'
-                            ? 'bg-teal-600 text-white shadow-2xs font-bold'
-                            : 'text-teal-900 bg-teal-50 hover:bg-teal-100 border border-teal-200/80'
-                        }`}
-                      >
-                        <span>✨ KOL: Lifestyle</span>
-                        {matchResponse && (
-                          <span className="ml-1 text-[10px] opacity-80">
-                            ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOL - Lifestyle / Aesthetic').length})
-                          </span>
-                        )}
-                      </button>
-                    </>
-                  )}
-
-                  {(roleFilter === 'All' || roleFilter === 'KOC') && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('hardsell')}
-                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                          activeTab === 'hardsell'
-                            ? 'bg-purple-600 text-white shadow-2xs font-bold'
-                            : 'text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200/80'
-                        }`}
-                      >
-                        <span>🛍️ KOC: Hard-Sell Reviewer</span>
-                        {matchResponse && (
-                          <span className="ml-1 text-[10px] opacity-80">
-                            ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Hard-Sell Reviewer').length})
-                          </span>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('everyday')}
-                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer whitespace-nowrap flex items-center space-x-1 ${
-                          activeTab === 'everyday'
-                            ? 'bg-amber-600 text-white shadow-2xs font-bold'
-                            : 'text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/80'
-                        }`}
-                      >
-                        <span>🤳 KOC: Everyday Vlog</span>
-                        {matchResponse && (
-                          <span className="ml-1 text-[10px] opacity-80">
-                            ({matchResponse.ranked_kols.filter(k => k.kol.sub_style === 'KOC - Everyday User / Vlog').length})
-                          </span>
-                        )}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-
               {/* Level 2: Search, Tier, Sort, Top-K & Export CSV */}
               <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
                 <div className="relative">
@@ -1700,15 +1853,12 @@ export default function HomePage() {
                     <option value="followers">Sort: Followers</option>
                   </select>
 
-                  <select
-                    value={topK}
-                    onChange={e => setTopK(Number(e.target.value))}
-                    className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-[#0536d2] font-semibold text-xs focus:outline-none"
+                  <div
+                    className="bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2 text-[#0536d2] font-bold text-xs flex items-center space-x-1.5 shadow-2xs"
+                    title="Top 10 Curated Portfolio ตามสัดส่วน Conversion Model"
                   >
-                    <option value={10}>Top 10</option>
-                    <option value={20}>Top 20</option>
-                    <option value={30}>Top 30</option>
-                  </select>
+                    <span>🏆 Top 10 Curated</span>
+                  </div>
 
                   {matchResponse && (
                     <button
