@@ -5,7 +5,7 @@ Implements the 4-stage pipeline from `system_specification_tiktok_kol_matching_e
   1. Brand DNA & Conversion Model Classification
   2. Adaptive Scene Translation & TikTok Discovery (KOL_QUERY / KOC_QUERY)
   3. Two-Stage Filtering, 2x2 KOL/KOC Classification & Dynamic Scoring (40 / 35 / 25)
-  4. Role-Adaptive Pitch Hooks & 3-Layer Grounded Competitor Detection
+  4. Stratified Portfolio Ranking & 3-Layer Grounded Competitor Detection
 """
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
@@ -61,6 +61,8 @@ class BrandAnalyzeRequest(BaseModel):
         default_factory=list, description="Optional competitor override from the marketing team"
     )
     force_refresh: bool = Field(default=False, description="Bypass demo cache and force live external scrape")
+    dry_run: bool = Field(default=False, description="Dry run mode: use pre-run datasets without external API keys")
+    preset_id: Optional[str] = Field(default=None, description="Optional preset ID for dry run")
 
 
 class SearchQuery(BaseModel):
@@ -182,7 +184,6 @@ class KOLProfile(BaseModel):
     sub_style: Optional[SubStyle] = None
     llm_relevance_score: float = Field(default=0.0, description="0-1 relevance from LLM Relevance Gate")
     why_it_fits: str = Field(default="", description="One-sentence LLM rationale")
-    pitch_hook: str = Field(default="", description="Role-adaptive 3-second opening hook")
 
     # Tier-2 audience proxy (Top-K only)
     real_comments: List[str] = Field(default_factory=list, description="Real scraped comments (Top-K)")
@@ -238,7 +239,6 @@ class RankedKOL(BaseModel):
     kol: KOLProfile
     total_match_score: float = Field(..., description="0-100")
     score_breakdown: SignalBreakdown
-    pitch_hook: str = Field(default="", description="3-second Thai opening hook tailored to sub-style")
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +248,8 @@ class MatchRequest(BaseModel):
     brand_dna: BrandDNA
     top_k: int = Field(default=10, ge=1, le=50)
     force_refresh: bool = Field(default=False, description="Bypass demo cache and force live external fetch")
+    dry_run: bool = Field(default=False, description="Dry run mode: use pre-run datasets without external API keys")
+    preset_id: Optional[str] = Field(default=None, description="Optional preset ID for dry run")
 
 
 class AutoMatchRequest(BaseModel):
@@ -258,6 +260,8 @@ class AutoMatchRequest(BaseModel):
     manual_competitors: Optional[List[str]] = Field(default_factory=list)
     top_k: int = Field(default=10, ge=1, le=50)
     force_refresh: bool = Field(default=False, description="Bypass demo cache and force live external fetch")
+    dry_run: bool = Field(default=False, description="Dry run mode: use pre-run datasets without external API keys")
+    preset_id: Optional[str] = Field(default=None, description="Optional preset ID for dry run")
 
 
 class StrategySummary(BaseModel):

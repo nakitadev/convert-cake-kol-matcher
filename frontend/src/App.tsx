@@ -15,8 +15,6 @@ import {
   ChevronUp,
   Sliders,
   Info,
-  Check,
-  Copy,
   Eye,
   MessageSquare,
   ShoppingBag,
@@ -167,7 +165,6 @@ interface RankedKOL {
   kol: KOLProfile;
   total_match_score: number;
   score_breakdown: SignalBreakdown;
-  pitch_hook: string;
 }
 
 interface StrategySummary {
@@ -425,7 +422,6 @@ export default function HomePage() {
   const [matchResponse, setMatchResponse] = useState<MatchResponse | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'guru' | 'lifestyle' | 'hardsell' | 'everyday' | 'excluded' | 'trace'>('all');
   const [expandedKOLId, setExpandedKOLId] = useState<string | null>(null);
-  const [copiedHookId, setCopiedHookId] = useState<string | null>(null);
 
   // Filters & Sorting for Results
   const [roleFilter, setRoleFilter] = useState<'All' | 'KOL' | 'KOC'>('All');
@@ -434,6 +430,7 @@ export default function HomePage() {
   const [sortBy, setSortBy] = useState<'score' | 'er' | 'followers'>('score');
   const [topK, setTopK] = useState(10);
   const [forceRefresh, setForceRefresh] = useState(false);
+  const [executionMode, setExecutionMode] = useState<'dry_run' | 'live'>('dry_run');
 
   // Loading & Diagnostics
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -571,6 +568,8 @@ export default function HomePage() {
           custom_notes: customNotes || undefined,
           manual_competitors: compList,
           force_refresh: forceRefresh,
+          dry_run: executionMode === 'dry_run',
+          preset_id: selectedTestCase || undefined,
         }),
       });
       if (!res.ok) {
@@ -673,6 +672,8 @@ export default function HomePage() {
           brand_dna: brandDNA,
           top_k: topK,
           force_refresh: forceRefresh,
+          dry_run: executionMode === 'dry_run',
+          preset_id: selectedTestCase || undefined,
         }),
       });
       if (!res.ok) {
@@ -753,8 +754,8 @@ export default function HomePage() {
         setProgressPercent(Math.min(80, Math.round(55 + (elapsed - 20) * 1.8)));
       } else {
         setActiveStep(4);
-        setProgressStageTitle('Stage 4: Dynamic Scoring & 3-Sec Pitch Hooks');
-        setProgressStageDesc('คำนวณคะแนน 40/35/25 และสร้าง Campaign Hooks...');
+        setProgressStageTitle('Stage 4: Dynamic Scoring & Portfolio Ranking');
+        setProgressStageDesc('คำนวณคะแนน 40/35/25 และจัดสรร Two-Pass Quota...');
         setProgressPercent(Math.min(96, Math.round(80 + (elapsed - 34) * 0.7)));
       }
     }, 400);
@@ -771,6 +772,8 @@ export default function HomePage() {
           manual_competitors: compList,
           top_k: topK,
           force_refresh: forceRefresh,
+          dry_run: executionMode === 'dry_run',
+          preset_id: selectedTestCase || undefined,
         }),
       });
       if (!res.ok) {
@@ -801,13 +804,6 @@ export default function HomePage() {
         setElapsedSeconds(0);
       }, 450);
     }
-  };
-
-  // Copy 3-second hook
-  const handleCopyHook = (id: string, hook: string) => {
-    navigator.clipboard.writeText(hook);
-    setCopiedHookId(id);
-    setTimeout(() => setCopiedHookId(null), 2500);
   };
 
   // --------------------------------------------------------------------------
@@ -886,7 +882,6 @@ export default function HomePage() {
       'View Consistency',
       'Yellow Basket Ratio %',
       'Strategic Fit Rationale',
-      '3-Second Pitch Hook',
     ];
     const rows = matchResponse.ranked_kols.map(item => [
       item.rank,
@@ -908,7 +903,6 @@ export default function HomePage() {
       (item.score_breakdown.view_consistency_ratio || 0).toFixed(3),
       `${Math.round(item.kol.signals.basket_ratio * 100)}%`,
       `"${(item.kol.why_it_fits || '').replace(/"/g, '""')}"`,
-      `"${(item.pitch_hook || '').replace(/"/g, '""')}"`,
     ]);
 
     const csvContent =
@@ -1031,6 +1025,61 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-3.5 pt-1">
+                {/* EXECUTION MODE SELECTOR (Dry Run vs Live API) */}
+                <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-900">
+                      <Sliders className="w-3.5 h-3.5 text-[#0536d2]" />
+                      <span>โหมดการประมวลผล (Execution Mode)</span>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      executionMode === 'dry_run'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-blue-50 text-[#0536d2] border border-blue-200'
+                    }`}>
+                      {executionMode === 'dry_run' ? '⚡ ข้อมูลรันจริง (No API Key)' : '🚀 Live API Call'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExecutionMode('dry_run')}
+                      className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                        executionMode === 'dry_run'
+                          ? 'bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
+                          : 'bg-white/60 hover:bg-white border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-1.5 font-bold text-xs text-slate-900 mb-1">
+                        <span>🧪</span>
+                        <span className={executionMode === 'dry_run' ? 'text-emerald-800' : 'text-slate-800'}>โหมด Dry Run</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-snug">
+                        ใช้ข้อมูลที่เคยรันและประเมินจริง 6 อุตสาหกรรม ไม่ต้องต่อ API Key
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setExecutionMode('live')}
+                      className={`p-2.5 rounded-xl text-left border transition-all cursor-pointer flex flex-col justify-between ${
+                        executionMode === 'live'
+                          ? 'bg-white border-[#0536d2] ring-2 ring-[#0536d2]/20 shadow-xs'
+                          : 'bg-white/60 hover:bg-white border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-1.5 font-bold text-xs text-slate-900 mb-1">
+                        <span>🚀</span>
+                        <span className={executionMode === 'live' ? 'text-[#0536d2]' : 'text-slate-800'}>โหมด Live API</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-snug">
+                        ยิง Jina Reader, Gemini 2.5 Flash Lite และ Apify TikTok สด
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
                 {/* 6 Industry Test Cases Selection */}
                 <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5">
                   <div className="flex items-center justify-between">
@@ -1923,7 +1972,6 @@ export default function HomePage() {
               <div className="space-y-4">
                 {filteredRankedKOLs.map(item => {
                   const isExpanded = expandedKOLId === item.kol.id;
-                  const isCopied = copiedHookId === item.kol.id;
 
                   return (
                     <div
@@ -2156,38 +2204,6 @@ export default function HomePage() {
                           </div>
                         </div>
                       </div>
-
-                      {/* 3-SECOND CAMPAIGN PITCH HOOK (Spec 5.2 & 5.3) */}
-                      {item.pitch_hook && (
-                        <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 flex items-start justify-between gap-3 text-xs">
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 flex items-center space-x-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                              <span>3-Sec Role-Adaptive Pitch Hook ({item.kol.sub_style})</span>
-                            </span>
-                            <p className="text-slate-900 font-semibold italic text-xs leading-relaxed">
-                              "{item.pitch_hook}"
-                            </p>
-                          </div>
-
-                          <button
-                            onClick={() => handleCopyHook(item.kol.id, item.pitch_hook)}
-                            className="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shrink-0"
-                          >
-                            {isCopied ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                <span className="text-emerald-700">Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5 text-amber-700" />
-                                <span>Copy Hook</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      )}
 
                       {/* Audited Video Telemetry Drawer */}
                       {item.kol.recent_videos && item.kol.recent_videos.length > 0 && (

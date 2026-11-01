@@ -3,7 +3,7 @@ Stage 2 — Plain & Natural Thai Search Query Extraction guardrails (Spec 3.2).
 
 Validates LLM-generated natural search queries against the TikTok Search Syntax rules:
   1. Short & Native: 2-4 words, at most 18 Thai letters (combining vowels / tone marks are not letters)
-  2. Zero Hardcoded Examples & Templates: queries must be grounded in brand niche
+  2. Dynamic Demand-Side Grounding: queries must be grounded in brand niche
   3. Anti-Merchant Guardrail: no ราคาส่ง, ขายถูก, โปรโมชั่น, โปรโมชัน, ตัวแทนจำหน่าย, เปิดบิล
 """
 import math

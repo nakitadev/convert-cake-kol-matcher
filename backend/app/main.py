@@ -1,6 +1,7 @@
 import os
+import json
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
 
 # Load .env (supports backend/.env or root .env, container env vars take precedence)
@@ -63,12 +64,48 @@ async def health():
     return {"status": "healthy", "service": "kol-matcher-backend"}
 
 
+def get_dry_run_dataset() -> Dict[str, Any]:
+    dataset_path = Path(__file__).resolve().parent / "data" / "dry_run_dataset.json"
+    if dataset_path.exists():
+        try:
+            return json.loads(dataset_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def resolve_preset(dataset: Dict[str, Any], preset_id: Optional[str], brand_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    if preset_id and preset_id in dataset:
+        return dataset[preset_id]
+    if brand_name:
+        b_lower = brand_name.lower().strip()
+        for k, v in dataset.items():
+            cand_name = v.get("brand_name", "").lower().strip()
+            if b_lower in cand_name or cand_name in b_lower:
+                return v
+    return dataset.get("skincare-beauty")
+
+
 @app.get("/api/demo-presets")
 async def demo_presets():
     """
-    Presets endpoint for backward compatibility.
+    Presets endpoint for Dry Run simulation and benchmark demonstration.
     """
-    return []
+    dataset = get_dry_run_dataset()
+    return [
+        {
+            "id": k,
+            "brand_name": v.get("brand_name"),
+            "industry": v.get("industry"),
+            "icon": v.get("icon", "🏷️"),
+            "badge": v.get("badge", "Benchmark"),
+            "execution_duration_sec": v.get("execution_duration_sec", 60.0),
+            "estimated_cost_usd": v.get("estimated_cost_usd", 0.28),
+            "estimated_cost_thb": v.get("estimated_cost_thb", 9.80),
+            "brand_dna": v.get("brand_dna", {}),
+        }
+        for k, v in dataset.items()
+    ]
 
 
 @app.post("/api/analyze-brand", response_model=BrandDNA)
@@ -77,6 +114,17 @@ async def analyze_brand(req: BrandAnalyzeRequest):
     Stage 1: Extract Brand DNA from client website/Facebook page with Gemini 3.5 Flash Lite.
     Supports Human-in-the-Loop review & editing prior to Stage 2.
     """
+    if req.dry_run:
+        dataset = get_dry_run_dataset()
+        preset = resolve_preset(dataset, req.preset_id, req.brand_name)
+        if preset and "brand_dna" in preset:
+            dna_dict = dict(preset["brand_dna"])
+            if req.custom_notes:
+                dna_dict["custom_notes"] = req.custom_notes
+            if req.manual_competitors:
+                dna_dict["manual_competitors"] = req.manual_competitors
+            return BrandDNA(**dna_dict)
+
     try:
         analyzer = get_brand_analyzer()
         brand_dna = await analyzer.analyze(req)
@@ -96,6 +144,15 @@ async def match_kols(req: MatchRequest):
     Stage 2: Evaluate & rank live Thai TikTok creators against Brand DNA
     using the Archetype-Aware Dynamic Scoring Engine (Relevance 40%, Engagement 35%, Multi-Signal Audience 25%).
     """
+    if req.dry_run:
+        dataset = get_dry_run_dataset()
+        preset = resolve_preset(dataset, req.preset_id, req.brand_dna.brand_name)
+        if preset and "match_response" in preset:
+            res_dict = dict(preset["match_response"])
+            if req.top_k and "ranked_kols" in res_dict:
+                res_dict["ranked_kols"] = res_dict["ranked_kols"][: req.top_k]
+            return MatchResponse(**res_dict)
+
     try:
         response = await run_full_matching(
             brand_dna=req.brand_dna,
@@ -116,6 +173,15 @@ async def auto_match(req: AutoMatchRequest):
     """
     1-Click End-to-End matching pipeline combining Stage 1 & Stage 2 via LangGraph.
     """
+    if req.dry_run:
+        dataset = get_dry_run_dataset()
+        preset = resolve_preset(dataset, req.preset_id, req.brand_name)
+        if preset and "match_response" in preset:
+            res_dict = dict(preset["match_response"])
+            if req.top_k and "ranked_kols" in res_dict:
+                res_dict["ranked_kols"] = res_dict["ranked_kols"][: req.top_k]
+            return MatchResponse(**res_dict)
+
     try:
         brand_req = BrandAnalyzeRequest(
             brand_name=req.brand_name,

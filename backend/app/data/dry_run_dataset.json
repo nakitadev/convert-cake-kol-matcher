@@ -1,0 +1,3250 @@
+{
+  "skincare-beauty": {
+    "id": "skincare-beauty",
+    "brand_name": "Dr.PONG",
+    "industry": "Skincare & Beauty",
+    "icon": "🧴",
+    "badge": "Balanced Portfolio Gate",
+    "execution_duration_sec": 64.2,
+    "estimated_cost_usd": 0.28,
+    "estimated_cost_thb": 9.8,
+    "brand_dna": {
+      "id": "live-drpong",
+      "brand_name": "Dr.PONG",
+      "website_url": "https://drpongshop.com",
+      "facebook_url": "https://www.facebook.com/drpongshop",
+      "vertical": "Skincare & Cosmetics",
+      "sub_category": "Science-backed Skincare and Supplements",
+      "brand_summary": "Dr.PONG is a leading Thai science-backed skincare and supplement brand founded on dermatological research and international awards. They offer targeted solutions for acne, melasma, barrier repair, and wellness at accessible mass-market and mid-range price points.",
+      "target_audience": "Thai teens, working adults, and beauty-conscious consumers dealing with acne, sensitive skin, melasma, or hair/scalp concerns.",
+      "target_age_range": "18-35",
+      "brand_tone": [
+        "Friendly",
+        "Educational",
+        "Science-backed",
+        "Relatable",
+        "Approachable"
+      ],
+      "customer_pain_points": [
+        "เป็นสิวง่าย ผิวมัน ใช้ตัวไหนดี",
+        "ฝ้า กระ ฝังลึก รักษาอย่างไร",
+        "หนังศีรษะแห้ง คัน ลอก เป็นเซ็บเดิร์ม",
+        "หน้าหมองคล้ำ มีจุดด่างดำ"
+      ],
+      "price_positioning": "Mass | Mid-Range",
+      "average_price_thb": 299,
+      "conversion_model": "ECOMMERCE_PRODUCT",
+      "conversion_model_reason": "Dr.PONG sells physical skincare and supplement products directly to consumers through online e-commerce channels like TikTok Shop, Shopee, Lazada, and convenience stores like 7-Eleven.",
+      "kol_koc_mix": {
+        "kol": 30,
+        "koc": 70
+      },
+      "search_queries": [
+        {
+          "query": "ครีมซอง 7-Eleven",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_2"
+        },
+        {
+          "query": "รีวิวเซรั่มลดฝ้า",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "มอยส์เจรไลบำรุงผิว",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "กันแดดผิวแพ้ง่าย",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "สเปรย์แก้คันหัว",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "แนะนำสกินแคร์กู้ผิว",
+          "side": "KOC_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_3"
+        }
+      ],
+      "niche_keywords": [
+        "รักษาสิว",
+        "ผิวแพ้ง่าย",
+        "เซรั่มหน้าใส",
+        "ลดฝ้ากระ",
+        "กู้ผิวพัง",
+        "สกินแคร์",
+        "มอยส์เจอร์ไรเซอร์"
+      ],
+      "manual_competitors": [],
+      "competitors": [
+        {
+          "brand": "Ingu Skin",
+          "aliases": [
+            "Ingu Skin",
+            "อิงกุ",
+            "INGU"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        },
+        {
+          "brand": "Herbitage",
+          "aliases": [
+            "Herbitage",
+            "เฮอร์บิเทจ"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        },
+        {
+          "brand": "MizuMi",
+          "aliases": [
+            "MizuMi",
+            "มิซึมิ",
+            "Mizumi"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        },
+        {
+          "brand": "Fyne",
+          "aliases": [
+            "Fyne",
+            "ไฟน์"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        },
+        {
+          "brand": "Rojukiss",
+          "aliases": [
+            "Rojukiss",
+            "โรจูคิส"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        },
+        {
+          "brand": "Srichand",
+          "aliases": [
+            "Srichand",
+            "ศรีจันทร์"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        },
+        {
+          "brand": "Narisara",
+          "aliases": [
+            "Narisara",
+            "นาริ사ร่า"
+          ],
+          "source": "llm_knowledge",
+          "mentions": 0
+        },
+        {
+          "brand": "Skinsista",
+          "aliases": [
+            "Skinsista",
+            "สกินซิสต้า"
+          ],
+          "source": "llm_knowledge",
+          "mentions": 0
+        },
+        {
+          "brand": "Bio-Essence",
+          "aliases": [
+            "Bio-Essence",
+            "ไบโอเอสเซนส์"
+          ],
+          "source": "llm_knowledge",
+          "mentions": 0
+        },
+        {
+          "brand": "Clear Nose",
+          "aliases": [
+            "Clear Nose",
+            "เคลียร์โนส"
+          ],
+          "source": "llm_knowledge",
+          "mentions": 0
+        },
+        {
+          "brand": "Sunon",
+          "aliases": [
+            "sunon",
+            "ซันออนแฮร์โทนิค"
+          ],
+          "source": "tiktok_cooccurrence",
+          "mentions": 2
+        },
+        {
+          "brand": "SKIN1004",
+          "aliases": [
+            "skin1004"
+          ],
+          "source": "tiktok_cooccurrence",
+          "mentions": 2
+        },
+        {
+          "brand": "Her Hyness",
+          "aliases": [
+            "herhyness"
+          ],
+          "source": "tiktok_cooccurrence",
+          "mentions": 2
+        }
+      ],
+      "scraped_sources": [
+        "Website via Jina Reader (SQLite Cached) (https://drpongshop.com)",
+        "Facebook via Apify Facebook scrapers (https://www.facebook.com/drpongshop) — 10 posts, 3 comments",
+        "Google Search Grounding: 6 Thai competitors"
+      ]
+    },
+    "match_response": {
+      "brand_dna": {
+        "id": "live-drpong",
+        "brand_name": "Dr.PONG",
+        "website_url": "https://drpongshop.com",
+        "facebook_url": "https://www.facebook.com/drpongshop",
+        "vertical": "Skincare & Cosmetics",
+        "sub_category": "Science-backed Skincare and Supplements",
+        "brand_summary": "Dr.PONG is a leading Thai science-backed skincare and supplement brand founded on dermatological research and international awards. They offer targeted solutions for acne, melasma, barrier repair, and wellness at accessible mass-market and mid-range price points.",
+        "target_audience": "Thai teens, working adults, and beauty-conscious consumers dealing with acne, sensitive skin, melasma, or hair/scalp concerns.",
+        "target_age_range": "18-35",
+        "brand_tone": [
+          "Friendly",
+          "Educational",
+          "Science-backed",
+          "Relatable",
+          "Approachable"
+        ],
+        "customer_pain_points": [
+          "เป็นสิวง่าย ผิวมัน ใช้ตัวไหนดี",
+          "ฝ้า กระ ฝังลึก รักษาอย่างไร",
+          "หนังศีรษะแห้ง คัน ลอก เป็นเซ็บเดิร์ม",
+          "หน้าหมองคล้ำ มีจุดด่างดำ"
+        ],
+        "price_positioning": "Mass | Mid-Range",
+        "average_price_thb": 299,
+        "conversion_model": "ECOMMERCE_PRODUCT",
+        "conversion_model_reason": "Dr.PONG sells physical skincare and supplement products directly to consumers through online e-commerce channels like TikTok Shop, Shopee, Lazada, and convenience stores like 7-Eleven.",
+        "kol_koc_mix": {
+          "kol": 30,
+          "koc": 70
+        },
+        "search_queries": [
+          {
+            "query": "ครีมซอง 7-Eleven",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_2"
+          },
+          {
+            "query": "รีวิวเซรั่มลดฝ้า",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "มอยส์เจรไลบำรุงผิว",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "กันแดดผิวแพ้ง่าย",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "สเปรย์แก้คันหัว",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "แนะนำสกินแคร์กู้ผิว",
+            "side": "KOC_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          }
+        ],
+        "niche_keywords": [
+          "รักษาสิว",
+          "ผิวแพ้ง่าย",
+          "เซรั่มหน้าใส",
+          "ลดฝ้ากระ",
+          "กู้ผิวพัง",
+          "สกินแคร์",
+          "มอยส์เจอร์ไรเซอร์"
+        ],
+        "manual_competitors": [],
+        "competitors": [
+          {
+            "brand": "Ingu Skin",
+            "aliases": [
+              "Ingu Skin",
+              "อิงกุ",
+              "INGU"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          },
+          {
+            "brand": "Herbitage",
+            "aliases": [
+              "Herbitage",
+              "เฮอร์บิเทจ"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          },
+          {
+            "brand": "MizuMi",
+            "aliases": [
+              "MizuMi",
+              "มิซึมิ",
+              "Mizumi"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          },
+          {
+            "brand": "Fyne",
+            "aliases": [
+              "Fyne",
+              "ไฟน์"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          },
+          {
+            "brand": "Rojukiss",
+            "aliases": [
+              "Rojukiss",
+              "โรจูคิส"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          },
+          {
+            "brand": "Srichand",
+            "aliases": [
+              "Srichand",
+              "ศรีจันทร์"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          },
+          {
+            "brand": "Narisara",
+            "aliases": [
+              "Narisara",
+              "นาริ사ร่า"
+            ],
+            "source": "llm_knowledge",
+            "mentions": 0
+          },
+          {
+            "brand": "Skinsista",
+            "aliases": [
+              "Skinsista",
+              "สกินซิสต้า"
+            ],
+            "source": "llm_knowledge",
+            "mentions": 0
+          },
+          {
+            "brand": "Bio-Essence",
+            "aliases": [
+              "Bio-Essence",
+              "ไบโอเอสเซนส์"
+            ],
+            "source": "llm_knowledge",
+            "mentions": 0
+          },
+          {
+            "brand": "Clear Nose",
+            "aliases": [
+              "Clear Nose",
+              "เคลียร์โนส"
+            ],
+            "source": "llm_knowledge",
+            "mentions": 0
+          },
+          {
+            "brand": "Sunon",
+            "aliases": [
+              "sunon",
+              "ซันออนแฮร์โทนิค"
+            ],
+            "source": "tiktok_cooccurrence",
+            "mentions": 2
+          },
+          {
+            "brand": "SKIN1004",
+            "aliases": [
+              "skin1004"
+            ],
+            "source": "tiktok_cooccurrence",
+            "mentions": 2
+          },
+          {
+            "brand": "Her Hyness",
+            "aliases": [
+              "herhyness"
+            ],
+            "source": "tiktok_cooccurrence",
+            "mentions": 2
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader (SQLite Cached) (https://drpongshop.com)",
+          "Facebook via Apify Facebook scrapers (https://www.facebook.com/drpongshop) — 10 posts, 3 comments",
+          "Google Search Grounding: 6 Thai competitors"
+        ]
+      },
+      "strategy": {
+        "conversion_model": "ECOMMERCE_PRODUCT",
+        "conversion_model_reason": "Dr.PONG sells physical skincare and supplement products directly to consumers through online e-commerce channels like TikTok Shop, Shopee, Lazada, and convenience stores like 7-Eleven.",
+        "recommended_mix": {
+          "kol": 30,
+          "koc": 70
+        },
+        "achieved_mix": {
+          "KOL": 2,
+          "KOC": 4
+        }
+      },
+      "filter_stats": {
+        "raw_clips": 48,
+        "unique_creators": 42,
+        "removed_brand_accounts": 0,
+        "removed_merchants": 3,
+        "removed_affiliate_bots": 4,
+        "removed_irrelevant": 2,
+        "scored": 33
+      },
+      "ranked_kols": [
+        {
+          "rank": 1,
+          "kol": {
+            "id": "tt_dr.pianpharit",
+            "handle": "dr.pianpharit",
+            "display_name": "หมอเพียร หน้าเด็กศาสตร์",
+            "tiktok_url": "https://www.tiktok.com/@dr.pianpharit",
+            "avatar_url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-avt-0068/4d4740649a9ad9c9bc633802e91661e0~tplv-tiktokx-cropcenter:720:720.jpeg?dr=14579&refresh_token=2170aa06&x-expires=1793718000&x-signature=rdqPPJ%2BkIZPcnVmyq4fgF6ijhbc%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my",
+            "bio": "หลักฐานความงามที่มีชีวิตอยู่\nMSc. Dermatology | American board of aesthetic medicine | HRT\nผิวหนังเเละฮอร์โมน\nContact IG : dr.pianpharit",
+            "follower_count": 118000,
+            "following_count": 13,
+            "total_likes": 2500000,
+            "tier": "Mid-Tier",
+            "recent_videos": [
+              {
+                "video_id": "7675599380027641108",
+                "url": "https://www.tiktok.com/@dr.pianpharit/video/7675599380027641108",
+                "caption": "5 สิ่งที่ทำให้ผิวดีขึ้น #สกินแคร์ #ครีม #ผิวใส #ผิวชุ่มชื้น #หมอเพียร",
+                "hashtags": [
+                  "สกินแคร์",
+                  "ครีม",
+                  "ผิวใส",
+                  "ผิวชุ่มชื้น",
+                  "หมอเพียร"
+                ],
+                "views": 322200,
+                "likes": 20900,
+                "comments": 167,
+                "shares": 1010,
+                "collect_count": 6048,
+                "has_yellow_basket": false,
+                "query_origin": "NATURAL_QUERY",
+                "search_query": "แนะนำสกินแคร์กู้ผิว"
+              }
+            ],
+            "query_origin": "NATURAL_QUERY",
+            "is_work_ready": true,
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 322200.0,
+              "mean_views": 322200.0,
+              "median_comments": 167.0,
+              "save_rate": 0.01877,
+              "comment_to_like": 0.00799,
+              "share_to_like": 0.04833,
+              "avg_caption_length": 69.0,
+              "kol_query_hits": 0,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Expert / Guru",
+            "llm_relevance_score": 0.98,
+            "why_it_fits": "แพทย์ผิวหนังผู้เชี่ยวชาญให้ความรู้เรื่องสกินแคร์ ตรงกับ DNA วิทยาศาสตร์ผิวหนังของ Dr.PONG อย่างสมบูรณ์แบบ",
+            "real_comments": [],
+            "comment_intent_ratio": null,
+            "competitor_flags": []
+          },
+          "total_match_score": 86.5,
+          "score_breakdown": {
+            "relevance_total": 29.74,
+            "semantic_llm_points": 24.88,
+            "cosine_similarity": 0.679,
+            "subniche_workready_points": 4.86,
+            "matched_keywords": [
+              "สกินแคร์"
+            ],
+            "engagement_total": 31.79,
+            "median_er_points": 15.0,
+            "median_engagement_rate": 0.0873,
+            "eligible_clips": 1,
+            "utility_points": 6.79,
+            "utility_score": 0.021,
+            "consistency_points": 10.0,
+            "view_consistency_ratio": 1.0,
+            "audience_total": 25.0,
+            "thai_authenticity_points": 10.0,
+            "thai_ratio": 1.0,
+            "buyer_intent_points": 10.0,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 5.0,
+            "evidence": [
+              "Relevance (29.74/40): Cosine 0.68, LLM fit 0.98, matched 1 niche tags.",
+              "Work-Ready signal confirmed (+4.0 bonus).",
+              "Engagement (31.79/35): Median ER 8.7% (15.0/15), Utility 2.10% (6.79/10), Consistency 1.00 (10.0/10).",
+              "Buyer Intent Tier-1 Fast Proxy (10.0/10): Comment/Like 0.0080, Share/Like 0.0483."
+            ]
+          }
+        },
+        {
+          "rank": 2,
+          "kol": {
+            "id": "tt_aum_aemmika19",
+            "handle": "aum_aemmika19",
+            "display_name": "อั้ม เอมมิกา(ช่องจริง 2.6 M)",
+            "tiktok_url": "https://www.tiktok.com/@aum_aemmika19",
+            "avatar_url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-avt-0068/d1c52964e01ea679a19136bf2982c9ec~tplv-tiktokx-cropcenter:720:720.jpeg?dr=14579&refresh_token=7c7757f3&x-expires=1793718000&x-signature=uK6rj15uVeU2Z9ZM8pNoixNMF84%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my",
+            "bio": "เบื้องหลัง(แม่เมย์,น้องอั้ม,พี่แตมป์)ติดต่องาน\n[มีช่องนี้ช่องเดียวนะคะ] @แม่เมย์น้องอั้ม🦄( 6.8 M)",
+            "follower_count": 2700000,
+            "following_count": 304,
+            "total_likes": 133500000,
+            "tier": "Macro",
+            "recent_videos": [
+              {
+                "video_id": "7663085810564025608",
+                "url": "https://www.tiktok.com/@aum_aemmika19/video/7663085810564025608",
+                "caption": "ติดป้าย hot ไปเลย  ##อั้มเอมมิกา##ดราก้อนบลัดแดง##ครีมซองเซเว่น",
+                "hashtags": [
+                  "อั้มเอมมิกา",
+                  "ดราก้อนบลัดแดง",
+                  "ครีมซองเซเว่น"
+                ],
+                "views": 373000,
+                "likes": 27300,
+                "comments": 148,
+                "shares": 842,
+                "collect_count": 1966,
+                "has_yellow_basket": false,
+                "query_origin": "NATURAL_QUERY",
+                "search_query": "ครีมซอง 7-Eleven"
+              }
+            ],
+            "query_origin": "NATURAL_QUERY",
+            "is_work_ready": true,
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 373000.0,
+              "mean_views": 373000.0,
+              "median_comments": 148.0,
+              "save_rate": 0.00527,
+              "comment_to_like": 0.00542,
+              "share_to_like": 0.03084,
+              "avg_caption_length": 63.0,
+              "kol_query_hits": 0,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Lifestyle / Aesthetic",
+            "llm_relevance_score": 0.85,
+            "why_it_fits": "ครีเอเตอร์สายบิวตี้ชื่อดังที่รีวิวครีมซองและสกินแคร์ยอดฮิต สร้างการรับรู้แบรนด์ในวงกว้าง",
+            "real_comments": [],
+            "comment_intent_ratio": null,
+            "competitor_flags": []
+          },
+          "total_match_score": 75.1,
+          "score_breakdown": {
+            "relevance_total": 25.76,
+            "semantic_llm_points": 21.76,
+            "cosine_similarity": 0.601,
+            "subniche_workready_points": 4.0,
+            "matched_keywords": [],
+            "engagement_total": 26.57,
+            "median_er_points": 15.0,
+            "median_engagement_rate": 0.0811,
+            "eligible_clips": 1,
+            "utility_points": 1.57,
+            "utility_score": 0.0069,
+            "consistency_points": 10.0,
+            "view_consistency_ratio": 1.0,
+            "audience_total": 22.79,
+            "thai_authenticity_points": 10.0,
+            "thai_ratio": 1.0,
+            "buyer_intent_points": 7.79,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 5.0,
+            "evidence": [
+              "Relevance (25.76/40): Cosine 0.60, LLM fit 0.85, matched 0 niche tags.",
+              "Work-Ready signal confirmed (+4.0 bonus).",
+              "Engagement (26.57/35): Median ER 8.1% (15.0/15), Utility 0.69% (1.57/10), Consistency 1.00 (10.0/10).",
+              "Buyer Intent Tier-1 Fast Proxy (7.79/10): Comment/Like 0.0054, Share/Like 0.0308."
+            ]
+          }
+        },
+        {
+          "rank": 3,
+          "kol": {
+            "id": "tt_mammot2004",
+            "handle": "mammot2004",
+            "display_name": "แมมมอสสสสสสส",
+            "tiktok_url": "https://www.tiktok.com/@mammot2004",
+            "avatar_url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-avt-0068/30e023db45c3e089bf27f23eddf89700~tplv-tiktokx-cropcenter:720:720.jpeg?dr=14579&refresh_token=ae211800&x-expires=1793718000&x-signature=dfmMWSYxtO1bSC4ZCUuWqLOa9ig%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my",
+            "bio": "ติดต่องาน👇🏻👇🏻\nID Line : @mammot2040 ❤️ ig: mmammott\n@Mammotttt (ช่องหลัก)",
+            "follower_count": 760300,
+            "following_count": 12,
+            "total_likes": 12900000,
+            "tier": "Macro",
+            "recent_videos": [
+              {
+                "video_id": "7692441230386482438",
+                "url": "https://www.tiktok.com/@mammot2004/video/7692441230386482438",
+                "caption": "ช่วงหาทำ #กันแดดบอนวอน #ครีมซองเซเว่น",
+                "hashtags": [
+                  "กันแดดบอนวอน",
+                  "ครีมซองเซเว่น"
+                ],
+                "views": 1100000,
+                "likes": 44500,
+                "comments": 170,
+                "shares": 2251,
+                "collect_count": 2266,
+                "has_yellow_basket": false,
+                "query_origin": "NATURAL_QUERY",
+                "search_query": "ครีมซอง 7-Eleven"
+              }
+            ],
+            "query_origin": "NATURAL_QUERY",
+            "is_work_ready": true,
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 1100000.0,
+              "mean_views": 1100000.0,
+              "median_comments": 170.0,
+              "save_rate": 0.00206,
+              "comment_to_like": 0.00382,
+              "share_to_like": 0.05058,
+              "avg_caption_length": 37.0,
+              "kol_query_hits": 0,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOC",
+            "sub_style": "KOC - Everyday User / Vlog",
+            "llm_relevance_score": 0.8,
+            "why_it_fits": "นำเสนอผลิตภัณฑ์กันแดดและสกินแคร์ในเซเว่น เข้าถึงกลุ่มวัยรุ่นและคนรุ่นใหม่ได้ดี",
+            "real_comments": [],
+            "comment_intent_ratio": null,
+            "competitor_flags": []
+          },
+          "total_match_score": 69.5,
+          "score_breakdown": {
+            "relevance_total": 25.14,
+            "semantic_llm_points": 21.14,
+            "cosine_similarity": 0.609,
+            "subniche_workready_points": 4.0,
+            "matched_keywords": [],
+            "engagement_total": 19.38,
+            "median_er_points": 8.38,
+            "median_engagement_rate": 0.0447,
+            "eligible_clips": 1,
+            "utility_points": 1.0,
+            "utility_score": 0.0035,
+            "consistency_points": 10.0,
+            "view_consistency_ratio": 1.0,
+            "audience_total": 25.0,
+            "thai_authenticity_points": 10.0,
+            "thai_ratio": 1.0,
+            "buyer_intent_points": 10.0,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 5.0,
+            "evidence": [
+              "Relevance (25.14/40): Cosine 0.61, LLM fit 0.80, matched 0 niche tags.",
+              "Work-Ready signal confirmed (+4.0 bonus).",
+              "Engagement (19.38/35): Median ER 4.5% (8.38/15), Utility 0.35% (1.0/10), Consistency 1.00 (10.0/10).",
+              "Buyer Intent Tier-1 Fast Proxy (10.0/10): Comment/Like 0.0038, Share/Like 0.0506."
+            ]
+          }
+        },
+        {
+          "rank": 4,
+          "kol": {
+            "id": "tt_danai6990",
+            "handle": "danai6990",
+            "display_name": "danai6990",
+            "tiktok_url": "https://www.tiktok.com/@danai6990",
+            "avatar_url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-avt-0068/7229cdb0e26568f270ed236a2fa6bbe3~tplv-tiktokx-cropcenter:720:720.jpeg?dr=14579&refresh_token=66813377&x-expires=1793718000&x-signature=mWTpOXPRvDI3f5ya6euWpUqdHPc%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my2",
+            "bio": "เพจสั่งซื้อครีมดนัย Dmiracle Official\nติดต่องาน line : kantoon1669",
+            "follower_count": 920100,
+            "following_count": 2271,
+            "total_likes": 35300000,
+            "tier": "Macro",
+            "recent_videos": [
+              {
+                "video_id": "7633746904102276373",
+                "url": "https://www.tiktok.com/@danai6990/video/7633746904102276373",
+                "caption": "ตอบกลับ @noi ฝ้าจางเร็วมาก ทดลองดูสิ #รีวิวบิวตี้ #ฝ้ากระ #ฝ้า #เซรั่มดนัย",
+                "hashtags": [
+                  "รีวิวบิวตี้",
+                  "ฝ้ากระ",
+                  "ฝ้า",
+                  "เซรั่มดนัย"
+                ],
+                "views": 72100,
+                "likes": 2250,
+                "comments": 40,
+                "shares": 47,
+                "collect_count": 173,
+                "has_yellow_basket": false,
+                "query_origin": "NATURAL_QUERY",
+                "search_query": "รีวิวเซรั่มลดฝ้า"
+              }
+            ],
+            "query_origin": "NATURAL_QUERY",
+            "is_work_ready": true,
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 72100.0,
+              "mean_views": 72100.0,
+              "median_comments": 40.0,
+              "save_rate": 0.0024,
+              "comment_to_like": 0.01778,
+              "share_to_like": 0.02089,
+              "avg_caption_length": 74.0,
+              "kol_query_hits": 0,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOC",
+            "sub_style": "KOC - Hard-Sell Reviewer",
+            "llm_relevance_score": 0.85,
+            "why_it_fits": "รีวิวผลิตภัณฑ์ลดฝ้ากระและจุดด่างดำ เน้นผลลัพธ์ชัดเจนเพื่อกระตุ้นการตัดสินใจซื้อ",
+            "real_comments": [],
+            "comment_intent_ratio": null,
+            "competitor_flags": []
+          },
+          "total_match_score": 68.4,
+          "score_breakdown": {
+            "relevance_total": 26.34,
+            "semantic_llm_points": 22.34,
+            "cosine_similarity": 0.639,
+            "subniche_workready_points": 4.0,
+            "matched_keywords": [],
+            "engagement_total": 17.53,
+            "median_er_points": 6.53,
+            "median_engagement_rate": 0.0348,
+            "eligible_clips": 1,
+            "utility_points": 1.0,
+            "utility_score": 0.0029,
+            "consistency_points": 10.0,
+            "view_consistency_ratio": 1.0,
+            "audience_total": 24.51,
+            "thai_authenticity_points": 10.0,
+            "thai_ratio": 1.0,
+            "buyer_intent_points": 9.51,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 5.0,
+            "evidence": [
+              "Relevance (26.34/40): Cosine 0.64, LLM fit 0.85, matched 0 niche tags.",
+              "Work-Ready signal confirmed (+4.0 bonus).",
+              "Engagement (17.53/35): Median ER 3.5% (6.53/15), Utility 0.29% (1.0/10), Consistency 1.00 (10.0/10).",
+              "Buyer Intent Tier-1 Fast Proxy (9.51/10): Comment/Like 0.0178, Share/Like 0.0209.",
+              "Affiliate Health (5/5): Top Hard-Sell Reviewer with 0% basket driving direct conversions."
+            ]
+          }
+        },
+        {
+          "rank": 5,
+          "kol": {
+            "id": "tt_pchskinmood",
+            "handle": "pchskinmood",
+            "display_name": "pchskinmood",
+            "tiktok_url": "https://www.tiktok.com/@pchskinmood",
+            "avatar_url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-avt-0068/f8745f5145183ba7b13953df4766d212~tplv-tiktokx-cropcenter:720:720.jpeg?dr=14579&refresh_token=308373db&x-expires=1793718000&x-signature=C5%2BDXAVVHNk9UdMfRaosQLzoACM%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my",
+            "bio": "🍬My baby @Tempers Official ✨\n🌈ig : peachhhs\n🧸for work : @pchskinmood\n☀️ห้ามนำคลิปไปใช้โดยไม่ได้รับอนุญาต☁️",
+            "follower_count": 97800,
+            "following_count": 195,
+            "total_likes": 1600000,
+            "tier": "Micro",
+            "recent_videos": [
+              {
+                "video_id": "7622542149191470356",
+                "url": "https://www.tiktok.com/@pchskinmood/video/7622542149191470356",
+                "caption": "เซรั่มที่ใช้มานานที่สุด อยู่ด้วยกันมาทุกสภาพผิว\n\n #Skin1004OriginalThailand  #ตัวจริงเรื่องผิวเเข็งแรง  #CentellaAmpoule #skin1004",
+                "hashtags": [
+                  "skin1004originalthailand",
+                  "ตัวจริงเรื่องผิวเเข็งแรง",
+                  "centellaampoule",
+                  "skin1004"
+                ],
+                "views": 1200000,
+                "likes": 13600,
+                "comments": 112,
+                "shares": 1044,
+                "collect_count": 4070,
+                "has_yellow_basket": true,
+                "query_origin": "NATURAL_QUERY",
+                "search_query": "แนะนำสกินแคร์กู้ผิว"
+              }
+            ],
+            "query_origin": "NATURAL_QUERY",
+            "is_work_ready": true,
+            "signals": {
+              "basket_ratio": 1.0,
+              "median_views": 1200000.0,
+              "mean_views": 1200000.0,
+              "median_comments": 112.0,
+              "save_rate": 0.00339,
+              "comment_to_like": 0.00824,
+              "share_to_like": 0.07676,
+              "avg_caption_length": 130.0,
+              "kol_query_hits": 0,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOC",
+            "sub_style": "KOC - Hard-Sell Reviewer",
+            "llm_relevance_score": 0.85,
+            "why_it_fits": "รีวิวเซรั่มบำรุงผิวและเสริมความแข็งแรงให้ผิวแพ้ง่าย พร้อมลิงก์สินค้าในตะกร้าชัดเจน",
+            "real_comments": [],
+            "comment_intent_ratio": null,
+            "competitor_flags": [
+              {
+                "type": "conflict",
+                "label": "⚠️ Competitor Conflict: SKIN1004",
+                "brands": [
+                  "SKIN1004"
+                ],
+                "video_id": "7622542149191470356"
+              }
+            ]
+          },
+          "total_match_score": 65.0,
+          "score_breakdown": {
+            "relevance_total": 26.02,
+            "semantic_llm_points": 22.02,
+            "cosine_similarity": 0.618,
+            "subniche_workready_points": 4.0,
+            "matched_keywords": [],
+            "engagement_total": 13.94,
+            "median_er_points": 2.94,
+            "median_engagement_rate": 0.0157,
+            "eligible_clips": 1,
+            "utility_points": 1.0,
+            "utility_score": 0.004,
+            "consistency_points": 10.0,
+            "view_consistency_ratio": 1.0,
+            "audience_total": 25.0,
+            "thai_authenticity_points": 10.0,
+            "thai_ratio": 1.0,
+            "buyer_intent_points": 10.0,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 5.0,
+            "evidence": [
+              "Relevance (26.02/40): Cosine 0.62, LLM fit 0.85, matched 0 niche tags.",
+              "Work-Ready signal confirmed (+4.0 bonus).",
+              "Engagement (13.94/35): Median ER 1.6% (2.94/15), Utility 0.40% (1.0/10), Consistency 1.00 (10.0/10).",
+              "Buyer Intent Tier-1 Fast Proxy (10.0/10): Comment/Like 0.0082, Share/Like 0.0768.",
+              "Affiliate Health (5/5): Top Hard-Sell Reviewer with 100% basket driving direct conversions."
+            ]
+          }
+        },
+        {
+          "rank": 6,
+          "kol": {
+            "id": "tt_cmcmx0307",
+            "handle": "cmcmx0307",
+            "display_name": "แคทตี้กำลังจะป้ายยาคุณ🤏🏻✨",
+            "tiktok_url": "https://www.tiktok.com/@cmcmx0307",
+            "avatar_url": "https://p16-common-sign.tiktokcdn.com/tos-alisg-avt-0068/19bedaa1ef50e41c3e3ada133d76c923~tplv-tiktokx-cropcenter:720:720.jpeg?dr=14579&refresh_token=7a043e28&x-expires=1793718000&x-signature=woo8copQraELx%2Bn73Q%2FuvELKgGA%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my",
+            "bio": "For work : Please DM. (รับรีวิว)\nช่องนี้มีแต่ของลดราคา ฟอลไว้จะได้ไม่พลาดงับ💖",
+            "follower_count": 1177,
+            "following_count": 304,
+            "total_likes": 50800,
+            "tier": "Nano",
+            "recent_videos": [
+              {
+                "video_id": "7688236837881515285",
+                "url": "https://www.tiktok.com/@cmcmx0307/video/7688236837881515285",
+                "caption": "มัดรวมของดีของเด็กราคาถูกใน 7-11 #ครีมซองเซเว่น #ครีมดารา #กระจ่างใส",
+                "hashtags": [
+                  "ครีมซองเซเว่น",
+                  "ครีมดารา",
+                  "กระจ่างใส"
+                ],
+                "views": 89700,
+                "likes": 483,
+                "comments": 3,
+                "shares": 33,
+                "collect_count": 147,
+                "has_yellow_basket": false,
+                "query_origin": "NATURAL_QUERY",
+                "search_query": "ครีมซอง 7-Eleven"
+              }
+            ],
+            "query_origin": "NATURAL_QUERY",
+            "is_work_ready": true,
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 89700.0,
+              "mean_views": 89700.0,
+              "median_comments": 3.0,
+              "save_rate": 0.00164,
+              "comment_to_like": 0.00621,
+              "share_to_like": 0.06832,
+              "avg_caption_length": 68.0,
+              "kol_query_hits": 0,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOC",
+            "sub_style": "KOC - Everyday User / Vlog",
+            "llm_relevance_score": 0.85,
+            "why_it_fits": "รีวิวสกินแคร์และครีมซองราคาประหยัดใน 7-11 ตรงกับกลุ่มเป้าหมาย Mass market ของ Dr.PONG",
+            "real_comments": [],
+            "comment_intent_ratio": null,
+            "competitor_flags": []
+          },
+          "total_match_score": 64.0,
+          "score_breakdown": {
+            "relevance_total": 26.59,
+            "semantic_llm_points": 22.59,
+            "cosine_similarity": 0.656,
+            "subniche_workready_points": 4.0,
+            "matched_keywords": [],
+            "engagement_total": 12.39,
+            "median_er_points": 1.39,
+            "median_engagement_rate": 0.0074,
+            "eligible_clips": 1,
+            "utility_points": 1.0,
+            "utility_score": 0.0019,
+            "consistency_points": 10.0,
+            "view_consistency_ratio": 1.0,
+            "audience_total": 25.0,
+            "thai_authenticity_points": 10.0,
+            "thai_ratio": 1.0,
+            "buyer_intent_points": 10.0,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 5.0,
+            "evidence": [
+              "Relevance (26.59/40): Cosine 0.66, LLM fit 0.85, matched 0 niche tags.",
+              "Work-Ready signal confirmed (+4.0 bonus).",
+              "Engagement (12.39/35): Median ER 0.7% (1.39/15), Utility 0.19% (1.0/10), Consistency 1.00 (10.0/10).",
+              "Buyer Intent Tier-1 Fast Proxy (10.0/10): Comment/Like 0.0062, Share/Like 0.0683."
+            ]
+          }
+        }
+      ],
+      "excluded_creators": [
+        {
+          "handle": "ancientming",
+          "display_name": "อาแป่ะหมิง",
+          "tiktok_url": "https://www.tiktok.com/@ancientming",
+          "follower_count": 2093,
+          "bio": "สุขภาพคือทุกสิ่ง🌿\nสินค้าทุกชิ้นมีงานวิจัย สนใจกดตระกร้าได้ครับ👇🏻",
+          "stage": "gate1_merchant",
+          "reason": "Affiliate Spam Bot: basket 100% > 85%, no work-ready bio, median comments 0 / median views 530"
+        },
+        {
+          "handle": "baanmaewas",
+          "display_name": "วาส เล่าให้ฟัง",
+          "tiktok_url": "https://www.tiktok.com/@baanmaewas",
+          "follower_count": 1304,
+          "bio": "เรื่องของผู้หญิงวัย 40+ ที่อยากดูแลตัวเองและคนที่รัก 🤍เล่าเรื่องสุขภาพ ผิวพรรณ ลูก & ครอบครัว",
+          "stage": "gate1_merchant",
+          "reason": "Affiliate Spam Bot: basket 100% > 85%, no work-ready bio, median comments 1 / median views 234"
+        },
+        {
+          "handle": "_bubblejan_",
+          "display_name": "Bubble Jan",
+          "tiktok_url": "https://www.tiktok.com/@_bubblejan_",
+          "follower_count": 2868,
+          "bio": "พิกัด : ของใช้สำหรับดูแลตัวเอง 🩵🫧\n📍คัดสรรแต่ของดีมีคุณภาพ",
+          "stage": "gate1_merchant",
+          "reason": "Affiliate Spam Bot: basket 100% > 85%, no work-ready bio, median comments 1 / median views 83300"
+        },
+        {
+          "handle": "thadniam",
+          "display_name": "ป้ามาป้าย",
+          "tiktok_url": "https://www.tiktok.com/@thadniam",
+          "follower_count": 1707,
+          "bio": "ป้าใช้ ป้าว่าดี 💖🧺\nของแท้ตะกร้าบริษัท ✅\nอาหารเสริม&สินค้าเสริมความงามของใช้ดีๆ 🫶🏼",
+          "stage": "gate1_merchant",
+          "reason": "Factory / wholesale / company account ('บริษัท')"
+        },
+        {
+          "handle": "naphat_stories",
+          "display_name": "Naphat_stories.",
+          "tiktok_url": "https://www.tiktok.com/@naphat_stories",
+          "follower_count": 1948,
+          "bio": "โชว์เคส อุปกรณ์แคมป์ปิ้ง สำหรับนักเดินทาง\n     🧑‍🦯..การเดินทาง = ความสุข😊",
+          "stage": "gate1_merchant",
+          "reason": "Affiliate Spam Bot: basket 100% > 85%, no work-ready bio, median comments 1 / median views 6527"
+        },
+        {
+          "handle": "zomza0305",
+          "display_name": "โปรดีของเเท้ส่งตรงจากบริษัท",
+          "tiktok_url": "https://www.tiktok.com/@zomza0305",
+          "follower_count": 4860,
+          "bio": "ชี้เป้าสินค้าใช้ดี ทั้งผญ.-ผช.\nสกินแคร์,อาหารเสริม ,โปรคุ้มมาก ลดเยอะมาก\n ตระกร้าบริษัทของเเท้ คัดมาอย่างดีนะคะ\nห้ามดูดคลิปเสียง-ภาพ วีดีโอ❌️ ปรับ 100,000",
+          "stage": "gate1_merchant",
+          "reason": "Factory / wholesale / company account ('บริษัท')"
+        },
+        {
+          "handle": "sinabeautystore",
+          "display_name": "Sina beauty store",
+          "tiktok_url": "https://www.tiktok.com/@sinabeautystore",
+          "follower_count": 1576,
+          "bio": "ช่องหลัก ศิณา บิวตี้ สโตว์ \nเครื่องสำอางราคาส่ง\nสั่งซื้อ I สอบถาม I แจ้งปัญหา",
+          "stage": "gate1_merchant",
+          "reason": "Merchant / official store ('store') with no creator work-ready signal"
+        },
+        {
+          "handle": "jwxjwxjwxjwxx",
+          "display_name": "จว",
+          "tiktok_url": "https://www.tiktok.com/@jwxjwxjwxjwxx",
+          "follower_count": 37300,
+          "bio": "𝐔𝐫 𝐟𝐚𝐯 𝐜𝐡𝐮𝐛𝐛𝐲 𝐠𝐚𝐥 🐽\n 𝐈𝐧𝐬𝐭𝐚 : 𝐩𝐭𝐜𝐡𝐧.𝐣𝐰\n\n*ไม่ให้ดูดคลิปไปใช้*",
+          "stage": "gate1_merchant",
+          "reason": "คอนเทนต์เน้นแฟชั่นสาวอวบและชุดชั้นใน ไม่ตรงกับหมวดสกินแคร์และสถาบันผิวหนังของแบรนด์"
+        },
+        {
+          "handle": "jureeporn09",
+          "display_name": "ใครๆก็เรียกฉันว่าแม่อ้อ",
+          "tiktok_url": "https://www.tiktok.com/@jureeporn09",
+          "follower_count": 64600,
+          "bio": "ติดต่องาน aor252531 ต้องส่งสินค้ามาให้เทสก่อนเท่านั้น",
+          "stage": "gate1_merchant",
+          "reason": "รีวิวครีมกระแสและแบรนด์อื่นที่ไม่สอดคล้องกับมาตรฐานทางวิทยาศาสตร์ของ Dr.PONG"
+        }
+      ],
+      "warnings": [],
+      "workflow_trace": [
+        "Stage 1: analyze_brand_node started",
+        "Ingesting website via Jina Reader: https://drpongshop.com",
+        "Scraping Facebook page: https://www.facebook.com/drpongshop",
+        "BrandDNA extracted: 'Dr.PONG' (ECOMMERCE_PRODUCT — KOL 30% : KOC 70%)",
+        "Scene Translation generated 6 queries (3 KOL / 3 KOC)",
+        "Competitor Layer 1: 10 Thai competitors catalogued",
+        "Stage 2: discover_candidates_node started (TikTok Discovery)",
+        "Running Single-Job Apify TikTok search (Country: TH) across 6 natural queries",
+        "Apify single-job batch returned 48 raw clips",
+        "Grouped clips into 42 unique creator candidates",
+        "Profile enrichment completed for 4 creators",
+        "Assembled 42 candidate creator profiles with deterministic signals",
+        "Competitor Layer 2: Discovered 3 co-occurring competitor brands on TikTok",
+        "Stage 3: filter_and_classify_node started (Two-Stage Filtering & 2x2 Matrix)",
+        "Gate 1 Filter: 35 passed, 7 excluded (0 brand accounts, 3 merchants, 4 affiliate bots)",
+        "Gate 2 Batch LLM Relevance Gate: 33 qualified (2 irrelevant channels excluded)",
+        "Stage 4: score_rank_hooks_node started (Scoring, Top-K Media Mix & Stratified Ranking)",
+        "Tier-2 comment analysis note:  — using Tier-1 Fast Proxy",
+        "Final Portfolio: 6 Top-K creators (Achieved Mix: 2 KOL : 4 KOC, Target Mix: 30% : 70%)"
+      ],
+      "langfuse_trace_url": null
+    }
+  },
+  "b2b-manufacturing": {
+    "id": "b2b-manufacturing",
+    "brand_name": "Piggy Monster",
+    "industry": "B2B Manufacturing",
+    "icon": "🏭",
+    "badge": "Demand-Side Query Gate",
+    "execution_duration_sec": 72.5,
+    "estimated_cost_usd": 0.29,
+    "estimated_cost_thb": 10.15,
+    "brand_dna": {
+      "id": "dryrun-piggymonster",
+      "brand_name": "Piggy Monster",
+      "website_url": "https://piggymonster-th.com/",
+      "facebook_url": "https://www.facebook.com/p/Piggy-Monster-%E0%B9%80%E0%B8%AA%E0%B8%B7%E0%B9%89%E0%B8%AD%E0%B8%AA%E0%B8%81%E0%B8%A3%E0%B8%B5%E0%B8%99-%E0%B8%A3%E0%B8%B2%E0%B8%84%E0%B8%B2%E0%B8%96%E0%B8%B9%E0%B8%81-61554003789059/",
+      "vertical": "B2B Manufacturing & Apparel",
+      "sub_category": "Custom T-Shirt Screen Printing, DTF & Polo Uniforms",
+      "brand_summary": "Piggy Monster โรงงานสกรีนเสื้อยืด เสื้อโปโล เสื้อรุ่น เสื้อคณะ บล็อกสกรีน และ DTF สกรีนคมชัด ไม่มีขั้นต่ำ สำหรับแบรนด์แฟชั่นและกิจกรรมองค์กร/มหาวิทยาลัย",
+      "target_audience": "เจ้าของแบรนด์เสื้อผ้าแฟชั่น, นักศึกษาจัดกิจกรรมรับน้อง/ค่าย, ฝ่ายจัดซื้อองค์กร",
+      "target_age_range": "18-40",
+      "brand_tone": [
+        "Professional",
+        "Accessible",
+        "Reliable"
+      ],
+      "customer_pain_points": [
+        "มีแบบเสื้อเองแต่ไม่อยากสั่งมีขั้นต่ำ",
+        "สกรีนแล้วสีแตกหลุดลอก",
+        "สั่งด่วนใช้ไม่ทันงาน"
+      ],
+      "price_positioning": "Mid-Market / Accessible B2B",
+      "average_price_thb": 180,
+      "conversion_model": "HIGH_TICKET_LEADGEN",
+      "conversion_model_reason": "ธุรกิจรับผลิตและสกรีนเสื้อ B2B มีเป้าหมายคือดึงดูดลูกค้าให้ทักแชตเพื่อประเมินราคาและออกใบเสนอราคา",
+      "kol_koc_mix": {
+        "kol": 70,
+        "koc": 30
+      },
+      "search_queries": [
+        {
+          "query": "เสื้อสกรีนแบรนด์ตัวเอง",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "เสื้อคณะมหาลัย",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_2"
+        },
+        {
+          "query": "รีวิวร้านสกรีนเสื้อ",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "เสื้อยืดสกรีนลาย",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "สกรีนเสื้อไม่มีขั้นต่ำ",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "ทำเสื้อแบรนด์ตัวเอง",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "สั่งทำเสื้อกลุ่ม",
+          "side": "KOC_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_2"
+        }
+      ],
+      "niche_keywords": [
+        "สกรีนเสื้อ",
+        "เสื้อยืด",
+        "DTF",
+        "เสื้อรุ่น",
+        "บล็อกสกรีน",
+        "ทำแบรนด์เสื้อผ้า"
+      ],
+      "manual_competitors": [
+        "Korat Screen",
+        "Screen BKK"
+      ],
+      "competitors": [
+        {
+          "brand": "Korat Screen",
+          "aliases": [
+            "โคราชสกรีน",
+            "Korat Screen"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "Screen BKK",
+          "aliases": [
+            "สกรีนบีเคเค",
+            "Screen BKK"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "T-Shirt Bangkok",
+          "aliases": [
+            "เสื้อยืดบางกอก"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        }
+      ],
+      "scraped_sources": [
+        "Website via Jina Reader (https://piggymonster-th.com/)",
+        "Facebook Page 10 posts"
+      ]
+    },
+    "match_response": {
+      "strategy": {
+        "conversion_model": "HIGH_TICKET_LEADGEN",
+        "conversion_model_reason": "B2B Custom apparel requires consulting, quoting, and direct sales inbox inquiries.",
+        "recommended_mix": {
+          "kol": 70,
+          "koc": 30
+        },
+        "achieved_mix": {
+          "KOL": 4,
+          "KOC": 2
+        }
+      },
+      "filter_stats": {
+        "raw_clips": 46,
+        "unique_creators": 38,
+        "removed_brand_accounts": 1,
+        "removed_merchants": 6,
+        "removed_affiliate_bots": 3,
+        "removed_irrelevant": 2,
+        "scored": 26
+      },
+      "ranked_kols": [
+        {
+          "rank": 1,
+          "kol": {
+            "id": "tt_fah_brandbuilder",
+            "handle": "fah.brandbuilder",
+            "display_name": "Fah สอนสร้างแบรนด์แฟชั่น",
+            "tiktok_url": "https://www.tiktok.com/@fah.brandbuilder",
+            "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+            "bio": "แชร์วิธีสร้างแบรนด์เสื้อผ้าตั้งแต่ 0 | แหล่งผ้า โรงงานสกรีน การตลาดแฟชั่น",
+            "follower_count": 142000,
+            "following_count": 85,
+            "total_likes": 1850000,
+            "tier": "Mid-Tier",
+            "recent_videos": [
+              {
+                "video_id": "v_fah_101",
+                "url": "https://www.tiktok.com/@fah.brandbuilder/video/7611223344",
+                "caption": "ทำเสื้อยืดแบรนด์ตัวเองครั้งแรก เลือกระบบสกรีนแบบไหนดี DTF vs บล็อกสกรีน #สร้างแบรนด์เสื้อผ้า #สกรีนเสื้อ",
+                "hashtags": [
+                  "สร้างแบรนด์เสื้อผ้า",
+                  "สกรีนเสื้อ"
+                ],
+                "views": 285000,
+                "likes": 19400,
+                "comments": 312,
+                "shares": 1890,
+                "collect_count": 5420,
+                "has_yellow_basket": false
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 285000.0,
+              "mean_views": 285000.0,
+              "median_comments": 312.0,
+              "save_rate": 0.019,
+              "comment_to_like": 0.016,
+              "share_to_like": 0.097,
+              "avg_caption_length": 85.0,
+              "kol_query_hits": 3,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Expert / Guru",
+            "llm_relevance_score": 0.96,
+            "why_it_fits": "ตรงกลุ่มเป้าหมายผู้ประกอบการสร้างแบรนด์เสื้อผ้า คอนเทนต์ให้ความรู้เปรียบเทียบเทคนิคสกรีน DTF เสริมความน่าเชื่อถือให้ Piggy Monster ได้อย่างสมบูรณ์แบบ",
+            "potential_risks": "เน้นเนื้อหาเชิงลึก ต้องวางโครงเรื่องให้เชื่อมโยงสู่บริการของแบรนด์โดยตรง",
+            "telemetry_summary": "Save Rate สูงถึง 1.90% ยอดแชร์สูง บ่งชี้ว่าคนดูเก็บไว้ใช้งานจริง"
+          },
+          "total_match_score": 88.4,
+          "score_breakdown": {
+            "relevance_total": 38.4,
+            "vertical_relevance_points": 14.5,
+            "topic_overlap_points": 14.5,
+            "matched_keywords": [
+              "สกรีนเสื้อ",
+              "สร้างแบรนด์เสื้อผ้า",
+              "DTF"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 9.4,
+            "engagement_total": 28.5,
+            "median_view_tier_points": 13.5,
+            "utility_score": 8.5,
+            "consistency_points": 6.5,
+            "audience_total": 21.5,
+            "thai_authenticity_points": 9.5,
+            "buyer_intent_points": 8.5,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 3.5,
+            "semantic_llm_points": 21.1,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 17.3,
+            "median_er_points": 14.2,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 8.5,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        },
+        {
+          "rank": 2,
+          "kol": {
+            "id": "tt_boy_screenpro",
+            "handle": "boy_screenpro",
+            "display_name": "ช่างบอย เจาะลึกงานสกรีน",
+            "tiktok_url": "https://www.tiktok.com/@boy_screenpro",
+            "avatar_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+            "bio": "พาดูเบื้องหลังงานผลิตเสื้อผ้า สกรีนบล็อก DTF เทคนิคพิมพ์ไม่มีกั๊ก",
+            "follower_count": 89000,
+            "following_count": 42,
+            "total_likes": 1120000,
+            "tier": "Micro",
+            "recent_videos": [
+              {
+                "video_id": "v_boy_202",
+                "url": "https://www.tiktok.com/@boy_screenpro/video/7611223399",
+                "caption": "สกรีนเสื้อคณะ 200 ตัวเสร็จใน 2 วัน ลายละเอียดสีแน่นๆ คมกริบ #เสื้อรุ่น #เสื้อคณะ #สกรีนเสื้อ",
+                "hashtags": [
+                  "เสื้อรุ่น",
+                  "เสื้อคณะ",
+                  "สกรีนเสื้อ"
+                ],
+                "views": 178000,
+                "likes": 12400,
+                "comments": 185,
+                "shares": 820,
+                "collect_count": 2340,
+                "has_yellow_basket": false
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 178000.0,
+              "mean_views": 178000.0,
+              "median_comments": 185.0,
+              "save_rate": 0.013,
+              "comment_to_like": 0.015,
+              "share_to_like": 0.066,
+              "avg_caption_length": 72.0,
+              "kol_query_hits": 2,
+              "koc_query_hits": 1
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Expert / Guru",
+            "llm_relevance_score": 0.94,
+            "why_it_fits": "คลิปโชว์ผลงานสกรีนเสื้อคณะเสร็จไวและคุณภาพเนียน ดึงดูดประธานรุ่นและกลุ่มกิจกรรมมหาวิทยาลัยโดยตรง",
+            "potential_risks": "ไม่มีประวัติพูดถึงแบรนด์คู่แข่ง ปลอดภัย 100%",
+            "telemetry_summary": "Engagement สม่ำเสมอ ไม่พึ่งพาบอทตะกร้า"
+          },
+          "total_match_score": 82.6,
+          "score_breakdown": {
+            "relevance_total": 36.2,
+            "vertical_relevance_points": 14.0,
+            "topic_overlap_points": 13.8,
+            "matched_keywords": [
+              "เสื้อคณะ",
+              "สกรีนเสื้อ",
+              "เสื้อรุ่น"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 8.4,
+            "engagement_total": 26.8,
+            "median_view_tier_points": 12.5,
+            "utility_score": 7.8,
+            "consistency_points": 6.5,
+            "audience_total": 19.6,
+            "thai_authenticity_points": 9.2,
+            "buyer_intent_points": 7.6,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 2.8,
+            "semantic_llm_points": 19.9,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 16.3,
+            "median_er_points": 13.4,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 8.0,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        },
+        {
+          "rank": 3,
+          "kol": {
+            "id": "tt_ploy_chulalife",
+            "handle": "ploy_chulalife",
+            "display_name": "Ploy Diary รับน้อง & ค่ายอาสา",
+            "tiktok_url": "https://www.tiktok.com/@ploy_chulalife",
+            "avatar_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150",
+            "bio": "พรีวิวชีวิตเด็กมหาลัย กิจกรรมค่าย รับน้อง เสื้อรุ่น OOTD มหาลัย",
+            "follower_count": 64000,
+            "following_count": 110,
+            "total_likes": 820000,
+            "tier": "Micro",
+            "recent_videos": [
+              {
+                "video_id": "v_ploy_303",
+                "url": "https://www.tiktok.com/@ploy_chulalife/video/7611223311",
+                "caption": "แจกเสื้อค่ายรุ่น 68 แล้วว ลายปีนี้น่ารักมาก สกรีนคมซักแล้วไม่ลอก #เด็กมหาลัย #เสื้อค่าย #เสื้อรุ่น",
+                "hashtags": [
+                  "เด็กมหาลัย",
+                  "เสื้อค่าย",
+                  "เสื้อรุ่น"
+                ],
+                "views": 94000,
+                "likes": 8700,
+                "comments": 94,
+                "shares": 420,
+                "collect_count": 1150,
+                "has_yellow_basket": false
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 94000.0,
+              "mean_views": 94000.0,
+              "median_comments": 94.0,
+              "save_rate": 0.012,
+              "comment_to_like": 0.011,
+              "share_to_like": 0.048,
+              "avg_caption_length": 65.0,
+              "kol_query_hits": 0,
+              "koc_query_hits": 2
+            },
+            "funnel_role": "KOC",
+            "sub_style": "KOC - Everyday User / Vlog",
+            "llm_relevance_score": 0.89,
+            "why_it_fits": "เสียงจริงจากนักศึกษาจัดค่าย ช่วยสร้าง Social Proof ด้านความคงทนและลายสกรีนสวยตรงปก",
+            "potential_risks": "ยอดวิวยู่ในระดับไมโคร เหมาะกับการเป็น KOC กระจายความน่าเชื่อถือ",
+            "telemetry_summary": "Engagement Rate 9.2% สูงตามสไตล์ไลฟ์สไตล์นักศึกษา"
+          },
+          "total_match_score": 76.5,
+          "score_breakdown": {
+            "relevance_total": 32.8,
+            "vertical_relevance_points": 12.5,
+            "topic_overlap_points": 12.8,
+            "matched_keywords": [
+              "เสื้อค่าย",
+              "เสื้อรุ่น"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 7.5,
+            "engagement_total": 24.2,
+            "median_view_tier_points": 11.2,
+            "utility_score": 6.8,
+            "consistency_points": 6.2,
+            "audience_total": 19.5,
+            "thai_authenticity_points": 9.5,
+            "buyer_intent_points": 7.2,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 2.8,
+            "semantic_llm_points": 18.0,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 14.8,
+            "median_er_points": 12.1,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 7.3,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        }
+      ],
+      "excluded_creators": [
+        {
+          "handle": "cheap_shirt_factory_oem",
+          "display_name": "โรงงานเสื้อยืด ราคาส่ง 35 บาท",
+          "reason": "Excluded by Gate 1 (Merchant / Wholesale Factory Account)",
+          "evidence": "Signature contains wholesale factory keywords and catalog links",
+          "tiktok_url": "https://www.tiktok.com/@cheap_shirt_factory_oem",
+          "stage": "gate1_merchant",
+          "follower_count": 12000,
+          "bio": "Official Shop Wholesale Store"
+        }
+      ],
+      "warnings": [],
+      "workflow_trace": [
+        "[Stage 1] Extracted Brand DNA for Piggy Monster (Model: HIGH_TICKET_LEADGEN)",
+        "[Stage 2] Generated 7 Natural Thai queries (60% Direct / 40% Adjacent)",
+        "[Stage 3] Screened 46 clips -> 38 unique creators -> Gate 1 filtered 6 merchants",
+        "[Stage 4] Applied High-Ticket B2B Weights (Relevance 40 + Utility 35 + Intent 25)",
+        "[Success] Ranked Top-K portfolio: 70% KOL : 30% KOC"
+      ],
+      "brand_dna": {
+        "id": "dryrun-piggymonster",
+        "brand_name": "Piggy Monster",
+        "website_url": "https://piggymonster-th.com/",
+        "facebook_url": "https://www.facebook.com/p/Piggy-Monster-%E0%B9%80%E0%B8%AA%E0%B8%B7%E0%B9%89%E0%B8%AD%E0%B8%AA%E0%B8%81%E0%B8%A3%E0%B8%B5%E0%B8%99-%E0%B8%A3%E0%B8%B2%E0%B8%84%E0%B8%B2%E0%B8%96%E0%B8%B9%E0%B8%81-61554003789059/",
+        "vertical": "B2B Manufacturing & Apparel",
+        "sub_category": "Custom T-Shirt Screen Printing, DTF & Polo Uniforms",
+        "brand_summary": "Piggy Monster โรงงานสกรีนเสื้อยืด เสื้อโปโล เสื้อรุ่น เสื้อคณะ บล็อกสกรีน และ DTF สกรีนคมชัด ไม่มีขั้นต่ำ สำหรับแบรนด์แฟชั่นและกิจกรรมองค์กร/มหาวิทยาลัย",
+        "target_audience": "เจ้าของแบรนด์เสื้อผ้าแฟชั่น, นักศึกษาจัดกิจกรรมรับน้อง/ค่าย, ฝ่ายจัดซื้อองค์กร",
+        "target_age_range": "18-40",
+        "brand_tone": [
+          "Professional",
+          "Accessible",
+          "Reliable"
+        ],
+        "customer_pain_points": [
+          "มีแบบเสื้อเองแต่ไม่อยากสั่งมีขั้นต่ำ",
+          "สกรีนแล้วสีแตกหลุดลอก",
+          "สั่งด่วนใช้ไม่ทันงาน"
+        ],
+        "price_positioning": "Mid-Market / Accessible B2B",
+        "average_price_thb": 180,
+        "conversion_model": "HIGH_TICKET_LEADGEN",
+        "conversion_model_reason": "ธุรกิจรับผลิตและสกรีนเสื้อ B2B มีเป้าหมายคือดึงดูดลูกค้าให้ทักแชตเพื่อประเมินราคาและออกใบเสนอราคา",
+        "kol_koc_mix": {
+          "kol": 70,
+          "koc": 30
+        },
+        "search_queries": [
+          {
+            "query": "เสื้อสกรีนแบรนด์ตัวเอง",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "เสื้อคณะมหาลัย",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_2"
+          },
+          {
+            "query": "รีวิวร้านสกรีนเสื้อ",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "เสื้อยืดสกรีนลาย",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "สกรีนเสื้อไม่มีขั้นต่ำ",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "ทำเสื้อแบรนด์ตัวเอง",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "สั่งทำเสื้อกลุ่ม",
+            "side": "KOC_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_2"
+          }
+        ],
+        "niche_keywords": [
+          "สกรีนเสื้อ",
+          "เสื้อยืด",
+          "DTF",
+          "เสื้อรุ่น",
+          "บล็อกสกรีน",
+          "ทำแบรนด์เสื้อผ้า"
+        ],
+        "manual_competitors": [
+          "Korat Screen",
+          "Screen BKK"
+        ],
+        "competitors": [
+          {
+            "brand": "Korat Screen",
+            "aliases": [
+              "โคราชสกรีน",
+              "Korat Screen"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "Screen BKK",
+            "aliases": [
+              "สกรีนบีเคเค",
+              "Screen BKK"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "T-Shirt Bangkok",
+            "aliases": [
+              "เสื้อยืดบางกอก"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader (https://piggymonster-th.com/)",
+          "Facebook Page 10 posts"
+        ]
+      }
+    }
+  },
+  "beauty-clinic": {
+    "id": "beauty-clinic",
+    "brand_name": "Emma Clinic",
+    "industry": "Beauty Clinic",
+    "icon": "💉",
+    "badge": "Competitor Venue Gate",
+    "execution_duration_sec": 68.9,
+    "estimated_cost_usd": 0.27,
+    "estimated_cost_thb": 9.45,
+    "brand_dna": {
+      "id": "dryrun-emmaclinic",
+      "brand_name": "Emma Clinic",
+      "website_url": "https://emmaclinicthailand.com",
+      "facebook_url": "https://www.facebook.com/emmaclinicthailand",
+      "vertical": "Beauty & Medical Aesthetics",
+      "sub_category": "Facial Plastic Surgery (Rhinoplasty & Chin Augmentation)",
+      "brand_summary": "Emma Clinic คลินิกศัลยกรรมเสริมจมูก เสริมคาง ปรับรูปหน้า และดูแลผิวพรรณ เน้นทรงสโลปปลายพุ่งธรรมชาติ สไตล์เกาหลี ปลอดภัยโดยแพทย์เฉพาะทาง",
+      "target_audience": "หญิงสาววัยรุ่นและคนทำงานที่ต้องการศัลยกรรมครั้งแรก หรือแก้จมูกทรงธรรมชาติ",
+      "target_age_range": "20-35",
+      "brand_tone": [
+        "Aesthetic",
+        "Professional",
+        "Reassuring",
+        "Trendy"
+      ],
+      "customer_pain_points": [
+        "กลัวทำแล้วเบี้ยว ทรงโป๊ะ แข็งเกินไป",
+        "กังวลเรื่องการบวมช้ำ พักฟื้นนาน",
+        "อยากได้ทรงสโลปละมุนเป็นธรรมชาติ"
+      ],
+      "price_positioning": "Premium Accessible (20,000 - 60,000 THB)",
+      "average_price_thb": 25000,
+      "conversion_model": "HIGH_TICKET_LEADGEN",
+      "conversion_model_reason": "บริการศัลยกรรมความงามมีมูลค่าสูงต่อเคส ลูกค้าต้องปรึกษาแพทย์และจองคิวทางแชต LINE/Facebook",
+      "kol_koc_mix": {
+        "kol": 70,
+        "koc": 30
+      },
+      "search_queries": [
+        {
+          "query": "เสริมจมูกทรงธรรมชาติ",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "เสริมคางปรับรูปหน้า",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "รีวิวเสริมจมูก",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "แนะนำเสริมคาง",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "คลินิกเสริมจมูกเกาหลี",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "แก้จมูกที่ไหนดี",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "ตัดปีกจมูกรีวิว",
+          "side": "KOC_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_1"
+        }
+      ],
+      "niche_keywords": [
+        "เสริมจมูก",
+        "เสริมคาง",
+        "ทรงสโลปปลายพุ่ง",
+        "แก้จมูก",
+        "ศัลยกรรม",
+        "คลินิกเกาหลี"
+      ],
+      "manual_competitors": [
+        "Sowon Clinic",
+        "SLC Clinic",
+        "Apex Medical Center"
+      ],
+      "competitors": [
+        {
+          "brand": "Sowon Clinic",
+          "aliases": [
+            "โซวอนคลินิก",
+            "Sowon"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "SLC Clinic",
+          "aliases": [
+            "เอสแอลซี"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "Apex Medical Center",
+          "aliases": [
+            "เอเพ็กซ์"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "Masterpiece Hospital",
+          "aliases": [
+            "โรงพยาบาลมาสเตอร์พีช"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        }
+      ],
+      "scraped_sources": [
+        "Website via Jina Reader (https://emmaclinicthailand.com)",
+        "Facebook Page 10 posts"
+      ]
+    },
+    "match_response": {
+      "strategy": {
+        "conversion_model": "HIGH_TICKET_LEADGEN",
+        "conversion_model_reason": "High-ticket cosmetic procedure requires trust-building consultation and lead capture.",
+        "recommended_mix": {
+          "kol": 70,
+          "koc": 30
+        },
+        "achieved_mix": {
+          "KOL": 4,
+          "KOC": 2
+        }
+      },
+      "filter_stats": {
+        "raw_clips": 48,
+        "unique_creators": 36,
+        "removed_brand_accounts": 2,
+        "removed_merchants": 4,
+        "removed_affiliate_bots": 2,
+        "removed_irrelevant": 1,
+        "scored": 27
+      },
+      "ranked_kols": [
+        {
+          "rank": 1,
+          "kol": {
+            "id": "tt_dr_nook_aesthetics",
+            "handle": "dr.nook_beauty",
+            "display_name": "หมอนุก แกะกล่องศัลยกรรม",
+            "tiktok_url": "https://www.tiktok.com/@dr.nook_beauty",
+            "avatar_url": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150",
+            "bio": "หมอแชร์สาระศัลยกรรมใบหน้า จมูก คาง ทรงไหนรับกับหน้าคุณ | เทคนิคดูทรงก่อนตัดสินใจ",
+            "follower_count": 230000,
+            "following_count": 45,
+            "total_likes": 3400000,
+            "tier": "Mid-Tier",
+            "recent_videos": [
+              {
+                "video_id": "v_nook_1",
+                "url": "https://www.tiktok.com/@dr.nook_beauty/video/7622334455",
+                "caption": "จมูกเนื้อน้อยทำทรงไหนสวย ไม่เสี่ยงทะลุ ทรงสโลปปลายพุ่งธรรมชาติ #เสริมจมูก #หมอศัลยกรรม #คลินิกความงาม",
+                "hashtags": [
+                  "เสริมจมูก",
+                  "หมอศัลยกรรม",
+                  "คลินิกความงาม"
+                ],
+                "views": 410000,
+                "likes": 28500,
+                "comments": 412,
+                "shares": 3100,
+                "collect_count": 9200,
+                "has_yellow_basket": false
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 410000.0,
+              "mean_views": 410000.0,
+              "median_comments": 412.0,
+              "save_rate": 0.022,
+              "comment_to_like": 0.014,
+              "share_to_like": 0.108,
+              "avg_caption_length": 90.0,
+              "kol_query_hits": 3,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Expert / Guru",
+            "llm_relevance_score": 0.98,
+            "why_it_fits": "ให้ความรู้เชิงการแพทย์เรื่องจมูกเนื้อน้อย ตรงกับกลุ่มเคสหลักของ Emma Clinic ยอดบันทึกสูงมาก สร้าง Trust ในระดับสูงสุด",
+            "potential_risks": "ตรวจสอบแล้วไม่มีการโปรโมตคู่แข่งหลักอย่าง Sowon Clinic หรือ SLC Clinic",
+            "telemetry_summary": "Save Rate 2.24% สูงที่สุดในกลุ่มความงาม บ่งบอก Buyer Intent สูงมาก"
+          },
+          "total_match_score": 91.2,
+          "score_breakdown": {
+            "relevance_total": 39.2,
+            "vertical_relevance_points": 14.8,
+            "topic_overlap_points": 14.8,
+            "matched_keywords": [
+              "เสริมจมูก",
+              "ทรงสโลปปลายพุ่ง",
+              "ศัลยกรรม"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 9.6,
+            "engagement_total": 29.5,
+            "median_view_tier_points": 14.0,
+            "utility_score": 9.0,
+            "consistency_points": 6.5,
+            "audience_total": 22.5,
+            "thai_authenticity_points": 9.8,
+            "buyer_intent_points": 9.2,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 3.5,
+            "semantic_llm_points": 21.6,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 17.6,
+            "median_er_points": 14.8,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 8.8,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        },
+        {
+          "rank": 2,
+          "kol": {
+            "id": "tt_fa_aesthetic_vlog",
+            "handle": "fa_beautyjourney",
+            "display_name": "Fa Diary ป้ายยาความสวย",
+            "tiktok_url": "https://www.tiktok.com/@fa_beautyjourney",
+            "avatar_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+            "bio": "แชร์ประสบการณ์ทำสวยครบวงจร จมูก คาง ตา ผิวใส ไลฟ์สไตล์ผู้หญิงยุคใหม่",
+            "follower_count": 115000,
+            "following_count": 72,
+            "total_likes": 1950000,
+            "tier": "Mid-Tier",
+            "recent_videos": [
+              {
+                "video_id": "v_fa_2",
+                "url": "https://www.tiktok.com/@fa_beautyjourney/video/7622334488",
+                "caption": "อัปเดตจมูกครบ 6 เดือน ทรงธรรมชาติมาก เพื่อนทักว่าหน้าหวานขึ้น ละมุนเกาหลีสุด #รีวิวเสริมจมูก #จมูกสโลปปลายพุ่ง #ทำสวย",
+                "hashtags": [
+                  "รีวิวเสริมจมูก",
+                  "จมูกสโลปปลายพุ่ง",
+                  "ทำสวย"
+                ],
+                "views": 230000,
+                "likes": 16800,
+                "comments": 230,
+                "shares": 1150,
+                "collect_count": 4200,
+                "has_yellow_basket": false
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 230000.0,
+              "mean_views": 230000.0,
+              "median_comments": 230.0,
+              "save_rate": 0.018,
+              "comment_to_like": 0.013,
+              "share_to_like": 0.068,
+              "avg_caption_length": 78.0,
+              "kol_query_hits": 1,
+              "koc_query_hits": 2
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Lifestyle / Aesthetic",
+            "llm_relevance_score": 0.93,
+            "why_it_fits": "ภาพลักษณ์สวยหวานสไตล์เกาหลี แสดงผลลัพธ์หลังทำอย่างมั่นใจ เสริม Brand Identity เรื่องทรงละมุนของ Emma Clinic",
+            "potential_risks": "ปลอดภัย ไม่พบแฮชแท็กคู่แข่งใน 10 คลิปย้อนหลัง",
+            "telemetry_summary": "Engagement Rate 8.1% และยอดคอมเมนต์ถามพิกัดทรงจมูกจำนวนมาก"
+          },
+          "total_match_score": 84.8,
+          "score_breakdown": {
+            "relevance_total": 36.8,
+            "vertical_relevance_points": 14.2,
+            "topic_overlap_points": 14.0,
+            "matched_keywords": [
+              "รีวิวเสริมจมูก",
+              "จมูกสโลปปลายพุ่ง"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 8.6,
+            "engagement_total": 27.2,
+            "median_view_tier_points": 13.0,
+            "utility_score": 8.0,
+            "consistency_points": 6.2,
+            "audience_total": 20.8,
+            "thai_authenticity_points": 9.5,
+            "buyer_intent_points": 8.3,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 3.0,
+            "semantic_llm_points": 20.2,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 16.6,
+            "median_er_points": 13.6,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 8.2,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        }
+      ],
+      "excluded_creators": [
+        {
+          "handle": "sowon_clinic_official",
+          "display_name": "Sowon Clinic Official",
+          "reason": "Excluded by Gate 1 (Competitor Brand Account)",
+          "evidence": "Username matches Competitor Watchlist Sowon Clinic",
+          "tiktok_url": "https://www.tiktok.com/@sowon_clinic_official",
+          "stage": "gate1_merchant",
+          "follower_count": 12000,
+          "bio": "Official Shop Wholesale Store"
+        }
+      ],
+      "warnings": [],
+      "workflow_trace": [
+        "[Stage 1] Extracted Brand DNA for Emma Clinic (Model: HIGH_TICKET_LEADGEN)",
+        "[Stage 2] Generated 7 Natural Thai queries (60% Direct / 40% Adjacent)",
+        "[Stage 3] Screened 48 clips -> Gate 1 eliminated competitor brand channels",
+        "[Stage 4] Applied LeadGen Weights (Relevance 40 + Utility 35 + Intent 25)",
+        "[Success] Ranked Top-K portfolio: 70% KOL : 30% KOC"
+      ],
+      "brand_dna": {
+        "id": "dryrun-emmaclinic",
+        "brand_name": "Emma Clinic",
+        "website_url": "https://emmaclinicthailand.com",
+        "facebook_url": "https://www.facebook.com/emmaclinicthailand",
+        "vertical": "Beauty & Medical Aesthetics",
+        "sub_category": "Facial Plastic Surgery (Rhinoplasty & Chin Augmentation)",
+        "brand_summary": "Emma Clinic คลินิกศัลยกรรมเสริมจมูก เสริมคาง ปรับรูปหน้า และดูแลผิวพรรณ เน้นทรงสโลปปลายพุ่งธรรมชาติ สไตล์เกาหลี ปลอดภัยโดยแพทย์เฉพาะทาง",
+        "target_audience": "หญิงสาววัยรุ่นและคนทำงานที่ต้องการศัลยกรรมครั้งแรก หรือแก้จมูกทรงธรรมชาติ",
+        "target_age_range": "20-35",
+        "brand_tone": [
+          "Aesthetic",
+          "Professional",
+          "Reassuring",
+          "Trendy"
+        ],
+        "customer_pain_points": [
+          "กลัวทำแล้วเบี้ยว ทรงโป๊ะ แข็งเกินไป",
+          "กังวลเรื่องการบวมช้ำ พักฟื้นนาน",
+          "อยากได้ทรงสโลปละมุนเป็นธรรมชาติ"
+        ],
+        "price_positioning": "Premium Accessible (20,000 - 60,000 THB)",
+        "average_price_thb": 25000,
+        "conversion_model": "HIGH_TICKET_LEADGEN",
+        "conversion_model_reason": "บริการศัลยกรรมความงามมีมูลค่าสูงต่อเคส ลูกค้าต้องปรึกษาแพทย์และจองคิวทางแชต LINE/Facebook",
+        "kol_koc_mix": {
+          "kol": 70,
+          "koc": 30
+        },
+        "search_queries": [
+          {
+            "query": "เสริมจมูกทรงธรรมชาติ",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "เสริมคางปรับรูปหน้า",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "รีวิวเสริมจมูก",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "แนะนำเสริมคาง",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "คลินิกเสริมจมูกเกาหลี",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "แก้จมูกที่ไหนดี",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "ตัดปีกจมูกรีวิว",
+            "side": "KOC_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_1"
+          }
+        ],
+        "niche_keywords": [
+          "เสริมจมูก",
+          "เสริมคาง",
+          "ทรงสโลปปลายพุ่ง",
+          "แก้จมูก",
+          "ศัลยกรรม",
+          "คลินิกเกาหลี"
+        ],
+        "manual_competitors": [
+          "Sowon Clinic",
+          "SLC Clinic",
+          "Apex Medical Center"
+        ],
+        "competitors": [
+          {
+            "brand": "Sowon Clinic",
+            "aliases": [
+              "โซวอนคลินิก",
+              "Sowon"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "SLC Clinic",
+            "aliases": [
+              "เอสแอลซี"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "Apex Medical Center",
+            "aliases": [
+              "เอเพ็กซ์"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "Masterpiece Hospital",
+            "aliases": [
+              "โรงพยาบาลมาสเตอร์พีช"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader (https://emmaclinicthailand.com)",
+          "Facebook Page 10 posts"
+        ]
+      }
+    }
+  },
+  "fashion-streetwear": {
+    "id": "fashion-streetwear",
+    "brand_name": "Merge Official",
+    "industry": "Fashion & Streetwear",
+    "icon": "👖",
+    "badge": "Entity & Spam Gate",
+    "execution_duration_sec": 61.4,
+    "estimated_cost_usd": 0.25,
+    "estimated_cost_thb": 8.75,
+    "brand_dna": {
+      "id": "dryrun-merge",
+      "brand_name": "Merge Official",
+      "website_url": "https://mergeofficial.com",
+      "facebook_url": "https://www.facebook.com/mergeofficialth",
+      "vertical": "Fashion & Streetwear Apparel",
+      "sub_category": "Designer Denim, Jeans, OOTD & Trendy Streetwear",
+      "brand_summary": "Merge Official แบรนด์แฟชั่นเสื้อผ้าสตรีทแวร์และกางเกงยีนส์ OOTD ทรงสวยยอดฮิตสำหรับคนรุ่นใหม่ ดีไซน์โก้เก๋ แมตช์ง่าย เก็บทรงพรางหุ่น ใส่ได้ทุกวัน",
+      "target_audience": "วัยรุ่น นักศึกษา และคนรุ่นใหม่ Gen Z ที่ชื่นชอบการแต่งตัวแฟชั่นสตรีทแวร์และแชร์ OOTD",
+      "target_age_range": "18-32",
+      "brand_tone": [
+        "Trendy",
+        "Confident",
+        "Stylish",
+        "Youthful"
+      ],
+      "customer_pain_points": [
+        "กางเกงยีนส์ใส่แล้วไม่เก็บทรง เอวเหลือสะโพกติด",
+        "หายีนส์ทรงสวยใส่สบายแมตช์ได้หลายลุคยาก"
+      ],
+      "price_positioning": "Affordable Luxury / Trendy Premium (1,290 - 2,590 THB)",
+      "average_price_thb": 1690,
+      "conversion_model": "ECOMMERCE_PRODUCT",
+      "conversion_model_reason": "แบรนด์จำหน่ายสินค้าแฟชั่นและกางเกงยีนส์สำเร็จรูปผ่านช่องทางออนไลน์ TikTok Shop, Website, Lazada, Shopee",
+      "kol_koc_mix": {
+        "kol": 30,
+        "koc": 70
+      },
+      "search_queries": [
+        {
+          "query": "กางเกงยีนส์ทรงสวย",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "เสื้อผ้าวัยรุ่น",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_2"
+        },
+        {
+          "query": "รีวิวกางเกงยีนส์",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "แนะนำเสื้อผ้าสตรีท",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "กางเกงยีนส์ Merge",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "ไอเดียแต่งตัว OOTD",
+          "side": "KOC_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_1"
+        }
+      ],
+      "niche_keywords": [
+        "กางเกงยีนส์",
+        "OOTD",
+        "สตรีทแวร์",
+        "แมตช์ชุด",
+        "เสื้อผ้าวัยรุ่น",
+        "ยีนส์ทรงสวย"
+      ],
+      "manual_competitors": [
+        "Gentlewoman",
+        "Stylist Shop",
+        "Mitr"
+      ],
+      "competitors": [
+        {
+          "brand": "Gentlewoman",
+          "aliases": [
+            "เจนเทิลวูแมน"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "Stylist Shop",
+          "aliases": [
+            "สไตลิสต์ช็อป"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "Mitr",
+          "aliases": [
+            "มิตร"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "Cintage",
+          "aliases": [
+            "ซินเทจ"
+          ],
+          "source": "google_search_grounded",
+          "mentions": 0
+        }
+      ],
+      "scraped_sources": [
+        "Website via Jina Reader (https://mergeofficial.com)",
+        "Facebook Page 10 posts"
+      ]
+    },
+    "match_response": {
+      "strategy": {
+        "conversion_model": "ECOMMERCE_PRODUCT",
+        "conversion_model_reason": "Fashion e-commerce heavily relies on visual try-on KOC vlogs and styling inspo.",
+        "recommended_mix": {
+          "kol": 30,
+          "koc": 70
+        },
+        "achieved_mix": {
+          "KOL": 2,
+          "KOC": 4
+        }
+      },
+      "filter_stats": {
+        "raw_clips": 45,
+        "unique_creators": 37,
+        "removed_brand_accounts": 1,
+        "removed_merchants": 5,
+        "removed_affiliate_bots": 4,
+        "removed_irrelevant": 2,
+        "scored": 25
+      },
+      "ranked_kols": [
+        {
+          "rank": 1,
+          "kol": {
+            "id": "tt_mint_ootd_chic",
+            "handle": "mint.ootdchic",
+            "display_name": "Mint แมตช์ชุดไปคาเฟ่",
+            "tiktok_url": "https://www.tiktok.com/@mint.ootdchic",
+            "avatar_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150",
+            "bio": "รวมไอเดียแต่งตัว OOTD แมตช์ยีนส์ให้ดูสูงเพรียว สตรีทชิค แต่งตามง่าย",
+            "follower_count": 185000,
+            "following_count": 94,
+            "total_likes": 2800000,
+            "tier": "Mid-Tier",
+            "recent_videos": [
+              {
+                "video_id": "v_mint_1",
+                "url": "https://www.tiktok.com/@mint.ootdchic/video/7633112233",
+                "caption": "กางเกงยีนส์ที่คนถามพิกัดเยอะที่สุด เก็บสะโพก เอวสับ พรางหุ่น 10/10 #OOTD #กางเกงยีนส์ทรงสวย #แต่งตัว",
+                "hashtags": [
+                  "OOTD",
+                  "กางเกงยีนส์ทรงสวย",
+                  "แต่งตัว"
+                ],
+                "views": 360000,
+                "likes": 24000,
+                "comments": 380,
+                "shares": 2400,
+                "collect_count": 7800,
+                "has_yellow_basket": true
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.35,
+              "median_views": 360000.0,
+              "mean_views": 360000.0,
+              "median_comments": 380.0,
+              "save_rate": 0.021,
+              "comment_to_like": 0.015,
+              "share_to_like": 0.1,
+              "avg_caption_length": 75.0,
+              "kol_query_hits": 2,
+              "koc_query_hits": 1
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Lifestyle / Aesthetic",
+            "llm_relevance_score": 0.95,
+            "why_it_fits": "ลุคสตรีทชิคตรงกลุ่ม Merge Official คอนเทนต์เน้น Try-on และแจกพิกัดกางเกงยีนส์เก็บสะโพก สร้างยอดขายผ่านตะกร้าทันที",
+            "potential_risks": "มีคลิปติดตะกร้าบางคลิป (Commerce Ratio 35%) แต่อยู่ในเกณฑ์สุขภาพดี ไม่ใช่บอทสแปม",
+            "telemetry_summary": "Save Rate 2.16% คนดูเซฟเก็บไว้เป็นเรฟแต่งตัวสูงมาก"
+          },
+          "total_match_score": 87.5,
+          "score_breakdown": {
+            "relevance_total": 37.5,
+            "vertical_relevance_points": 14.5,
+            "topic_overlap_points": 14.2,
+            "matched_keywords": [
+              "กางเกงยีนส์ทรงสวย",
+              "OOTD",
+              "แต่งตัว"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 8.8,
+            "engagement_total": 28.2,
+            "median_view_tier_points": 13.5,
+            "utility_score": 8.5,
+            "consistency_points": 6.2,
+            "audience_total": 21.8,
+            "thai_authenticity_points": 9.6,
+            "buyer_intent_points": 8.6,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 3.6,
+            "semantic_llm_points": 20.6,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 16.9,
+            "median_er_points": 14.1,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 8.5,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        },
+        {
+          "rank": 2,
+          "kol": {
+            "id": "tt_ice_everyday_denim",
+            "handle": "ice.everydaylook",
+            "display_name": "Ice ป้ายยายีนส์ทรงกระบอก",
+            "tiktok_url": "https://www.tiktok.com/@ice.everydaylook",
+            "avatar_url": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150",
+            "bio": "สาว 158cm รีวิวกางเกงยีนส์คนตัวเล็ก พรางขา โกงความสูง แมตช์เสื้อผ้าง่ายๆ",
+            "follower_count": 58000,
+            "following_count": 80,
+            "total_likes": 790000,
+            "tier": "Micro",
+            "recent_videos": [
+              {
+                "video_id": "v_ice_2",
+                "url": "https://www.tiktok.com/@ice.everydaylook/video/7633112277",
+                "caption": "ยีนส์ตัวโปรดใส่ซ้ำทั้งอาทิตย์ ทรงดีจนต้องป้ายยา แมตช์กับเสื้อกล้ามคือจบ #รีวิวกางเกงยีนส์ #ป้ายยาเสื้อผ้า",
+                "hashtags": [
+                  "รีวิวกางเกงยีนส์",
+                  "ป้ายยาเสื้อผ้า"
+                ],
+                "views": 112000,
+                "likes": 9600,
+                "comments": 142,
+                "shares": 620,
+                "collect_count": 1850,
+                "has_yellow_basket": true
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.4,
+              "median_views": 112000.0,
+              "mean_views": 112000.0,
+              "median_comments": 142.0,
+              "save_rate": 0.016,
+              "comment_to_like": 0.014,
+              "share_to_like": 0.064,
+              "avg_caption_length": 68.0,
+              "kol_query_hits": 0,
+              "koc_query_hits": 3
+            },
+            "funnel_role": "KOC",
+            "sub_style": "KOC - Hard-Sell Reviewer",
+            "llm_relevance_score": 0.92,
+            "why_it_fits": "เสียงจากผู้บริโภคจริงเน้นไซส์คนเอเชียตัวเล็ก ช่วยผลักดัน Conversion ปิดการขายใน TikTok Shop ได้รวดเร็ว",
+            "potential_risks": "เน้นการป้ายยา เหมาะกับโควตา KOC Conversion ปลาย Funnel",
+            "telemetry_summary": "Engagement Rate 8.5% แฟนคลับตามซื้อสินค้าสม่ำเสมอ"
+          },
+          "total_match_score": 81.4,
+          "score_breakdown": {
+            "relevance_total": 34.8,
+            "vertical_relevance_points": 13.5,
+            "topic_overlap_points": 13.5,
+            "matched_keywords": [
+              "รีวิวกางเกงยีนส์",
+              "ป้ายยาเสื้อผ้า"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 7.8,
+            "engagement_total": 26.4,
+            "median_view_tier_points": 12.0,
+            "utility_score": 7.8,
+            "consistency_points": 6.6,
+            "audience_total": 20.2,
+            "thai_authenticity_points": 9.4,
+            "buyer_intent_points": 7.8,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 3.0,
+            "semantic_llm_points": 19.1,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 15.7,
+            "median_er_points": 13.2,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 7.9,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        }
+      ],
+      "excluded_creators": [
+        {
+          "handle": "fast_fashion_drop_th",
+          "display_name": "เสื้อผ้าแฟชั่นราคาส่ง 80 บาท",
+          "reason": "Excluded by Gate 1 (Wholesale Factory Merchant)",
+          "evidence": "Profile bio and video catalog wholesale prices below threshold",
+          "tiktok_url": "https://www.tiktok.com/@fast_fashion_drop_th",
+          "stage": "gate1_merchant",
+          "follower_count": 12000,
+          "bio": "Official Shop Wholesale Store"
+        }
+      ],
+      "warnings": [],
+      "workflow_trace": [
+        "[Stage 1] Extracted Brand DNA for Merge Official (Model: ECOMMERCE_PRODUCT)",
+        "[Stage 2] Generated 6 Natural Thai queries (Denim / OOTD focused)",
+        "[Stage 3] Screened 45 clips -> Multi-Condition AND Gate removed spam bots",
+        "[Stage 4] Applied E-Commerce Weights (Relevance 40 + Commerce 35 + Intent 25)",
+        "[Success] Ranked Top-K portfolio: 30% KOL : 70% KOC"
+      ],
+      "brand_dna": {
+        "id": "dryrun-merge",
+        "brand_name": "Merge Official",
+        "website_url": "https://mergeofficial.com",
+        "facebook_url": "https://www.facebook.com/mergeofficialth",
+        "vertical": "Fashion & Streetwear Apparel",
+        "sub_category": "Designer Denim, Jeans, OOTD & Trendy Streetwear",
+        "brand_summary": "Merge Official แบรนด์แฟชั่นเสื้อผ้าสตรีทแวร์และกางเกงยีนส์ OOTD ทรงสวยยอดฮิตสำหรับคนรุ่นใหม่ ดีไซน์โก้เก๋ แมตช์ง่าย เก็บทรงพรางหุ่น ใส่ได้ทุกวัน",
+        "target_audience": "วัยรุ่น นักศึกษา และคนรุ่นใหม่ Gen Z ที่ชื่นชอบการแต่งตัวแฟชั่นสตรีทแวร์และแชร์ OOTD",
+        "target_age_range": "18-32",
+        "brand_tone": [
+          "Trendy",
+          "Confident",
+          "Stylish",
+          "Youthful"
+        ],
+        "customer_pain_points": [
+          "กางเกงยีนส์ใส่แล้วไม่เก็บทรง เอวเหลือสะโพกติด",
+          "หายีนส์ทรงสวยใส่สบายแมตช์ได้หลายลุคยาก"
+        ],
+        "price_positioning": "Affordable Luxury / Trendy Premium (1,290 - 2,590 THB)",
+        "average_price_thb": 1690,
+        "conversion_model": "ECOMMERCE_PRODUCT",
+        "conversion_model_reason": "แบรนด์จำหน่ายสินค้าแฟชั่นและกางเกงยีนส์สำเร็จรูปผ่านช่องทางออนไลน์ TikTok Shop, Website, Lazada, Shopee",
+        "kol_koc_mix": {
+          "kol": 30,
+          "koc": 70
+        },
+        "search_queries": [
+          {
+            "query": "กางเกงยีนส์ทรงสวย",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "เสื้อผ้าวัยรุ่น",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_2"
+          },
+          {
+            "query": "รีวิวกางเกงยีนส์",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "แนะนำเสื้อผ้าสตรีท",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "กางเกงยีนส์ Merge",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "ไอเดียแต่งตัว OOTD",
+            "side": "KOC_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_1"
+          }
+        ],
+        "niche_keywords": [
+          "กางเกงยีนส์",
+          "OOTD",
+          "สตรีทแวร์",
+          "แมตช์ชุด",
+          "เสื้อผ้าวัยรุ่น",
+          "ยีนส์ทรงสวย"
+        ],
+        "manual_competitors": [
+          "Gentlewoman",
+          "Stylist Shop",
+          "Mitr"
+        ],
+        "competitors": [
+          {
+            "brand": "Gentlewoman",
+            "aliases": [
+              "เจนเทิลวูแมน"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "Stylist Shop",
+            "aliases": [
+              "สไตลิสต์ช็อป"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "Mitr",
+            "aliases": [
+              "มิตร"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "Cintage",
+            "aliases": [
+              "ซินเทจ"
+            ],
+            "source": "google_search_grounded",
+            "mentions": 0
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader (https://mergeofficial.com)",
+          "Facebook Page 10 posts"
+        ]
+      }
+    }
+  },
+  "sports-outdoor": {
+    "id": "sports-outdoor",
+    "brand_name": "Proski Thailand",
+    "industry": "Sports & Outdoor",
+    "icon": "🎿",
+    "badge": "Niche Consistency Gate",
+    "execution_duration_sec": 67.8,
+    "estimated_cost_usd": 0.26,
+    "estimated_cost_thb": 9.1,
+    "brand_dna": {
+      "id": "dryrun-proski",
+      "brand_name": "Proski Thailand",
+      "website_url": "https://proski.co/",
+      "facebook_url": "https://www.facebook.com/p/Proski-Thailand-61594629305420/",
+      "vertical": "Sports & Outdoor Entertainment",
+      "sub_category": "Indoor Ski & Snowboard Training Club",
+      "brand_summary": "Proski Thailand คลับฝึกซ้อมสกีและสโนว์บอร์ดในร่มแห่งแรกในไทย จำลองเนินหิมะอินดอร์ พร้อมคอร์สเรียนก่อนไปทริปเล่นสกีต่างประเทศ",
+      "target_audience": "คนเมือง วัยทำงาน ครอบครัว และกลุ่มชอบท่องเที่ยวฤดูหนาวที่เตรียมตัวไปเล่นสกีญี่ปุ่นหรือยุโรป",
+      "target_age_range": "22-45",
+      "brand_tone": [
+        "Adventurous",
+        "Enthusiastic",
+        "Premium",
+        "Active"
+      ],
+      "customer_pain_points": [
+        "ไปเที่ยวสกีครั้งแรกแต่เล่นไม่เป็น กลัวล้มเจ็บ",
+        "ไม่มีเวลาไปฝึกต่างประเทศ ค่าตั๋วและคอร์สหน้าลานแพง"
+      ],
+      "price_positioning": "Premium Experience (1,500 - 5,000 THB / session)",
+      "average_price_thb": 2200,
+      "conversion_model": "LIFESTYLE_EXPERIENCE",
+      "conversion_model_reason": "ธุรกิจเน้นขายประสบการณ์ การเรียนรู้ และการมาใช้บริการที่คลับอินดอร์ จองเวลาล่วงหน้า",
+      "kol_koc_mix": {
+        "kol": 60,
+        "koc": 40
+      },
+      "search_queries": [
+        {
+          "query": "เรียนสกี กรุงเทพ",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "สโนว์บอร์ด อินดอร์",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "ฝึกสกี ก่อนไปญี่ปุ่น",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_2"
+        },
+        {
+          "query": "รีวิว เรียนสกี",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "แนะนำ คอร์สสกี",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "เล่นสกี ครั้งแรก",
+          "side": "KOC_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_2"
+        }
+      ],
+      "niche_keywords": [
+        "เรียนสกี",
+        "สโนว์บอร์ด",
+        "สกีอินดอร์",
+        "สกีญี่ปุ่น",
+        "หิมะ",
+        "ทริปสกี"
+      ],
+      "manual_competitors": [
+        "Ski365",
+        "The Snow Town"
+      ],
+      "competitors": [
+        {
+          "brand": "Ski365",
+          "aliases": [
+            "สกี365"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "The Snow Town",
+          "aliases": [
+            "สโนว์ทาวน์"
+          ],
+          "source": "manual",
+          "mentions": 0
+        }
+      ],
+      "scraped_sources": [
+        "Website via Jina Reader (https://proski.co/)",
+        "Facebook Page 10 posts"
+      ]
+    },
+    "match_response": {
+      "strategy": {
+        "conversion_model": "LIFESTYLE_EXPERIENCE",
+        "conversion_model_reason": "Activity and lifestyle sports require visual experience sharing and trial videos.",
+        "recommended_mix": {
+          "kol": 60,
+          "koc": 40
+        },
+        "achieved_mix": {
+          "KOL": 3,
+          "KOC": 2
+        }
+      },
+      "filter_stats": {
+        "raw_clips": 42,
+        "unique_creators": 33,
+        "removed_brand_accounts": 1,
+        "removed_merchants": 3,
+        "removed_affiliate_bots": 2,
+        "removed_irrelevant": 1,
+        "scored": 26
+      },
+      "ranked_kols": [
+        {
+          "rank": 1,
+          "kol": {
+            "id": "tt_bank_snowboarder",
+            "handle": "bank.snowlife",
+            "display_name": "Bank สอนเล่น Snowboard",
+            "tiktok_url": "https://www.tiktok.com/@bank.snowlife",
+            "avatar_url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
+            "bio": "พาทัวร์ทริปหิมะ & เทคนิคสโนว์บอร์ดตั้งแต่พื้นฐาน ทรงตัว เลี้ยว เบรก เล่นเป็นใน 1 วัน",
+            "follower_count": 92000,
+            "following_count": 60,
+            "total_likes": 1450000,
+            "tier": "Micro",
+            "recent_videos": [
+              {
+                "video_id": "v_bank_1",
+                "url": "https://www.tiktok.com/@bank.snowlife/video/7644112233",
+                "caption": "ไปญี่ปุ่นครั้งแรกหัดสโนว์บอร์ดที่ไทยก่อน ดียังไง ไม่ต้องเจ็บตัวฟรีหน้าลาน #สโนว์บอร์ด #ฝึกสกี #เที่ยวญี่ปุ่น",
+                "hashtags": [
+                  "สโนว์บอร์ด",
+                  "ฝึกสกี",
+                  "เที่ยวญี่ปุ่น"
+                ],
+                "views": 290000,
+                "likes": 18500,
+                "comments": 210,
+                "shares": 1400,
+                "collect_count": 5600,
+                "has_yellow_basket": false
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 290000.0,
+              "mean_views": 290000.0,
+              "median_comments": 210.0,
+              "save_rate": 0.019,
+              "comment_to_like": 0.011,
+              "share_to_like": 0.075,
+              "avg_caption_length": 82.0,
+              "kol_query_hits": 3,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Expert / Guru",
+            "llm_relevance_score": 0.96,
+            "why_it_fits": "ความเชี่ยวชาญเฉพาะด้านสโนว์บอร์ด คอนเทนต์ตอบโจทย์คนอยากฝึกก่อนไปต่างประเทศ ตรงจุดขาย Proski 100%",
+            "potential_risks": "กลุ่มคนดูเฉพาะกลุ่ม แต่มี Purchasing Power สูงมาก",
+            "telemetry_summary": "Save Rate 1.93% คนดูเซฟเก็บไว้เตรียมวางแผนทริปฤดูหนาว"
+          },
+          "total_match_score": 86.8,
+          "score_breakdown": {
+            "relevance_total": 38.0,
+            "vertical_relevance_points": 14.5,
+            "topic_overlap_points": 14.2,
+            "matched_keywords": [
+              "สโนว์บอร์ด",
+              "ฝึกสกี",
+              "เที่ยวญี่ปุ่น"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 9.3,
+            "engagement_total": 27.8,
+            "median_view_tier_points": 13.0,
+            "utility_score": 8.5,
+            "consistency_points": 6.3,
+            "audience_total": 21.0,
+            "thai_authenticity_points": 9.6,
+            "buyer_intent_points": 8.4,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 3.0,
+            "semantic_llm_points": 20.9,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 17.1,
+            "median_er_points": 13.9,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 8.3,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        }
+      ],
+      "excluded_creators": [
+        {
+          "handle": "japan_tour_package_cheap",
+          "display_name": "ทัวร์ญี่ปุ่นราคาประหยัด",
+          "reason": "Excluded by Gate 1 (Tour Agency Merchant)",
+          "evidence": "Tour selling agency with price listings",
+          "tiktok_url": "https://www.tiktok.com/@japan_tour_package_cheap",
+          "stage": "gate1_merchant",
+          "follower_count": 12000,
+          "bio": "Official Shop Wholesale Store"
+        }
+      ],
+      "warnings": [],
+      "workflow_trace": [
+        "[Stage 1] Extracted Brand DNA for Proski Thailand (Model: LIFESTYLE_EXPERIENCE)",
+        "[Stage 2] Generated 6 Natural Thai queries (Indoor Ski & Snowboard)",
+        "[Stage 3] Screened 42 clips -> Gate 1 screened out tour resellers",
+        "[Stage 4] Applied Experience Matrix (Relevance 40 + Engagement 35 + Authenticity 25)",
+        "[Success] Ranked Top-K portfolio: 60% KOL : 40% KOC"
+      ],
+      "brand_dna": {
+        "id": "dryrun-proski",
+        "brand_name": "Proski Thailand",
+        "website_url": "https://proski.co/",
+        "facebook_url": "https://www.facebook.com/p/Proski-Thailand-61594629305420/",
+        "vertical": "Sports & Outdoor Entertainment",
+        "sub_category": "Indoor Ski & Snowboard Training Club",
+        "brand_summary": "Proski Thailand คลับฝึกซ้อมสกีและสโนว์บอร์ดในร่มแห่งแรกในไทย จำลองเนินหิมะอินดอร์ พร้อมคอร์สเรียนก่อนไปทริปเล่นสกีต่างประเทศ",
+        "target_audience": "คนเมือง วัยทำงาน ครอบครัว และกลุ่มชอบท่องเที่ยวฤดูหนาวที่เตรียมตัวไปเล่นสกีญี่ปุ่นหรือยุโรป",
+        "target_age_range": "22-45",
+        "brand_tone": [
+          "Adventurous",
+          "Enthusiastic",
+          "Premium",
+          "Active"
+        ],
+        "customer_pain_points": [
+          "ไปเที่ยวสกีครั้งแรกแต่เล่นไม่เป็น กลัวล้มเจ็บ",
+          "ไม่มีเวลาไปฝึกต่างประเทศ ค่าตั๋วและคอร์สหน้าลานแพง"
+        ],
+        "price_positioning": "Premium Experience (1,500 - 5,000 THB / session)",
+        "average_price_thb": 2200,
+        "conversion_model": "LIFESTYLE_EXPERIENCE",
+        "conversion_model_reason": "ธุรกิจเน้นขายประสบการณ์ การเรียนรู้ และการมาใช้บริการที่คลับอินดอร์ จองเวลาล่วงหน้า",
+        "kol_koc_mix": {
+          "kol": 60,
+          "koc": 40
+        },
+        "search_queries": [
+          {
+            "query": "เรียนสกี กรุงเทพ",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "สโนว์บอร์ด อินดอร์",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "ฝึกสกี ก่อนไปญี่ปุ่น",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_2"
+          },
+          {
+            "query": "รีวิว เรียนสกี",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "แนะนำ คอร์สสกี",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "เล่นสกี ครั้งแรก",
+            "side": "KOC_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_2"
+          }
+        ],
+        "niche_keywords": [
+          "เรียนสกี",
+          "สโนว์บอร์ด",
+          "สกีอินดอร์",
+          "สกีญี่ปุ่น",
+          "หิมะ",
+          "ทริปสกี"
+        ],
+        "manual_competitors": [
+          "Ski365",
+          "The Snow Town"
+        ],
+        "competitors": [
+          {
+            "brand": "Ski365",
+            "aliases": [
+              "สกี365"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "The Snow Town",
+            "aliases": [
+              "สโนว์ทาวน์"
+            ],
+            "source": "manual",
+            "mentions": 0
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader (https://proski.co/)",
+          "Facebook Page 10 posts"
+        ]
+      }
+    }
+  },
+  "fnb-cafe": {
+    "id": "fnb-cafe",
+    "brand_name": "Bearhouse",
+    "industry": "F&B & Cafe",
+    "icon": "🧋",
+    "badge": "Experience & Niche Gate",
+    "execution_duration_sec": 62.1,
+    "estimated_cost_usd": 0.25,
+    "estimated_cost_thb": 8.75,
+    "brand_dna": {
+      "id": "dryrun-bearhouse",
+      "brand_name": "Bearhouse",
+      "website_url": "https://bearhouse.co.th",
+      "facebook_url": "https://www.facebook.com/bearhouse.thailand",
+      "vertical": "F&B, Beverage & Lifestyle Cafe",
+      "sub_category": "Craft Milk Tea, Mochi Pearls, Fresh Bakery",
+      "brand_summary": "Bearhouse แบรนด์ชานมไข่มุกและเครื่องดื่มไลฟ์สไตล์ จุดเด่นคือไข่มุกโมจิทำสดหนึบหนับ เค้กโรล และเมนูชาพรีเมียม ขวัญใจวัยรุ่นและสายคาเฟ่",
+      "target_audience": "วัยรุ่น นักเรียน นักศึกษา คนทำงานรุ่นใหม่ และสายคาเฟ่ฮอปเปอร์ทั่วกรุงเทพฯ และหัวเมืองใหญ่",
+      "target_age_range": "16-35",
+      "brand_tone": [
+        "Playful",
+        "Warm",
+        "Delicious",
+        "Friendly"
+      ],
+      "customer_pain_points": [
+        "อยากกินชานมที่ไข่มุกนุ่มหนึบไม่เหมือนใคร ชาเข้มหวานกำลังดี",
+        "อยากลองเมนูลิมิเต็ดใหม่ๆ"
+      ],
+      "price_positioning": "Mass Premium (85 - 145 THB)",
+      "average_price_thb": 110,
+      "conversion_model": "LIFESTYLE_EXPERIENCE",
+      "conversion_model_reason": "ธุรกิจอาหารและเครื่องดื่มมีหน้าร้าน เน้นกระแสรีวิว ชวนไปลองชิม และสั่งเดลิเวอรี",
+      "kol_koc_mix": {
+        "kol": 60,
+        "koc": 40
+      },
+      "search_queries": [
+        {
+          "query": "ชานมไข่มุก อร่อย",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "ชาไทย ไข่มุกโมจิ",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        },
+        {
+          "query": "คาเฟ่ วัยรุ่น",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_2"
+        },
+        {
+          "query": "รีวิว ชานม",
+          "side": "KOC_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "แนะนำ เมนูเด็ด",
+          "side": "KOL_QUERY",
+          "specificity": "adjacent",
+          "syntax_rule": "rule_3"
+        },
+        {
+          "query": "ชานม Bearhouse",
+          "side": "KOL_QUERY",
+          "specificity": "direct",
+          "syntax_rule": "rule_1"
+        }
+      ],
+      "niche_keywords": [
+        "ชานมไข่มุก",
+        "ไข่มุกโมจิ",
+        "ชาไทย",
+        "คาเฟ่",
+        "ของหวาน",
+        "รีวิวของกิน"
+      ],
+      "manual_competitors": [
+        "After You",
+        "Nose Tea",
+        "Fire Tiger",
+        "ChaTraMue"
+      ],
+      "competitors": [
+        {
+          "brand": "After You",
+          "aliases": [
+            "อาฟเตอร์ยู"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "Nose Tea",
+          "aliases": [
+            "โนสที"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "Fire Tiger",
+          "aliases": [
+            "เสือพ่นไฟ"
+          ],
+          "source": "manual",
+          "mentions": 0
+        },
+        {
+          "brand": "ChaTraMue",
+          "aliases": [
+            "ชาตรามือ"
+          ],
+          "source": "manual",
+          "mentions": 0
+        }
+      ],
+      "scraped_sources": [
+        "Website via Jina Reader (https://bearhouse.co.th)",
+        "Facebook Page 10 posts"
+      ]
+    },
+    "match_response": {
+      "strategy": {
+        "conversion_model": "LIFESTYLE_EXPERIENCE",
+        "conversion_model_reason": "Food & Beverage drives traffic through sensory taste tests, mochi pearl texture videos, and cafe hopping vlogs.",
+        "recommended_mix": {
+          "kol": 60,
+          "koc": 40
+        },
+        "achieved_mix": {
+          "KOL": 3,
+          "KOC": 2
+        }
+      },
+      "filter_stats": {
+        "raw_clips": 50,
+        "unique_creators": 40,
+        "removed_brand_accounts": 2,
+        "removed_merchants": 4,
+        "removed_affiliate_bots": 3,
+        "removed_irrelevant": 1,
+        "scored": 30
+      },
+      "ranked_kols": [
+        {
+          "rank": 1,
+          "kol": {
+            "id": "tt_ginwith_ploy",
+            "handle": "gin.withploy",
+            "display_name": "Ploy พากินชาไข่มุกทั่วกรุง",
+            "tiktok_url": "https://www.tiktok.com/@gin.withploy",
+            "avatar_url": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
+            "bio": "สาวกชานมไข่มุก ชิมทุกแบรนด์ รีวิวรสชาติ ชาเข้ม/ไข่มุกหนึบ สายหวานต้องฟอล",
+            "follower_count": 320000,
+            "following_count": 110,
+            "total_likes": 5600000,
+            "tier": "Mid-Tier",
+            "recent_videos": [
+              {
+                "video_id": "v_ploy_boba",
+                "url": "https://www.tiktok.com/@gin.withploy/video/7655112233",
+                "caption": "ไข่มุกโมจิทำสด นุ่มหนึบเคี้ยวเพลินมาก ชาไทยหวาน 50% คือลงตัวที่สุด #รีวิวชานม #ชานมไข่มุก #อร่อยบอกต่อ",
+                "hashtags": [
+                  "รีวิวชานม",
+                  "ชานมไข่มุก",
+                  "อร่อยบอกต่อ"
+                ],
+                "views": 520000,
+                "likes": 42000,
+                "comments": 540,
+                "shares": 3800,
+                "collect_count": 11200,
+                "has_yellow_basket": false
+              }
+            ],
+            "signals": {
+              "basket_ratio": 0.0,
+              "median_views": 520000.0,
+              "mean_views": 520000.0,
+              "median_comments": 540.0,
+              "save_rate": 0.021,
+              "comment_to_like": 0.012,
+              "share_to_like": 0.09,
+              "avg_caption_length": 85.0,
+              "kol_query_hits": 3,
+              "koc_query_hits": 0
+            },
+            "funnel_role": "KOL",
+            "sub_style": "KOL - Lifestyle / Aesthetic",
+            "llm_relevance_score": 0.97,
+            "why_it_fits": "คอนเทนต์สายชานมโดยเฉพาะ ถ่ายภาพเครื่องดื่มและไข่มุกโมจิดูน่ารับประทาน กระตุ้นให้ผู้ชมไปหน้าร้านได้ทันที",
+            "potential_risks": "มีรีวิวแบรนด์อื่นๆ ในอดีต แต่ไม่มีสัญญากับคู่แข่งหลักใน 30 วันล่าสุด",
+            "telemetry_summary": "Save Rate 2.15% ยอดเซฟเกินหมื่นครั้ง บ่งชี้ความต้องการตามไปกินจริง"
+          },
+          "total_match_score": 90.5,
+          "score_breakdown": {
+            "relevance_total": 38.8,
+            "vertical_relevance_points": 14.8,
+            "topic_overlap_points": 14.5,
+            "matched_keywords": [
+              "ชานมไข่มุก",
+              "ไข่มุกโมจิ",
+              "อร่อยบอกต่อ"
+            ],
+            "competitor_risk_penalty": 0.0,
+            "intent_alignment_points": 9.5,
+            "engagement_total": 29.2,
+            "median_view_tier_points": 14.0,
+            "utility_score": 8.8,
+            "consistency_points": 6.4,
+            "audience_total": 22.5,
+            "thai_authenticity_points": 9.8,
+            "buyer_intent_points": 9.2,
+            "buyer_intent_tier": "tier1_fast_proxy",
+            "affiliate_health_points": 3.5,
+            "semantic_llm_points": 21.3,
+            "cosine_similarity": 0.88,
+            "subniche_workready_points": 17.5,
+            "median_er_points": 14.6,
+            "median_engagement_rate": 0.085,
+            "eligible_clips": 3,
+            "utility_points": 8.8,
+            "view_consistency_ratio": 0.82,
+            "thai_ratio": 0.95,
+            "evidence": []
+          }
+        }
+      ],
+      "excluded_creators": [
+        {
+          "handle": "syrup_wholesale_factory",
+          "display_name": "โรงงานหัวเชื้อไซรัปชานม",
+          "reason": "Excluded by Gate 1 (Ingredient Wholesale Merchant)",
+          "evidence": "Industrial b2b syrup ingredient seller",
+          "tiktok_url": "https://www.tiktok.com/@syrup_wholesale_factory",
+          "stage": "gate1_merchant",
+          "follower_count": 12000,
+          "bio": "Official Shop Wholesale Store"
+        }
+      ],
+      "warnings": [],
+      "workflow_trace": [
+        "[Stage 1] Extracted Brand DNA for Bearhouse (Model: LIFESTYLE_EXPERIENCE)",
+        "[Stage 2] Generated 6 Natural Thai queries (Milk Tea / Mochi Pearls)",
+        "[Stage 3] Screened 50 clips -> Removed industrial b2b ingredient shops",
+        "[Stage 4] Applied Food & Beverage Sensory Matrix",
+        "[Success] Ranked Top-K portfolio: 60% KOL : 40% KOC"
+      ],
+      "brand_dna": {
+        "id": "dryrun-bearhouse",
+        "brand_name": "Bearhouse",
+        "website_url": "https://bearhouse.co.th",
+        "facebook_url": "https://www.facebook.com/bearhouse.thailand",
+        "vertical": "F&B, Beverage & Lifestyle Cafe",
+        "sub_category": "Craft Milk Tea, Mochi Pearls, Fresh Bakery",
+        "brand_summary": "Bearhouse แบรนด์ชานมไข่มุกและเครื่องดื่มไลฟ์สไตล์ จุดเด่นคือไข่มุกโมจิทำสดหนึบหนับ เค้กโรล และเมนูชาพรีเมียม ขวัญใจวัยรุ่นและสายคาเฟ่",
+        "target_audience": "วัยรุ่น นักเรียน นักศึกษา คนทำงานรุ่นใหม่ และสายคาเฟ่ฮอปเปอร์ทั่วกรุงเทพฯ และหัวเมืองใหญ่",
+        "target_age_range": "16-35",
+        "brand_tone": [
+          "Playful",
+          "Warm",
+          "Delicious",
+          "Friendly"
+        ],
+        "customer_pain_points": [
+          "อยากกินชานมที่ไข่มุกนุ่มหนึบไม่เหมือนใคร ชาเข้มหวานกำลังดี",
+          "อยากลองเมนูลิมิเต็ดใหม่ๆ"
+        ],
+        "price_positioning": "Mass Premium (85 - 145 THB)",
+        "average_price_thb": 110,
+        "conversion_model": "LIFESTYLE_EXPERIENCE",
+        "conversion_model_reason": "ธุรกิจอาหารและเครื่องดื่มมีหน้าร้าน เน้นกระแสรีวิว ชวนไปลองชิม และสั่งเดลิเวอรี",
+        "kol_koc_mix": {
+          "kol": 60,
+          "koc": 40
+        },
+        "search_queries": [
+          {
+            "query": "ชานมไข่มุก อร่อย",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "ชาไทย ไข่มุกโมจิ",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          },
+          {
+            "query": "คาเฟ่ วัยรุ่น",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_2"
+          },
+          {
+            "query": "รีวิว ชานม",
+            "side": "KOC_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "แนะนำ เมนูเด็ด",
+            "side": "KOL_QUERY",
+            "specificity": "adjacent",
+            "syntax_rule": "rule_3"
+          },
+          {
+            "query": "ชานม Bearhouse",
+            "side": "KOL_QUERY",
+            "specificity": "direct",
+            "syntax_rule": "rule_1"
+          }
+        ],
+        "niche_keywords": [
+          "ชานมไข่มุก",
+          "ไข่มุกโมจิ",
+          "ชาไทย",
+          "คาเฟ่",
+          "ของหวาน",
+          "รีวิวของกิน"
+        ],
+        "manual_competitors": [
+          "After You",
+          "Nose Tea",
+          "Fire Tiger",
+          "ChaTraMue"
+        ],
+        "competitors": [
+          {
+            "brand": "After You",
+            "aliases": [
+              "อาฟเตอร์ยู"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "Nose Tea",
+            "aliases": [
+              "โนสที"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "Fire Tiger",
+            "aliases": [
+              "เสือพ่นไฟ"
+            ],
+            "source": "manual",
+            "mentions": 0
+          },
+          {
+            "brand": "ChaTraMue",
+            "aliases": [
+              "ชาตรามือ"
+            ],
+            "source": "manual",
+            "mentions": 0
+          }
+        ],
+        "scraped_sources": [
+          "Website via Jina Reader (https://bearhouse.co.th)",
+          "Facebook Page 10 posts"
+        ]
+      }
+    }
+  }
+}

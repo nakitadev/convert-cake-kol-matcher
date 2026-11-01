@@ -200,7 +200,11 @@ class ApifyTikTokService:
             "shouldDownloadVideos": False,
             "shouldDownloadCovers": False,
         }
-        items = await self._run_tiktok(payload, timeout_s=60)
+        try:
+            items = await self._run_tiktok(payload, timeout_s=120)
+        except Exception as e:
+            logger.warning("scrape_profiles timed out or failed: %s", e)
+            items = []
         out: Dict[str, List[Dict[str, Any]]] = {}
         for it in items:
             name = str((it.get("authorMeta") or {}).get("name") or "").strip().lower()

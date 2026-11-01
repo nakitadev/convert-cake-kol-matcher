@@ -28,7 +28,6 @@
 - **ห้ามใส่ Hardcoded Heuristic Numbers / Tables** เช่น การเดาราคาคงที่ 690, 280, 2900 หรือการเขียน `if "beauty" in ... elif "f&b" in ... else ...` ทุกอย่างต้องสกัดจากข้อมูลจริง (Regex ดึงราคาที่ระบุในคลิปจริง, ใช้ Bio/Hashtags ของครีเอเตอร์จริง, Brand Category จริงจาก LLM)
 - ห้ามใช้ Seed Pool (`thai_kols_seed.json`) มาเป็น Fallback เมื่อค้นหาไม่เจอ
 - ห้ามใช้ Hardcoded Comments ใน `apify_service.py` ทุกคอมเมนต์ต้องมาจากการสังเคราะห์สดผ่าน Gemini จาก Live Video Captions
-- ห้ามใช้ Template Campaign Hooks แบบตายตัว ต้องสร้างแบบไดนามิก 100% จาก Context ของวิดีโอจริงและ Brand DNA จริง
 - **Fail-Loud / Transparent Reporting:** หาก Apify หรือ Gemini ขัดข้อง ให้รายงาน Error สดตามจริงบน UI เพื่อให้ผู้ใช้ทราบสถานะจริงของ API เสมอ
 
 ---
@@ -42,8 +41,8 @@
   1. `analyze_brand_node`: สกัด Brand DNA และ Thai Keywords
   2. `discover_candidates_node`: ค้นหาครีเอเตอร์และคลิปสดจาก TikTok ผ่าน Apify
   3. `score_and_filter_node`: คำนวณ Hybrid Score 45/35/20 พร้อมกรอง Anti-Spam
-  4. `rank_and_hook_node`: จัดอันดับ และสร้าง Thai Campaign Pitch Hooks
-- **LLM Model:** `gemini-3.5-flash-lite` (วิเคราะห์ Brand DNA & Conversion Models, Google Search Grounding สกัดคู่แข่งในไทย, Batch Relevance Gate, สร้าง Role-Adaptive 3-Sec Campaign Hooks)
+  4. `score_rank_hooks_node`: จัดอันดับ Two-Pass Stratified Quota
+- **LLM Model:** `gemini-3.5-flash-lite` (วิเคราะห์ Brand DNA & Conversion Models, Google Search Grounding สกัดคู่แข่งในไทย, Batch Relevance Gate)
 - **Embedding Model:** `gemini-embedding-2` (เวกเตอร์ขนาด 3,072 มิติ ใช้คำนวณ Cosine Similarity)
 - **Assistant Development Engine:** `agy` CLI v1.4.7 (`gemini-3.8-flash-high`)
 
@@ -94,13 +93,12 @@
 
 ---
 
-### 9. 3-Layer Grounded Thai Competitor Detection & Role-Adaptive Hooks (Spec 5)
+### 9. 3-Layer Grounded Thai Competitor Detection (Spec 5)
 - **Layer 1:** Google Search Grounding ร่วมกับ Gemini สกัดแบรนด์คู่แข่งในไทย ณ ปัจจุบัน พร้อมชื่อเรียกทับศัพท์ภาษาไทย
 - **Layer 2:** Bottom-Up TikTok Co-occurrence Discovery สกัดชื่อแบรนด์คู่แข่งที่ปรากฏซ้ำบ่อยในแฮชแท็กของคลิปที่ค้นพบ
 - **Layer 3:**
   - คลิปรีวิวเดี่ยว -> ติดป้ายเตือน `⚠️ Competitor Conflict: [ชื่อแบรนด์]`
   - คลิปเปรียบเทียบหลายแบรนด์ -> ติดป้ายโอกาสทอง `🎯 Comparison Opportunity`
-- **Role-Adaptive Pitch Hooks (3 วินาทีแรก):** ปรับตาม 4 สไตล์ย่อย (Expert Myth-Busting Hook, Aesthetic Prestige Hook, Value Proof Conversion Hook, Relatable Daily Routine Hook)
 
 ---
 

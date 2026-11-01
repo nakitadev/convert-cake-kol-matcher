@@ -5,7 +5,7 @@ Verifies the 4-stage pipeline against system_specification_tiktok_kol_matching_e
   1. Stage 1: Brand DNA & 4 Conversion Models + Scene Translation (2-3 words, <= 18 letters, 60/40 funnel)
   2. Stage 2: TikTok Discovery (Country: TH, KOL_QUERY vs KOC_QUERY origin tagging) & Competitor Layer 2
   3. Stage 3: Two-Stage Filtering (Gate 1: Merchant & Smart Bot Filter; Gate 2: Batch LLM Relevance Gate; 2x2 Matrix & Guard)
-  4. Stage 4: Dynamic Scoring (40/35/25), Balanced Top-K Media Mix Portfolio & Role-Adaptive 3-Sec Hooks
+  4. Stage 4: Dynamic Scoring (40/35/25), Balanced Top-K Media Mix Portfolio & Two-Pass Quota Ranking
   5. FastAPI Endpoints & Healthcheck
 """
 import pytest
@@ -463,7 +463,7 @@ async def test_fastapi_analyze_brand_endpoint(monkeypatch):
 async def test_end_to_end_matching_pipeline(monkeypatch):
     """
     Tests the complete 4-stage matching pipeline:
-    BrandDNA -> Discovery -> Two-Stage Filter (Gate 1 & 2) -> Scoring (40/35/25) -> Top-K Media Mix Portfolio -> 3-Sec Hooks.
+    BrandDNA -> Discovery -> Two-Stage Filter (Gate 1 & 2) -> Scoring (40/35/25) -> Top-K Media Mix Portfolio.
     """
     from app.services.apify_service import get_apify_service
     from app.workflow.graph import run_full_matching
@@ -569,7 +569,7 @@ async def test_end_to_end_matching_pipeline(monkeypatch):
     assert len(response.ranked_kols) >= 2
     # Verify Gate 1 filtered out the OEM factory merchant
     assert any(ex.handle == "oem_cream_factory" for ex in response.excluded_creators)
-    # Verify ranked creators have scores, breakdown, and pitch hooks
+    # Verify ranked creators have scores and score breakdown
     for r in response.ranked_kols:
         assert 0.0 <= r.total_match_score <= 100.0
         assert r.score_breakdown.relevance_total > 0
@@ -678,4 +678,34 @@ async def test_langfuse_tracing_optional_behavior(monkeypatch):
     assert handler is not None
     # flush should not raise
     flush_langfuse_handler(handler)
+
+
+def test_dry_run_mode_endpoints():
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    client = TestClient(app)
+    # 1. Preset list
+    res_presets = client.get("/api/demo-presets")
+    assert res_presets.status_code == 200
+    presets = res_presets.json()
+    assert len(presets) >= 6
+    preset_ids = [p["id"] for p in presets]
+    assert "skincare-beauty" in preset_ids
+    assert "b2b-manufacturing" in preset_ids
+
+    # 2. Analyze Brand in Dry Run mode
+    res_analyze = client.post("/api/analyze-brand", json={"brand_name": "Dr.PONG", "dry_run": True})
+    assert res_analyze.status_code == 200
+    dna = res_analyze.json()
+    assert dna["brand_name"] == "Dr.PONG"
+    assert "conversion_model" in dna
+
+    # 3. Auto Match in Dry Run mode
+    res_match = client.post("/api/auto-match", json={"brand_name": "Piggy Monster", "dry_run": True, "preset_id": "b2b-manufacturing"})
+    assert res_match.status_code == 200
+    match_res = res_match.json()
+    assert len(match_res["ranked_kols"]) > 0
+    assert match_res["strategy"]["conversion_model"] == "HIGH_TICKET_LEADGEN"
+
 

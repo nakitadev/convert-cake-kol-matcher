@@ -8,7 +8,7 @@ Spec 1 & 4.1:
   Stage 3: filter_and_classify_node — Two-Stage Filtering (Gate 1: Merchant & Bot Filter, Gate 2: Batch LLM Relevance Gate),
            2x2 Sub-Style Guard, Competitor Layer 3 (Sponsor Conflict & Comparison Opportunity)
   Stage 4: score_rank_hooks_node — Dynamic Scoring (40/35/25), Balanced Top-K Media Mix Portfolio,
-           Tier-2 Comment Analysis, Role-Adaptive 3-Second Pitch Hooks
+           Tier-2 Comment Analysis, Two-Pass Stratified Quota Ranking
 """
 import asyncio
 import logging
@@ -138,9 +138,9 @@ async def discover_candidates_node(state: MatcherState) -> Dict[str, Any]:
     grouped = group_items_by_creator(raw_items)
     trace.append(f"Grouped clips into {len(grouped)} unique creator candidates")
 
-    # Fast Profile enrichment: only enrich creators with < 3 videos from search, max 6 handles
+    # Fast Profile enrichment: only enrich creators with < 3 videos from search, max 4 handles
     enriched_profiles: Dict[str, List[Dict[str, Any]]] = {}
-    top_handles = [h for h, entry in grouped.items() if len(entry.get("videos", {})) < 3][:6]
+    top_handles = [h for h, entry in grouped.items() if len(entry.get("videos", {})) < 3][:4]
     if apify.is_configured and top_handles:
         try:
             enriched_profiles = await apify.scrape_profiles(top_handles, per_profile=4)
@@ -327,7 +327,6 @@ async def filter_and_classify_node(state: MatcherState) -> Dict[str, Any]:
                     role = info.get("main_role")
                     p.funnel_role = role if role in ("KOL", "KOC") else ("KOL" if p.sub_style.startswith("KOL") else "KOC")
                     p.why_it_fits = str(info.get("why_it_fits") or f"Matches {brand_dna.sub_category} audience")
-                    p.pitch_hook = str(info.get("pitch_hook") or "")
 
                     # Competitor Layer 3: Sponsor Conflict & Multi-Brand Comparison
                     p.competitor_flags = competitor_flags(p, brand_dna.competitors)
@@ -365,11 +364,11 @@ async def filter_and_classify_node(state: MatcherState) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Node 4: Dynamic Scoring, Media Mix Top-K & 3-Sec Pitch Hooks
+# Node 4: Dynamic Scoring, Media Mix Top-K & Stratified Portfolio Ranking
 # ---------------------------------------------------------------------------
 async def score_rank_hooks_node(state: MatcherState) -> Dict[str, Any]:
     trace = list(state.get("trace", []))
-    trace.append("Stage 4: score_rank_hooks_node started (Scoring, Top-K Media Mix & Pitch Hooks)")
+    trace.append("Stage 4: score_rank_hooks_node started (Scoring, Top-K Media Mix & Stratified Ranking)")
 
     brand_dna = state.get("brand_dna")
     qualified = state.get("qualified_creators", [])
@@ -401,7 +400,6 @@ async def score_rank_hooks_node(state: MatcherState) -> Dict[str, Any]:
                 kol=kol,
                 total_match_score=score,
                 score_breakdown=breakdown,
-                pitch_hook=kol.pitch_hook or "",
             )
         )
 
@@ -498,9 +496,6 @@ async def score_rank_hooks_node(state: MatcherState) -> Dict[str, Any]:
     selected.sort(key=lambda x: x.total_match_score, reverse=True)
     for idx, r in enumerate(selected, start=1):
         r.rank = idx
-
-    # 4. Role-Adaptive 3-Second Pitch Hooks: Bypassed to optimize speed and pipeline latency
-    trace.append("Pitch hook generation bypassed for accelerated matching throughput")
 
     # Build Strategy Summary
     achieved_kol = sum(1 for r in selected if r.kol.funnel_role == "KOL")

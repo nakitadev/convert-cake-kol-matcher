@@ -5,7 +5,7 @@ Gemini service: embeddings + all LLM calls used by the 4-stage pipeline.
            Search-Grounded Thai competitor extraction (Google Search Grounding)
 - Stage 2: Bottom-up TikTok co-occurrence brand extraction (competitor Layer 2)
 - Stage 3: Batch LLM Relevance Gate (single call) + 2x2 KOL/KOC sub-style classification
-- Stage 4: Role-adaptive 3-second pitch hooks
+- Stage 4: Multi-signal scoring, quota ranking & portfolio selection
 
 Fail-loud policy: every LLM helper raises RuntimeError when the model is unavailable or
 returns an unusable payload. Callers decide whether a failure is fatal.
@@ -74,7 +74,7 @@ CONVERSION_MODEL_GUIDE = """
 """
 
 NATURAL_SEARCH_SYNTAX_GUIDE = """
-Abstract Syntax Rules for Thai TikTok Search Queries (Zero-Mock & Zero Hardcoded Examples):
+Abstract Syntax Rules for Thai TikTok Search Queries (Dynamic Demand-Side Generation):
 People in Thailand type plain, everyday words into TikTok's search bar to discover products.
 Do NOT use artificial slang, forced KOL/KOC tags, or copied templates.
 Generate 6-8 natural Thai search queries grounded 100% on the brand's extracted content using these 4 Abstract Syntax Rules:
@@ -97,14 +97,6 @@ KOL (Top & Middle funnel: awareness, image, trust)
 KOC (Bottom funnel: purchase decision & closing)
   - 'KOC - Hard-Sell Reviewer': direct product review, before & after, value-for-money proof; consistent yellow basket; high buyer-intent comments (comment_to_like).
   - 'KOC - Everyday User / Vlog': relatable daily routines (office worker, student, mom); friend-to-friend real-life recommendation; natural style (Nano/Micro tier).
-"""
-
-HOOK_GUIDE = """
-3-Second Opening Hook Guidelines (Role-Adaptive & Dynamic, No Static Templates):
-- 'KOL - Expert / Guru': open with deep product knowledge, clinical/technical facts, or expert analysis.
-- 'KOL - Lifestyle / Aesthetic': open with atmosphere, mood & tone, aesthetic presentation, or lifestyle elevation.
-- 'KOC - Hard-Sell Reviewer': open with real-life usage results, before-and-after proof, or price-to-value comparison.
-- 'KOC - Everyday User / Vlog': open with relatable daily situations and natural friend-to-friend recommendation.
 """
 
 BRAND_DNA_SYSTEM_INSTRUCTION = f"""# Role & Identity
@@ -462,12 +454,6 @@ Evaluate each creator against the Brand DNA and return the classification JSON a
             raise RuntimeError("Relevance gate payload is not a JSON object")
         return data
 
-    # ------------------------------------------------------------------
-    # Stage 4 — Role-adaptive pitch hooks (BYPASSED for speed)
-    # ------------------------------------------------------------------
-    async def generate_pitch_hooks(self, brand: Dict[str, Any], creators: List[Dict[str, Any]]) -> Dict[str, str]:
-        # Bypassed per requirement to reduce pipeline latency
-        return {}
 
 
 _gemini_service_instance: Optional[GeminiService] = None

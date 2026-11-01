@@ -10,7 +10,7 @@
    - กำหนดสัดส่วนแนะนำ Media Mix (KOL : KOC)
    - สกัดคู่แข่งในไทยผ่าน Google Search Grounding (Competitor Layer 1)
 2. **ขั้นที่ 2 — Adaptive Scene Translation & TikTok Discovery:**
-   - แปลงธุรกิจเป็นคำค้นหาที่ครีเอเตอร์ไทยพูดเปิดคลิป (สั้นกระชับ 2-3 คำ, ไม่เกิน 18 ตัวอักษรไทย, 60/40 Direct vs Adjacent funnel, Anti-Merchant Guardrail)
+   - แปลงธุรกิจเป็นคำค้นหาภาษาไทยที่เป็นธรรมชาติ (สั้นกระชับ 2-3 คำ, ไม่เกิน 18 ตัวอักษรไทย, 60/40 Direct vs Adjacent funnel, Anti-Merchant Guardrail)
    - แยกชุดคำค้นหาฝั่ง `KOL_QUERY` และ `KOC_QUERY` กวาดคลิปสดผ่าน Apify (ล็อก `proxyCountryCode: "TH"`)
    - ตรวจจับคู่แข่งร่วมในแฮชแท็กของคลิป (Competitor Layer 2 Co-occurrence)
 3. **ขั้นที่ 3 — Two-Stage Filtering, 2x2 KOL/KOC Classification & Dynamic Scoring:**
@@ -22,9 +22,9 @@
      - Brand & Funnel Relevance (40 คะแนน): Semantic & LLM Fit (28) + Niche & Work-Ready Bonus (12)
      - Engagement Quality & Content Utility (35 คะแนน): Median ER บนคลิปวิว >= 500 (15) + Save/Share Utility (10) + Consistency (10)
      - Audience Proxy & Commercial Viability (25 คะแนน): Thai Authenticity (10) + Buyer Intent Proxy (10) + Brand-Adaptive Affiliate Health (5)
-4. **ขั้นที่ 4 — Role-Adaptive Pitch Hooks & Agency Dashboard:**
-   - สร้างไอเดียเปิดคลิป 3 วินาทีแรกปรับตามสไตล์ย่อยของแต่ละคน (Expert Hook, Aesthetic Hook, Value Proof Hook, Daily Routine Hook)
-   - Frontend Dashboard: Strategy Summary Banner, 2-Level Filter Bar (Sub-style & Tier), Explainable Creator Cards, Copy 3-Sec Hook, Export CSV, และ Excluded Transparency tab.
+4. **ขั้นที่ 4 — Stratified Quota Ranking & Agency Dashboard:**
+   - จัดอันดับพอร์ตโฟลิโอแบบ Two-Pass Stratified Quota คัดสรร Top 10 ที่สมดุลตาม Conversion Model และครบทุกสไตล์
+   - Frontend Dashboard: Strategy Summary Banner, Filter Bar 3 มิติ, Explainable Creator Cards, Export CSV, และ Excluded Transparency tab.
 
 ## 2. Technical Stack
 - **Backend:** FastAPI (Python 3.14 / 3.12), LangGraph (StateGraph 4 Nodes), google-genai 2.33, httpx, BeautifulSoup4, numpy.
