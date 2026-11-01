@@ -35,7 +35,7 @@
 7. **Two-Pass Stratified Quota Portfolio (Top 10 Curated):**
    - การันตีสัดส่วนครีเอเตอร์ครบทุกมิติ Funnel ใน Pass ที่ 1 ก่อนเติมเต็มโควตาด้วยคะแนน Performance ใน Pass ที่ 2
 8. **Multi-Tier SQLite Scraper Cache:**
-   - แคชผลลัพธ์ Network I/O แบบแยก TTL (Web 3 วัน, FB 2 วัน, TikTok Search 12 ชม., Profile Clips 24 ชม.) ลดระยะเวลาค้นหาซ้ำจาก 60–90s เหลือเพียง **< 2s** และประหยัดโควตา API (ต้นทุนต่อการรันสดครั้งแรกเพียง ~$0.45 USD หรือ ~16 บาท)
+   - แคชผลลัพธ์ Network I/O แบบแยก TTL (Web 3 วัน, FB 2 วัน, TikTok Search 12 ชม., Profile Clips 24 ชม.) ลดระยะเวลาค้นหาซ้ำจาก 60–90s เหลือเพียง **< 2s** และประหยัดโควตา API (ต้นทุนต่อการรันสดครั้งแรกเพียง ~0.45 USD หรือ ~16 บาท)
 
 ---
 
@@ -165,25 +165,23 @@ flowchart TD
 
 ## 🧮 100-Point Dynamic Performance Scoring Formula
 
-$$\text{Total Score} = \text{Brand Relevance (40)} + \text{Engagement Quality (35)} + \text{Audience & Commercial Proxy (25)}$$
+$$\text{Total Score} = \text{Brand Relevance (40)} + \text{Engagement Quality (35)} + \text{Audience and Commercial Proxy (25)}$$
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ 1. Brand & Content Relevance (40 Pts)                                   │
-│  ├── Semantic Vector Cosine Similarity (gemini-embedding-2):   20 Pts  │
-│  ├── LLM Category Relevance & Tone Alignment:                  10 Pts  │
-│  └── Sub-Niche Concentration & Work-Ready Signal (Bio/Contact): 10 Pts  │
-├────────────────────────────────────────────────────────────────────────┤
-│ 2. Engagement Quality & Content Utility (35 Pts)                       │
-│  ├── Median Engagement Rate (เฉพาะคลิป >= 500 วิว ป้องกันค่าเพี้ยน): 15 Pts  │
-│  ├── Save & Share Utility Score (วัดคุณค่าการเก็บไว้ซื้อตาม):      10 Pts  │
-│  └── View Consistency Ratio (Median Views / Mean Views):       10 Pts  │
-├────────────────────────────────────────────────────────────────────────┤
-│ 3. Audience Proxy & Commercial Viability (25 Pts)                      │
-│  ├── Thai Audience Authenticity (สัดส่วนภาษาไทยในคลิปและคอมเมนต์):  10 Pts  │
-│  ├── Buyer Intent Proxy (สัดส่วน Comment/Like สะท้อนความตั้งใจซื้อ): 10 Pts  │
-│  └── Brand-Adaptive Commercial Health (ปรับเกณฑ์ตามโมเดลธุรกิจ):    5 Pts  │
-└────────────────────────────────────────────────────────────────────────┘
+```text
+1. Brand & Content Relevance (40 Pts)
+ ├── [20 Pts] Semantic Vector Cosine Similarity (gemini-embedding-2)
+ ├── [10 Pts] LLM Category Relevance & Tone Alignment
+ └── [10 Pts] Sub-Niche Concentration & Work-Ready Signal (Bio/Contact)
+
+2. Engagement Quality & Content Utility (35 Pts)
+ ├── [15 Pts] Median Engagement Rate (เฉพาะคลิป >= 500 วิว ป้องกันค่าเพี้ยน)
+ ├── [10 Pts] Save & Share Utility Score (วัดคุณค่าการเก็บไว้ซื้อตาม)
+ └── [10 Pts] View Consistency Ratio (Median Views / Mean Views)
+
+3. Audience Proxy & Commercial Viability (25 Pts)
+ ├── [10 Pts] Thai Audience Authenticity (สัดส่วนภาษาไทยในคลิปและคอมเมนต์)
+ ├── [10 Pts] Buyer Intent Proxy (สัดส่วน Comment/Like สะท้อนความตั้งใจซื้อ)
+ └── [ 5 Pts] Brand-Adaptive Commercial Health (ปรับเกณฑ์ตามโมเดลธุรกิจ)
 ```
 
 ---
@@ -194,18 +192,18 @@ $$\text{Total Score} = \text{Brand Relevance (40)} + \text{Engagement Quality (3
 
 | กรณีศึกษา (Brand & Industry) | Conversion Model ที่สกัดได้ | เวลาประมวลผลจริง | ตัวอย่างคำค้นหาธรรมชาติ (Demand-Side Queries) | แบรนด์คู่แข่งที่สกัดได้จริง (Grounding Layer 1) | ต้นทุน API รันจริง (USD / THB) |
 | :--- | :---: | :---: | :--- | :--- | :---: |
-| **1. Piggy Monster** *(B2B Custom Merch)* | `HIGH_TICKET_LEADGEN` | **6.53s** | เสื้อสกรีนแบรนด์ตัวเอง, เสื้อคณะมหาลัย, ทำเสื้อแบรนด์ตัวเอง | Korat Screen, Screen BKK, T-Shirt Bangkok | $0.000375 (~0.013 THB) |
-| **2. Emma Clinic** *(Beauty Clinic)* | `HIGH_TICKET_LEADGEN` | **7.45s** | เสริมจมูกทรงธรรมชาติ, เสริมคางปรับรูปหน้า, คลินิกเสริมจมูกเกาหลี | Sowon Clinic, SLC Clinic, Apex Medical Center | $0.000385 (~0.013 THB) |
-| **3. Dr.PONG** *(Skincare & Beauty)* | `ECOMMERCE_PRODUCT` | **6.68s** | เซรั่มลดสิว ผิวแพ้ง่าย, กันแดดหน้า สิวอุดตัน, สกินแคร์ คุณหมอ | Her Hyness, Gravich, MizuMi, INGU | $0.000370 (~0.013 THB) |
-| **4. Proski Thailand** *(Sports & Outdoor)* | `HIGH_TICKET_LEADGEN` | **9.71s** | เรียนสกี กรุงเทพ, สโนว์บอร์ด อินดอร์, ฝึกสกี ก่อนไปญี่ปุ่น | Ski365, The Snow Town, Ski Addict, Let's Snow | $0.000390 (~0.014 THB) |
-| **5. Merge Official** *(Fashion D2C)* | `ECOMMERCE_PRODUCT` | **25.10s** | กางเกงยีนส์ทรงสวย, เสื้อผ้า Merge Official, ไอเดียแต่งตัว OOTD | Gentlewoman, Stylist Shop, Mitr, Twotwice | $0.000380 (~0.013 THB) |
-| **6. Bearhouse** *(F&B & Lifestyle Cafe)* | `LIFESTYLE_EXPERIENCE` | **6.43s** | ชานมไข่มุก อร่อย, ชาไทย ไข่มุกโมจิ, คาเฟ่ วัยรุ่น | After You, Nose Tea, Fire Tiger, ChaTraMue | $0.000360 (~0.013 THB) |
+| **1. Piggy Monster** *(B2B Custom Merch)* | `HIGH_TICKET_LEADGEN` | **6.53s** | เสื้อสกรีนแบรนด์ตัวเอง, เสื้อคณะมหาลัย, ทำเสื้อแบรนด์ตัวเอง | Korat Screen, Screen BKK, T-Shirt Bangkok | 0.000375 USD (~0.013 THB) |
+| **2. Emma Clinic** *(Beauty Clinic)* | `HIGH_TICKET_LEADGEN` | **7.45s** | เสริมจมูกทรงธรรมชาติ, เสริมคางปรับรูปหน้า, คลินิกเสริมจมูกเกาหลี | Sowon Clinic, SLC Clinic, Apex Medical Center | 0.000385 USD (~0.013 THB) |
+| **3. Dr.PONG** *(Skincare & Beauty)* | `ECOMMERCE_PRODUCT` | **6.68s** | เซรั่มลดสิว ผิวแพ้ง่าย, กันแดดหน้า สิวอุดตัน, สกินแคร์ คุณหมอ | Her Hyness, Gravich, MizuMi, INGU | 0.000370 USD (~0.013 THB) |
+| **4. Proski Thailand** *(Sports & Outdoor)* | `HIGH_TICKET_LEADGEN` | **9.71s** | เรียนสกี กรุงเทพ, สโนว์บอร์ด อินดอร์, ฝึกสกี ก่อนไปญี่ปุ่น | Ski365, The Snow Town, Ski Addict, Let's Snow | 0.000390 USD (~0.014 THB) |
+| **5. Merge Official** *(Fashion D2C)* | `ECOMMERCE_PRODUCT` | **25.10s** | กางเกงยีนส์ทรงสวย, เสื้อผ้า Merge Official, ไอเดียแต่งตัว OOTD | Gentlewoman, Stylist Shop, Mitr, Twotwice | 0.000380 USD (~0.013 THB) |
+| **6. Bearhouse** *(F&B & Lifestyle Cafe)* | `LIFESTYLE_EXPERIENCE` | **6.43s** | ชานมไข่มุก อร่อย, ชาไทย ไข่มุกโมจิ, คาเฟ่ วัยรุ่น | After You, Nose Tea, Fire Tiger, ChaTraMue | 0.000360 USD (~0.013 THB) |
 
 ### 📊 สรุปสถิติและต้นทุนจากการรันจริง (Dry Run Metrics Summary)
 - **เวลารวมทั้ง 6 เคส:** 61.91 วินาที (เฉลี่ย **10.32 วินาทีต่อแบรนด์**)
 - **Gemini 3.5 Flash-Lite Tokens รวม 6 เคส:** ~12,850 tokens (เฉลี่ย ~2,140 tokens/เคส)
-- **ต้นทุน API จริงรวมทั้ง 6 เคส:** **$0.00226 USD (ประมาณ 0.08 บาท หรือไม่ถึง 10 สตางค์!)**
-- **ต้นทุนเต็มรูปแบบ (Cold Run รวมค้นหา TikTok สด ~150 คลิป):** ~$0.42 – $0.56 USD (~15 – 20 THB) ต่อแคมเปญ (เมื่อมี SQLite Cache Hit = **$0.00 USD / 0 บาท**)
+- **ต้นทุน API จริงรวมทั้ง 6 เคส:** **0.00226 USD (ประมาณ 0.08 บาท หรือไม่ถึง 10 สตางค์!)**
+- **ต้นทุนเต็มรูปแบบ (Cold Run รวมค้นหา TikTok สด ~150 คลิป):** ~0.42 – 0.56 USD (~15 – 20 THB) ต่อแคมเปญ (เมื่อมี SQLite Cache Hit = **0.00 USD / 0 บาท**)
 
 ---
 
@@ -214,15 +212,8 @@ $$\text{Total Score} = \text{Brand Relevance (40)} + \text{Engagement Quality (3
 | นาทีที่ | ช่วงเนื้อหา (Agenda) | รายละเอียดและจุดที่ควรโฟกัสในการนำเสนอ |
 | :---: | :--- | :--- |
 | **0:00–1:30** | **Business Problem & Convert Cake Alignment** | ชี้ให้เห็น Pain Point ของ Performance Agency: เสียเวลาหาครีเอเตอร์ด้วยมือ, บอทสแปมตะกร้ากินงบ, ข้อมูล First-party follower demographics เข้าถึงยากทางกฎหมาย จึงต้องใช้ Multi-Signal Proxy ที่น่าเชื่อถือ |
-| **1:30–4:30** | **Live UI Demonstration** | - กด Quick Test Chip (เช่น Dr.PONG หรือ Piggy Monster)
-- แสดงการสกัด Brand DNA, 4 Conversion Models และคำค้นหาธรรมชาติ
-- กดปุ่มค้นหา แสดงความเร็ว Real-Time Progress Bar และ Live Terminal Logs
-- สาธิตแถบตัวกรอง Responsive Wrap สลับดู `🧠 KOL` vs `🛍️ KOC` และ 4 สไตล์ย่อย
-- เปิดดูการ์ดผลลัพธ์: หลอดคะแนน 40/35/25, Match Rationale, Niche Consistency Badge, และการตรวจจับคู่แข่ง |
-| **4:30–7:00** | **Engineering Architecture & Innovations** | - อธิบาย LangGraph 4 Nodes และ Single Batch Job บน Apify
-- ชี้แจง Two-Stage Entity Filtering (Multi-Condition AND Gate ที่ปกป้อง KOC ป้ายยาตัวจริง)
-- ชี้แจงระบบ Multi-Tier SQLite Scraper Cache ที่ประหยัดเวลาและโควตาเครือข่าย
-- ชี้แจง Prompt Separation (`system_instruction`) ตามมาตรฐาน Gemini ล่าสุด |
+| **1:30–4:30** | **Live UI Demonstration** | • กด Quick Test Chip (เช่น Dr.PONG หรือ Piggy Monster)<br>• แสดงการสกัด Brand DNA, 4 Conversion Models และคำค้นหาธรรมชาติ<br>• กดปุ่มค้นหา แสดงความเร็ว Real-Time Progress Bar และ Live Terminal Logs<br>• สาธิตแถบตัวกรอง Responsive Wrap สลับดู `🧠 KOL` vs `🛍️ KOC` และ 4 สไตล์ย่อย<br>• เปิดดูการ์ดผลลัพธ์: หลอดคะแนน 40/35/25, Match Rationale, Niche Consistency Badge, และการตรวจจับคู่แข่ง |
+| **4:30–7:00** | **Engineering Architecture & Innovations** | • อธิบาย LangGraph 4 Nodes และ Single Batch Job บน Apify<br>• ชี้แจง Two-Stage Entity Filtering (Multi-Condition AND Gate ที่ปกป้อง KOC ป้ายยาตัวจริง)<br>• ชี้แจงระบบ Multi-Tier SQLite Scraper Cache ที่ประหยัดเวลาและโควตาเครือข่าย<br>• ชี้แจง Prompt Separation (`system_instruction`) ตามมาตรฐาน Gemini ล่าสุด |
 | **7:00–8:30** | **Ethical & Data Privacy Considerations** | อธิบายเหตุผลที่ระบบไม่ใช้ข้อมูล Demographic ส่วนบุคคลที่ละเมิด PDPA/Terms แต่ใช้ Public Data Proxies (Thai Text Ratio, Comment Intent, Save Utility) ซึ่งถูกต้องตามหลักการวิศวกรรม |
 | **8:30–10:00** | **Future Scalability & Agency ROI** | แผนขยายผล: Automated Outreach DM Generator, TikTok Creator Marketplace API Integration, และ Client Approval Portal |
 
@@ -234,13 +225,3 @@ $$\text{Total Score} = \text{Brand Relevance (40)} + \text{Engagement Quality (3
 - **Frontend:** Vite 6, React 19, TypeScript, Tailwind CSS v4, Lucide React (สถาปัตยกรรม SPA น้ำหนักเบา ปราศจากปัญหา Port Collision และ Static Proxy Bake-in ของ SSR)
 - **Containerization:** Docker Compose Multi-Container (FastAPI Backend + Vite Frontend Preview)
 - **Observability:** ติดตั้ง Tracing Hooks รองรับ **Langfuse** สำหรับมอนิเตอร์ Token Usage และ Latency ของ Agent Pipeline
-
----
-
-## 👨‍💻 Author & Assessment Submission
-
-- **ผู้จัดทำ:** อธิชาต ชัยสาร (ไนท์ / Night)
-- **การศึกษา:** วิศวกรรมศาสตร์บัณฑิต จุฬาลงกรณ์มหาวิทยาลัย (เกียรตินิยม, GPA 3.59)
-- **ตำแหน่งที่สมัคร:** AI Engineer — Convert Cake
-- **GitHub Repository:** [https://github.com/nakitadev/convert-cake-kol-matcher](https://github.com/nakitadev/convert-cake-kol-matcher)
-- **ใบอนุญาต:** MIT License
