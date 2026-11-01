@@ -39,55 +39,96 @@
 
 ---
 
-## 🚀 Quick Start Guide (One-Click Launch)
+## 🚀 Getting Started (การติดตั้งและรันระบบ)
 
-### วิธีที่ 1: รันด้วย Docker Compose (แนะนำสำหรับการตรวจประเมินผล)
-
-ระบบถูกบรรจุใน Multi-Container Environment ที่แยกเครือข่ายอย่างปลอดภัย พร้อม Health Check อัตโนมัติ:
-
-```bash
-# 1. เข้าสู่โฟลเดอร์โปรเจกต์
-cd /home/ubuntu/projects/convert-cake-kol-matcher
-
-# 2. คัดลอกและตั้งค่า Environment Variables
-cp .env.example .env
-# 💡 หมายเหตุ: หากต้องการทดสอบด้วย ⚡ โหมด Dry Run (ข้อมูลรันจริงที่บันทึกไว้แล้ว 6 แบรนด์) สามารถข้ามการใส่ API Key ได้เลย!
-# หากต้องการรันสดด้วย 🚀 โหมด Live API ให้ใส่ GEMINI_API_KEY และ APIFY_API_TOKEN ของท่านลงใน .env
-
-# 3. สั่ง Build และเริ่มต้นระบบ
-docker compose up --build -d
-```
-
-- 🖥️ **Agency Dashboard (UI):** [http://localhost:3000](http://localhost:3000)
-- 📑 **FastAPI Interactive Docs (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
-- 🩺 **Health Check API:** [http://localhost:8000/api/health](http://localhost:8000/api/health)
-
-*คำสั่งหยุดการทำงาน:* `docker compose down`
+### ข้อกำหนดเบื้องต้น (Prerequisites)
+- **วิธีใช้ Docker (แนะนำ):** ติดตั้ง [Docker Desktop](https://www.docker.com/products/docker-desktop/) หรือ Docker Engine + Docker Compose
+- **วิธีรันแบบ Local (ไม่ใช้ Docker):** Python 3.11+ และ Node.js 20+
+- **API Keys (เฉพาะโหมด Live API):**
+  - `GEMINI_API_KEY` จาก [Google AI Studio](https://aistudio.google.com/)
+  - `APIFY_API_TOKEN` จาก [Apify Console](https://console.apify.com/account/integrations)
+  - *(หมายเหตุ: หากต้องการทดลองใช้งานทันทีผ่าน **⚡ โหมด Dry Run** ไม่จำเป็นต้องใส่ API Key ใดๆ)*
 
 ---
 
-### วิธีที่ 2: รันแบบ Local Development
+### ขั้นตอนที่ 1: โคลนโปรเจกต์และตั้งค่า Environment
 
-#### Backend (FastAPI + LangGraph)
 ```bash
-cd /home/ubuntu/projects/convert-cake-kol-matcher
-source venv/bin/activate
+# 1. โคลน Repository และเข้าสู่โฟลเดอร์โปรเจกต์
+git clone https://github.com/nakitadev/convert-cake-kol-matcher.git
+cd convert-cake-kol-matcher
+
+# 2. สร้างไฟล์ .env จากไฟล์ตัวอย่าง
+cp .env.example .env
+```
+
+> 💡 **การตั้งค่า `.env`:**
+> - **ทดลองใช้ทันที (⚡ โหมด Dry Run):** ข้ามขั้นตอนนี้ได้เลย ระบบมีชุดข้อมูลผลลัพธ์จริงที่บันทึกไว้แล้ว (Pre-recorded Real Dataset) ทั้ง 6 แบรนด์ให้ทดลองกดใช้งานได้ครบทุกฟีเจอร์โดยไม่ต้องใช้ API Key
+> - **รันค้นหาสด (🚀 โหมด Live API):** เปิดไฟล์ `.env` และใส่ค่า `GEMINI_API_KEY` และ `APIFY_API_TOKEN` ของคุณ
+
+---
+
+### ขั้นตอนที่ 2: เลือกวิธีรันระบบ
+
+#### 🐳 วิธีที่ 1: รันด้วย Docker Compose (แนะนำ — สะดวกที่สุด)
+
+```bash
+docker compose up --build -d
+```
+
+เมื่อรันสำเร็จ สามารถเข้าใช้งานได้ที่:
+- 🖥️ **Web Application (UI):** [http://localhost:3000](http://localhost:3000)
+- 📑 **API Documentation (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
+- 🩺 **Health Check:** [http://localhost:8000/api/health](http://localhost:8000/api/health)
+
+*(หากต้องการหยุดการทำงานของระบบ ให้รันคำสั่ง `docker compose down`)*
+
+---
+
+#### 💻 วิธีที่ 2: รันแบบ Local Development (แยก Backend & Frontend)
+
+**1. รัน Backend (FastAPI + LangGraph) — เปิด Terminal หน้าต่างที่ 1:**
+```bash
+# สร้างและเปิดใช้งาน Virtual Environment
+python3 -m venv venv
+source venv/bin/activate  # สำหรับ Windows ใช้: venv\Scripts\activate
+
+# ติดตั้ง Dependencies และรันเซิร์ฟเวอร์ที่พอร์ต 8000
+pip install -r backend/requirements.txt
+cd backend
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-#### Frontend (Vite 6 + React 19 + Tailwind CSS v4)
+**2. รัน Frontend (React + Vite) — เปิด Terminal หน้าต่างที่ 2:**
 ```bash
-cd /home/ubuntu/projects/convert-cake-kol-matcher/frontend
+cd frontend
 npm install
 npm run dev
 ```
+จากนั้นเปิดเบราว์เซอร์ไปที่ **[http://localhost:3000](http://localhost:3000)**
 
-#### รันชุดทดสอบอัตโนมัติ (Automated Test Suite)
+**3. รันชุดทดสอบอัตโนมัติ (Automated Tests):**
 ```bash
-cd /home/ubuntu/projects/convert-cake-kol-matcher
-./venv/bin/pytest -v
+pytest -v
 ```
-*(ผ่านครบ **18/18 Tests 100%** ครอบคลุม Brand DNA Extraction, Conversion Models, Scene Translation Rules, Two-Stage Filtering, Anti-Spam Gate, 2x2 Matrix, Dynamic Scoring, SQLite Cache, Dry Run Mode, และ LangGraph End-to-End Execution)*
+*(ผ่านครบ **18/18 Tests** ครอบคลุมการสกัด Brand DNA, Conversion Models, การกรองร้านค้าและบอทสแปม, 2x2 Matrix, ระบบให้คะแนน, SQLite Cache, โหมด Dry Run และ LangGraph Pipeline)*
+
+---
+
+## 📖 คู่มือการใช้งานระบบ (How to Use)
+
+1. **เลือกโหมดการทำงาน (มุมขวาบนของหน้าเว็บ):**
+   - **⚡ Dry Run (Pre-recorded):** ทดลองใช้งานได้ทันทีโดยไม่ต้องมี API Key ระบบจะจำลองขั้นตอนการทำงานและแสดงผลลัพธ์จริงที่เคยรันไว้ของ 6 แบรนด์ตัวอย่าง
+   - **🚀 Live API (Real-Time):** สกัดข้อมูลเว็บไซต์และเพจ Facebook สด พร้อมกวาดหาครีเอเตอร์จริงจาก TikTok Thailand แบบ Real-Time (ต้องตั้งค่า API Keys ใน `.env` หรือกรอกผ่านปุ่ม **API Keys** บนหน้าเว็บ)
+2. **เลือกแบรนด์ตัวอย่าง หรือกรอกข้อมูลแบรนด์ใหม่ (Step 1):**
+   - คลิกที่ปุ่ม **Quick Test Cases** ด้านบน (เช่น *Dr.PONG*, *Piggy Monster*, *Emma Clinic*, *Merge Official*, *Proski Thailand*, *Bearhouse*) เพื่อกรอกข้อมูลอัตโนมัติ หรือพิมพ์ชื่อแบรนด์และ URL ของคุณเอง
+   - กดปุ่ม **สกัด Brand DNA** ระบบจะวิเคราะห์โมเดลธุรกิจ สัดส่วน KOL:KOC ที่แนะนำ คำค้นหา TikTok และรายชื่อคู่แข่ง
+3. **ตรวจสอบและปรับแก้กลยุทธ์ (Human-in-the-Loop):**
+   - คุณสามารถแก้ไข Campaign Goal, เพิ่ม/ลบคำค้นหา (Search Queries) หรือปรับรายชื่อคู่แข่ง (Competitor Watchlist) ได้อย่างอิสระก่อนเริ่มค้นหา
+4. **ค้นหาและวิเคราะห์ผลลัพธ์ (Step 2 & Portfolio Dashboard):**
+   - กดปุ่ม **เริ่มค้นหาและจัดอันดับ KOL/KOC**
+   - ใช้ตัวกรองด้านบนตารางผลลัพธ์เพื่อสลับดู **`🧠 KOL`** หรือ **`🛍️ KOC`** และกรองตาม 4 สไตล์ย่อย
+   - คลิกที่การ์ดครีเอเตอร์เพื่อดูรายละเอียดคะแนนทั้ง 3 มิติ (40/35/25), เหตุผลที่เหมาะสม, คลิปตัวอย่างพร้อมยอด Engagement จริง และกด **Export CSV / JSON** เพื่อนำไปวางแผนแคมเปญต่อได้ทันที
 
 ---
 
@@ -204,18 +245,6 @@ $$\text{Total Score} = \text{Brand Relevance (40)} + \text{Engagement Quality (3
 - **Gemini 3.5 Flash-Lite Tokens รวม 6 เคส:** ~12,850 tokens (เฉลี่ย ~2,140 tokens/เคส)
 - **ต้นทุน API จริงรวมทั้ง 6 เคส:** **0.00226 USD (ประมาณ 0.08 บาท หรือไม่ถึง 10 สตางค์!)**
 - **ต้นทุนเต็มรูปแบบ (Cold Run รวมค้นหา TikTok สด ~150 คลิป):** ~0.42 – 0.56 USD (~15 – 20 THB) ต่อแคมเปญ (เมื่อมี SQLite Cache Hit = **0.00 USD / 0 บาท**)
-
----
-
-## 🎬 Recommended Evaluation & Loom Presentation Script (5–10 Mins)
-
-| นาทีที่ | ช่วงเนื้อหา (Agenda) | รายละเอียดและจุดที่ควรโฟกัสในการนำเสนอ |
-| :---: | :--- | :--- |
-| **0:00–1:30** | **Business Problem & Convert Cake Alignment** | ชี้ให้เห็น Pain Point ของ Performance Agency: เสียเวลาหาครีเอเตอร์ด้วยมือ, บอทสแปมตะกร้ากินงบ, ข้อมูล First-party follower demographics เข้าถึงยากทางกฎหมาย จึงต้องใช้ Multi-Signal Proxy ที่น่าเชื่อถือ |
-| **1:30–4:30** | **Live UI Demonstration** | • กด Quick Test Chip (เช่น Dr.PONG หรือ Piggy Monster)<br>• แสดงการสกัด Brand DNA, 4 Conversion Models และคำค้นหาธรรมชาติ<br>• กดปุ่มค้นหา แสดงความเร็ว Real-Time Progress Bar และ Live Terminal Logs<br>• สาธิตแถบตัวกรอง Responsive Wrap สลับดู `🧠 KOL` vs `🛍️ KOC` และ 4 สไตล์ย่อย<br>• เปิดดูการ์ดผลลัพธ์: หลอดคะแนน 40/35/25, Match Rationale, Niche Consistency Badge, และการตรวจจับคู่แข่ง |
-| **4:30–7:00** | **Engineering Architecture & Innovations** | • อธิบาย LangGraph 4 Nodes และ Single Batch Job บน Apify<br>• ชี้แจง Two-Stage Entity Filtering (Multi-Condition AND Gate ที่ปกป้อง KOC ป้ายยาตัวจริง)<br>• ชี้แจงระบบ Multi-Tier SQLite Scraper Cache ที่ประหยัดเวลาและโควตาเครือข่าย<br>• ชี้แจง Prompt Separation (`system_instruction`) ตามมาตรฐาน Gemini ล่าสุด |
-| **7:00–8:30** | **Ethical & Data Privacy Considerations** | อธิบายเหตุผลที่ระบบไม่ใช้ข้อมูล Demographic ส่วนบุคคลที่ละเมิด PDPA/Terms แต่ใช้ Public Data Proxies (Thai Text Ratio, Comment Intent, Save Utility) ซึ่งถูกต้องตามหลักการวิศวกรรม |
-| **8:30–10:00** | **Future Scalability & Agency ROI** | แผนขยายผล: Automated Outreach DM Generator, TikTok Creator Marketplace API Integration, และ Client Approval Portal |
 
 ---
 
