@@ -227,27 +227,6 @@ $$\text{Total Score} = \text{Brand Relevance (40)} + \text{Engagement Quality (3
 
 ---
 
-## 🧪 6 Industry Benchmark Test Cases & Real Dry Run Verification
-
-เพื่อความสะดวกในการตรวจประเมินผล ระบบได้ติดตั้งชุด **Quick Test Chips** ด้านบนสุดของหน้าแดชบอร์ด ผู้ประเมินสามารถคลิกเพียง 1 ครั้งเพื่อโหลดข้อมูลจริงของ 6 อุตสาหกรรมทดสอบลงในฟอร์มทันที โดยมีผลการทดสอบ **Dry Run จริง 100%** บันทึกไว้ดังนี้:
-
-| กรณีศึกษา (Brand & Industry) | Conversion Model ที่สกัดได้ | เวลาประมวลผลจริง | ตัวอย่างคำค้นหาธรรมชาติ (Demand-Side Queries) | แบรนด์คู่แข่งที่สกัดได้จริง (Grounding Layer 1) | ต้นทุน API รันจริง (USD / THB) |
-| :--- | :---: | :---: | :--- | :--- | :---: |
-| **1. Piggy Monster** *(B2B Custom Merch)* | `HIGH_TICKET_LEADGEN` | **6.53s** | เสื้อสกรีนแบรนด์ตัวเอง, เสื้อคณะมหาลัย, ทำเสื้อแบรนด์ตัวเอง | Korat Screen, Screen BKK, T-Shirt Bangkok | 0.000375 USD (~0.013 THB) |
-| **2. Emma Clinic** *(Beauty Clinic)* | `HIGH_TICKET_LEADGEN` | **7.45s** | เสริมจมูกทรงธรรมชาติ, เสริมคางปรับรูปหน้า, คลินิกเสริมจมูกเกาหลี | Sowon Clinic, SLC Clinic, Apex Medical Center | 0.000385 USD (~0.013 THB) |
-| **3. Dr.PONG** *(Skincare & Beauty)* | `ECOMMERCE_PRODUCT` | **6.68s** | เซรั่มลดสิว ผิวแพ้ง่าย, กันแดดหน้า สิวอุดตัน, สกินแคร์ คุณหมอ | Her Hyness, Gravich, MizuMi, INGU | 0.000370 USD (~0.013 THB) |
-| **4. Proski Thailand** *(Sports & Outdoor)* | `HIGH_TICKET_LEADGEN` | **9.71s** | เรียนสกี กรุงเทพ, สโนว์บอร์ด อินดอร์, ฝึกสกี ก่อนไปญี่ปุ่น | Ski365, The Snow Town, Ski Addict, Let's Snow | 0.000390 USD (~0.014 THB) |
-| **5. Merge Official** *(Fashion D2C)* | `ECOMMERCE_PRODUCT` | **25.10s** | กางเกงยีนส์ทรงสวย, เสื้อผ้า Merge Official, ไอเดียแต่งตัว OOTD | Gentlewoman, Stylist Shop, Mitr, Twotwice | 0.000380 USD (~0.013 THB) |
-| **6. Bearhouse** *(F&B & Lifestyle Cafe)* | `LIFESTYLE_EXPERIENCE` | **6.43s** | ชานมไข่มุก อร่อย, ชาไทย ไข่มุกโมจิ, คาเฟ่ วัยรุ่น | After You, Nose Tea, Fire Tiger, ChaTraMue | 0.000360 USD (~0.013 THB) |
-
-### 📊 สรุปสถิติและต้นทุนจากการรันจริง (Dry Run Metrics Summary)
-- **เวลารวมทั้ง 6 เคส:** 61.91 วินาที (เฉลี่ย **10.32 วินาทีต่อแบรนด์**)
-- **Gemini 3.5 Flash-Lite Tokens รวม 6 เคส:** ~12,850 tokens (เฉลี่ย ~2,140 tokens/เคส)
-- **ต้นทุน API จริงรวมทั้ง 6 เคส:** **0.00226 USD (ประมาณ 0.08 บาท หรือไม่ถึง 10 สตางค์!)**
-- **ต้นทุนเต็มรูปแบบ (Cold Run รวมค้นหา TikTok สด ~150 คลิป):** ~0.42 – 0.56 USD (~15 – 20 THB) ต่อแคมเปญ (เมื่อมี SQLite Cache Hit = **0.00 USD / 0 บาท**)
-
----
-
 ## 🛠️ Tech Stack & Architecture Decisions
 
 - **Backend:** Python 3.12 / 3.14, FastAPI, LangGraph (StateGraph), Google GenAI SDK (`gemini-3.5-flash-lite`, `gemini-embedding-2`), Apify Client, Jina Reader API, HTTPX, SQLite3
