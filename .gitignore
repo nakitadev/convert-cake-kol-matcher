@@ -15,3 +15,4 @@ backend/app/cache/
 frontend/test-results/
 frontend/playwright-report/
 .codegraph/
+skills/
